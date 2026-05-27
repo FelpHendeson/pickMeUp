@@ -44,6 +44,14 @@ O progresso e salvo no navegador usando `localStorage`.
 
 A chave de save fica em `Echoes.CONFIG.saveKey`, definida em `game/src/state.js`.
 
+O jogo tambem possui uma aba de Configuracoes para:
+
+- exportar o save como `ascensao-dos-ecos-save.json`;
+- importar um save JSON valido;
+- resetar o save local com confirmacao dupla.
+
+Saves exportados incluem `saveVersion` para validar compatibilidade futura.
+
 ### Base e recursos
 
 O estado inicial inclui recursos como:
