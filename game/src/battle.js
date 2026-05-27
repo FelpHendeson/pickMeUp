@@ -33,6 +33,8 @@
       side: "player",
       classKey: hero.classKey,
       className: hero.className,
+      specializationKey: hero.specializationKey || null,
+      specializationName: Echoes.getHeroSpecialization ? Echoes.getHeroSpecialization(hero)?.name || "" : "",
       rarity: hero.rarity,
       level: hero.level,
       stats: Object.assign({}, effectiveStats),
@@ -81,8 +83,9 @@
 
     const frontLine = living.filter((unit) => unit.position === "front");
     const targetPool = frontLine.length > 0 && Math.random() < BATTLE_CONFIG.frontTargetChance ? frontLine : living;
+    const target = targetPool[Math.floor(Math.random() * targetPool.length)];
 
-    return targetPool[Math.floor(Math.random() * targetPool.length)];
+    return Echoes.getSpecializationProtectionTarget ? Echoes.getSpecializationProtectionTarget(target, living) : target;
   }
 
   function createPlayerTeam(formationHeroes, state) {
@@ -96,7 +99,8 @@
   }
 
   function addUnitEnergy(unit, amount) {
-    unit.energy = Math.min(BATTLE_CONFIG.maxUnitEnergy, unit.energy + amount);
+    const multiplier = Echoes.getSpecializationEnergyGainMultiplier ? Echoes.getSpecializationEnergyGainMultiplier(unit) : 1;
+    unit.energy = Math.min(BATTLE_CONFIG.maxUnitEnergy, unit.energy + Math.round(amount * multiplier));
   }
 
   function snapshotStatuses(unit) {
@@ -172,11 +176,15 @@
   }
 
   function calculateDamage(attacker, target, multiplier, critBonus, battle) {
-    const critChance = Math.min(0.55, (attacker.stats.luck || 0) / 100 + (critBonus || 0));
+    const specializationCritBonus = Echoes.getSpecializationCritBonus ? Echoes.getSpecializationCritBonus(attacker, target, battle) : 0;
+    const critChance = Math.min(0.65, (attacker.stats.luck || 0) / 100 + (critBonus || 0) + specializationCritBonus);
     const critical = Math.random() < critChance;
     const variance = 0.9 + Math.random() * 0.2;
     const markedMultiplier = target.statuses && target.statuses.mark ? 1.2 : 1;
-    const rawDamage = attacker.stats.atk * multiplier * variance * (critical ? 1.75 : 1) * markedMultiplier;
+    const specializationMultiplier = Echoes.getSpecializationDamageMultiplier
+      ? Echoes.getSpecializationDamageMultiplier(attacker, target, battle)
+      : 1;
+    const rawDamage = attacker.stats.atk * multiplier * variance * (critical ? 1.75 : 1) * markedMultiplier * specializationMultiplier;
     const mitigation = getEffectiveDefense(target) * 0.48;
     const playerDamageTakenMultiplier =
       target.side === "player" && battle && battle.modifiers ? battle.modifiers.playerDamageTakenMultiplier || 1 : 1;
@@ -188,6 +196,31 @@
   }
 
   function applyDamage(attacker, target, multiplier, battle, label, critBonus) {
+    if (target.side === "player" && Echoes.shouldDuelistEvade && Echoes.shouldDuelistEvade(target)) {
+      addBattleEvent(battle, "specialization", `${target.name} esquivou de ${attacker.name} e contra-atacou como Duelista.`, {
+        actorId: target.id,
+        targetId: attacker.id,
+        skillName: "Passo de Duelo",
+      });
+
+      if (attacker.hp > 0) {
+        const counterDamage = calculateDamage(target, attacker, 0.55, 0.04, battle);
+        attacker.hp = Math.max(0, attacker.hp - counterDamage.amount);
+        addBattleEvent(
+          battle,
+          counterDamage.critical ? "critical" : "damage",
+          `${target.name} contra-atacou ${attacker.name} causando ${counterDamage.amount} de dano. (${formatUnitHp(attacker)})`,
+          { actorId: target.id, targetId: attacker.id, amount: counterDamage.amount, critical: counterDamage.critical }
+        );
+
+        if (attacker.hp <= 0) {
+          addBattleEvent(battle, "death", `${attacker.name} caiu.`, { actorId: target.id, targetId: attacker.id });
+        }
+      }
+
+      return 0;
+    }
+
     const damage = calculateDamage(attacker, target, multiplier, critBonus, battle);
 
     target.hp = Math.max(0, target.hp - damage.amount);
@@ -214,9 +247,17 @@
   function healUnit(healer, target, multiplier, battle, label, isSpecial) {
     const healingMultiplier =
       healer.side === "player" && battle && battle.modifiers ? battle.modifiers.healingDoneMultiplier || 1 : 1;
+    const specializationHealingMultiplier = Echoes.getSpecializationHealingMultiplier
+      ? Echoes.getSpecializationHealingMultiplier(healer)
+      : 1;
     const amount = Math.max(
       8,
-      Math.round((healer.stats.atk * multiplier + healer.stats.focus * 2) * (0.9 + Math.random() * 0.2) * healingMultiplier)
+      Math.round(
+        (healer.stats.atk * multiplier + healer.stats.focus * 2) *
+          (0.9 + Math.random() * 0.2) *
+          healingMultiplier *
+          specializationHealingMultiplier
+      )
     );
 
     target.hp = Math.min(target.maxHp, target.hp + amount);
@@ -259,7 +300,8 @@
       skillName: "Explosão Arcana",
     });
 
-    getLivingUnits(enemies).forEach((target) => applyDamage(unit, target, 0.92, battle, "atingiu", 0.02));
+    const areaMultiplier = Echoes.getElementalistAreaMultiplier ? Echoes.getElementalistAreaMultiplier(unit) : 1;
+    getLivingUnits(enemies).forEach((target) => applyDamage(unit, target, 0.92 * areaMultiplier, battle, "atingiu", 0.02));
   }
 
   function usePriestSkill(unit, allies, battle) {
@@ -322,12 +364,20 @@
       const target = selectAttackTarget(enemies, unit);
       if (!target) return;
 
-      target.statuses.mark = 2;
-      addBattleEvent(battle, "skill", `${unit.name} conjurou Marca Instavel em ${target.name}.`, {
-        actorId: unit.id,
-        targetId: target.id,
-        skillName: "Marca Instavel",
-      });
+      if (Echoes.shouldResistNegativeStatus && Echoes.shouldResistNegativeStatus(target)) {
+        addBattleEvent(battle, "specialization", `${target.name} resistiu a Marca Instavel como Colosso.`, {
+          actorId: target.id,
+          targetId: unit.id,
+          skillName: "Corpo Inabalavel",
+        });
+      } else {
+        target.statuses.mark = 2;
+        addBattleEvent(battle, "skill", `${unit.name} conjurou Marca Instavel em ${target.name}.`, {
+          actorId: unit.id,
+          targetId: target.id,
+          skillName: "Marca Instavel",
+        });
+      }
       applyDamage(unit, target, 1.05, battle, "marcou e golpeou", 0.02);
       return;
     }
@@ -360,7 +410,15 @@
         skillName: "Selo Prismal",
       });
       targets.forEach((target) => {
-        target.statuses.mark = 2;
+        if (Echoes.shouldResistNegativeStatus && Echoes.shouldResistNegativeStatus(target)) {
+          addBattleEvent(battle, "specialization", `${target.name} resistiu ao Selo Prismal como Colosso.`, {
+            actorId: target.id,
+            targetId: unit.id,
+            skillName: "Corpo Inabalavel",
+          });
+        } else {
+          target.statuses.mark = 2;
+        }
         applyDamage(unit, target, 0.9, battle, "estilhacou", 0.03);
       });
       return;

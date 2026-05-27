@@ -383,6 +383,27 @@ h3 {
   color: #ffd6d6 !important;
 }
 
+.specialization-badge {
+  background: rgba(155, 127, 232, 0.13);
+  border: 1px solid rgba(155, 127, 232, 0.34);
+  border-radius: 999px;
+  color: #e8ddff !important;
+  font-weight: 800;
+  padding: 0.18rem 0.45rem;
+}
+
+.specialization-badge.pending {
+  background: rgba(214, 168, 78, 0.13);
+  border-color: rgba(214, 168, 78, 0.42);
+  color: #ffe6ad !important;
+}
+
+.specialization-badge.locked {
+  background: rgba(185, 174, 161, 0.09);
+  border-color: rgba(185, 174, 161, 0.22);
+  color: var(--muted) !important;
+}
+
 .stat-grid {
   display: grid;
   gap: 0.45rem;
@@ -464,6 +485,57 @@ h3 {
   font-size: 0.76rem;
   font-style: normal;
   line-height: 1.35;
+}
+
+.specialization-panel {
+  background: #171514;
+  border: 1px solid rgba(155, 127, 232, 0.34);
+  border-radius: 8px;
+  margin-top: 0.85rem;
+  padding: 0.75rem;
+}
+
+.specialization-panel h4 {
+  color: #e8ddff;
+  font-size: 0.85rem;
+  margin: 0 0 0.45rem;
+  text-transform: uppercase;
+}
+
+.specialization-panel p {
+  color: var(--muted);
+  line-height: 1.45;
+  margin-bottom: 0.65rem;
+}
+
+.specialization-panel.chosen strong {
+  color: var(--gold);
+}
+
+.specialization-options {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.specialization-options article {
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.65rem;
+}
+
+.specialization-options strong {
+  color: var(--gold);
+}
+
+.specialization-options span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
 }
 
 .infirmary-panel {
@@ -1125,10 +1197,16 @@ h3 {
   color: #e8ddff;
 }
 
+.log-specialization {
+  border-left-color: var(--violet) !important;
+  color: #e8ddff;
+}
+
 .log-round span,
 .log-info span,
 .log-damage span,
-.log-morale span {
+.log-morale span,
+.log-specialization span {
   background: rgba(185, 174, 161, 0.12);
   color: var(--muted);
 }

@@ -140,6 +140,33 @@
     saveAndRender(result.message);
   }
 
+  function handleChooseSpecializationAction(target) {
+    const hero = Echoes.findHero(state, target.dataset.heroId);
+    const specialization = hero && Echoes.getSpecializationByKey
+      ? Echoes.getSpecializationByKey(hero.classKey, target.dataset.specializationKey)
+      : null;
+
+    if (!hero || !specialization) {
+      renderTransientMessage("Especializacao invalida.");
+      return;
+    }
+
+    const confirmed = global.confirm(
+      `Escolher ${specialization.name} para ${hero.name}?\n\n${specialization.passiveName}: ${specialization.description}\n\nEsta escolha sera permanente por enquanto.`
+    );
+
+    if (!confirmed) return;
+
+    const result = Echoes.chooseHeroSpecialization(state, hero.id, specialization.key);
+    if (!result.ok) {
+      renderTransientMessage(result.message);
+      return;
+    }
+
+    Echoes.setTab("heroes");
+    saveAndRender(result.message);
+  }
+
   function handleTreatInjuriesAction(target) {
     const result = Echoes.treatHeroInjuries(state, target.dataset.heroId, target.dataset.treatmentResource);
 
@@ -206,6 +233,7 @@
     if (action === "towerEventChoice") return handleTowerEventChoiceAction(target);
     if (action === "equipItem") return handleEquipItemAction(target);
     if (action === "unequipItem") return handleUnequipItemAction(target);
+    if (action === "chooseSpecialization") return handleChooseSpecializationAction(target);
     if (action === "treatInjuries") return handleTreatInjuriesAction(target);
     if (action === "startExpedition") return handleStartExpeditionAction(target);
     if (action === "collectExpedition") return handleCollectExpeditionAction(target);

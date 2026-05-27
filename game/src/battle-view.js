@@ -163,6 +163,10 @@
       victory: "Vitoria",
       defeat: "Derrota",
       reward: "Recompensa",
+      morale: "Moral",
+      injury: "Ferimento",
+      recovery: "Recuperacao",
+      specialization: "Especializacao",
       round: "Turno",
       info: "Info",
     };

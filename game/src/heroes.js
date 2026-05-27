@@ -191,6 +191,7 @@
       morale: Echoes.createStartingMorale ? Echoes.createStartingMorale() : 80,
       battlesSinceLastUsed: 0,
       lastUsedAt: null,
+      specializationKey: null,
       equipment: {
         weapon: null,
         armor: null,
@@ -214,6 +215,7 @@
         morale: Echoes.createStartingMorale ? Echoes.createStartingMorale() : 80,
         battlesSinceLastUsed: 0,
         lastUsedAt: null,
+        specializationKey: null,
         equipment: { weapon: null, armor: null, accessory: null },
       },
       hero || {}
@@ -230,6 +232,9 @@
     }
     if (Echoes.normalizeHeroMorale) {
       Echoes.normalizeHeroMorale(normalized);
+    }
+    if (Echoes.normalizeHeroSpecialization) {
+      Echoes.normalizeHeroSpecialization(normalized);
     }
 
     return recalculateHeroStats(normalized);

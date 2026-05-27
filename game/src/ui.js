@@ -103,6 +103,21 @@
     return `<span class="morale-badge morale-${moraleState.tone}">Moral ${morale}/100 | ${moraleState.label}</span>`;
   }
 
+  function renderSpecializationBadge(hero) {
+    if (!Echoes.getHeroSpecialization) return "";
+
+    const specialization = Echoes.getHeroSpecialization(hero);
+    if (specialization) {
+      return `<span class="specialization-badge">${escapeHtml(specialization.name)} | ${escapeHtml(specialization.passiveName)}</span>`;
+    }
+
+    if (hero.level >= Echoes.SPECIALIZATION_LEVEL) {
+      return `<span class="specialization-badge pending">Especializacao disponivel</span>`;
+    }
+
+    return `<span class="specialization-badge locked">Especializacao no nivel ${Echoes.SPECIALIZATION_LEVEL}</span>`;
+  }
+
   function renderInfirmaryPatient(hero, state) {
     const goldCost = Echoes.getHeroInjuryTreatmentCost(hero, "gold");
     const essenceCost = Echoes.getHeroInjuryTreatmentCost(hero, "essence");
@@ -285,6 +300,51 @@
     `;
   }
 
+  function renderSpecializationControls(hero) {
+    if (!Echoes.getClassSpecializations || !Echoes.canHeroSpecialize) return "";
+
+    const chosen = Echoes.getHeroSpecialization ? Echoes.getHeroSpecialization(hero) : null;
+    if (chosen) {
+      return `
+        <div class="specialization-panel chosen">
+          <h4>Especializacao</h4>
+          <strong>${escapeHtml(chosen.name)} - ${escapeHtml(chosen.passiveName)}</strong>
+          <p>${escapeHtml(chosen.description)}</p>
+        </div>
+      `;
+    }
+
+    if (!Echoes.canHeroSpecialize(hero)) return "";
+
+    return `
+      <div class="specialization-panel">
+        <h4>Escolher especializacao</h4>
+        <p>Escolha permanente para definir a progressao deste heroi.</p>
+        <div class="specialization-options">
+          ${Echoes.getClassSpecializations(hero.classKey)
+            .map(
+              (specialization) => `
+                <article>
+                  <strong>${escapeHtml(specialization.name)}</strong>
+                  <span>${escapeHtml(specialization.passiveName)}: ${escapeHtml(specialization.description)}</span>
+                  <button
+                    type="button"
+                    class="secondary"
+                    data-action="chooseSpecialization"
+                    data-hero-id="${hero.id}"
+                    data-specialization-key="${specialization.key}"
+                  >
+                    Escolher ${escapeHtml(specialization.name)}
+                  </button>
+                </article>
+              `
+            )
+            .join("")}
+        </div>
+      </div>
+    `;
+  }
+
   function renderHeroCard(hero, options) {
     const inFormation = options && options.inFormation;
     const compact = options && options.compact;
@@ -310,13 +370,14 @@
           <span>XP ${hero.xp}/${xpNext}</span>
           <span>Poder ${power}</span>
           ${renderMoraleBadge(hero)}
+          ${renderSpecializationBadge(hero)}
           ${expedition ? `<span>Expedicao: ${expedition.name}</span>` : ""}
         </div>
         ${renderInjuryList(hero, compact)}
         ${
           compact
             ? ""
-            : `${renderHeroStatGrid(hero, state)}${renderHeroEquipmentControls(hero, state)}`
+            : `${renderHeroStatGrid(hero, state)}${renderSpecializationControls(hero)}${renderHeroEquipmentControls(hero, state)}`
         }
         <div class="button-row">
           ${renderHeroActionButton(hero, inFormation, state)}
