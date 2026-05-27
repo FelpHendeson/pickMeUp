@@ -24,12 +24,87 @@
   }
 
   function handleResetAction() {
-    const confirmed = global.confirm("Resetar todo o progresso local?");
-    if (!confirmed) return;
+    const firstConfirmation = global.confirm(
+      "Resetar todo o progresso local? Essa acao apaga o save deste navegador e nao pode ser desfeita sem um backup exportado."
+    );
+    if (!firstConfirmation) return;
+
+    const secondConfirmation = global.confirm("Confirmar reset definitivo do save? Esta acao e irreversivel.");
+    if (!secondConfirmation) return;
 
     state = Echoes.resetGameState();
-    Echoes.setTab("base");
+    Echoes.setTab("settings");
     saveAndRender("Progresso resetado.");
+  }
+
+  function downloadTextFile(fileName, text) {
+    const blob = new Blob([text], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleExportSaveAction() {
+    state = Echoes.saveGameState(state);
+    downloadTextFile(Echoes.EXPORT_FILE_NAME, JSON.stringify(state, null, 2));
+    Echoes.setTab("settings");
+    Echoes.setMessage("Save exportado como ascensao-dos-ecos-save.json.");
+    Echoes.render(state);
+  }
+
+  function handleImportSaveAction() {
+    const input = document.querySelector("[data-save-import]");
+    if (!input) {
+      renderTransientMessage("Campo de importacao nao encontrado.");
+      return;
+    }
+
+    input.click();
+  }
+
+  function handleSaveImportChange(input) {
+    const file = input.files && input.files[0];
+    input.value = "";
+
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".json")) {
+      renderTransientMessage("Arquivo invalido: selecione um JSON.");
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = Echoes.parseImportedSaveText(String(reader.result || ""));
+      if (!result.ok) {
+        renderTransientMessage(result.message);
+        return;
+      }
+
+      const imported = result.state;
+      const confirmed = global.confirm(
+        `Importar este save e sobrescrever o progresso atual?\n\nAndar: ${imported.towerFloor}\nHerois: ${imported.heroes.length}\nVersao: ${imported.saveVersion}`
+      );
+
+      if (!confirmed) return;
+
+      state = Echoes.saveGameState(imported);
+      Echoes.setTab("settings");
+      Echoes.setMessage("Save importado com sucesso.");
+      Echoes.render(state);
+    };
+
+    reader.onerror = () => {
+      renderTransientMessage("Nao foi possivel ler o arquivo de save.");
+    };
+
+    reader.readAsText(file);
   }
 
   function handleSummonAction(target) {
@@ -270,6 +345,8 @@
 
     if (action === "save") return handleSaveAction();
     if (action === "reset") return handleResetAction();
+    if (action === "exportSave") return handleExportSaveAction();
+    if (action === "importSave") return handleImportSaveAction();
     if (action === "summon") return handleSummonAction(target);
     if (action === "addFormation") return handleFormationAction(target, true);
     if (action === "removeFormation") return handleFormationAction(target, false);
@@ -317,6 +394,12 @@
     });
 
     document.addEventListener("change", (event) => {
+      const saveImport = event.target.closest("[data-save-import]");
+      if (saveImport) {
+        handleSaveImportChange(saveImport);
+        return;
+      }
+
       const expeditionChoice = event.target.closest("[data-expedition-choice]");
       if (expeditionChoice) {
         handleExpeditionChoiceChange(expeditionChoice);

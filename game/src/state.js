@@ -5,6 +5,7 @@
 
   const CONFIG = {
     saveKey: "ascensao-dos-ecos-save-v1",
+    saveVersion: 1,
     commonSummonCost: 100,
     superiorSummonCost: 100,
     towerEnergyCost: 5,
@@ -21,6 +22,7 @@
 
     return {
       schemaVersion: 1,
+      saveVersion: CONFIG.saveVersion,
       accountLevel: 1,
       accountXp: 0,
       towerFloor: 1,
@@ -135,6 +137,7 @@
     const fresh = createInitialState();
     const safe = Object.assign({}, fresh, state || {});
 
+    safe.saveVersion = Number.isInteger(safe.saveVersion) ? safe.saveVersion : CONFIG.saveVersion;
     safe.resources = Object.assign({}, fresh.resources, safe.resources || {});
     safe.baseRooms = Object.assign({}, fresh.baseRooms, safe.baseRooms || {});
     safe.heroes = Array.isArray(safe.heroes) ? safe.heroes : [];

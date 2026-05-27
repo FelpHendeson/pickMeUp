@@ -224,7 +224,6 @@
           </div>
           <div class="button-row">
             <button type="button" data-action="save">Salvar jogo</button>
-            <button type="button" class="danger" data-action="reset">Resetar progresso</button>
           </div>
         </article>
         <section class="room-grid">
@@ -1165,6 +1164,37 @@
     return Echoes.renderBattleView(state);
   }
 
+  function renderSettings(state) {
+    return `
+      <section class="panel-grid two-columns">
+        <article class="panel settings-panel">
+          <p class="eyebrow">Backup local</p>
+          <h2>Exportar save</h2>
+          <p class="muted">Gere um arquivo JSON com todo o progresso salvo neste navegador. Use esse arquivo para backup ou para transferir o save.</p>
+          <div class="summary-grid">
+            <div><span>Versao do save</span><strong>${state.saveVersion || Echoes.CONFIG.saveVersion}</strong></div>
+            <div><span>Andar atual</span><strong>${state.towerFloor}</strong></div>
+            <div><span>Herois</span><strong>${state.heroes.length}</strong></div>
+          </div>
+          <button type="button" data-action="exportSave">Exportar save</button>
+        </article>
+        <article class="panel settings-panel">
+          <p class="eyebrow">Restaurar progresso</p>
+          <h2>Importar save</h2>
+          <p class="muted">Selecione um arquivo JSON exportado pelo jogo. O progresso atual sera sobrescrito apos confirmacao.</p>
+          <input class="hidden-file-input" id="saveImportInput" type="file" accept="application/json,.json" data-save-import />
+          <button type="button" class="secondary" data-action="importSave">Selecionar arquivo</button>
+        </article>
+        <article class="panel wide settings-danger-panel">
+          <p class="eyebrow">Zona de risco</p>
+          <h2>Resetar save</h2>
+          <p class="muted">Remove todo o progresso local deste navegador. A acao e irreversivel sem um backup exportado.</p>
+          <button type="button" class="danger" data-action="reset">Resetar save</button>
+        </article>
+      </section>
+    `;
+  }
+
   function renderCurrentTab(state) {
     const views = {
       base: renderBase,
@@ -1176,6 +1206,7 @@
       summon: renderSummon,
       tower: renderTower,
       battle: renderBattle,
+      settings: renderSettings,
     };
 
     return (views[UI.currentTab] || renderBase)(state);

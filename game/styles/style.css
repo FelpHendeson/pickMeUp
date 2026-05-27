@@ -347,6 +347,33 @@ h3 {
   padding: 0.55rem 0.65rem;
 }
 
+.settings-panel,
+.settings-danger-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.settings-panel button,
+.settings-danger-panel button {
+  margin-top: auto;
+}
+
+.settings-danger-panel {
+  background:
+    linear-gradient(135deg, rgba(184, 91, 91, 0.13), transparent 40%),
+    rgba(28, 25, 24, 0.96);
+  border-color: rgba(184, 91, 91, 0.42);
+}
+
+.hidden-file-input {
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  width: 1px;
+}
+
 .wide {
   grid-column: 1 / -1;
 }
