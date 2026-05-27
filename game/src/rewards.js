@@ -46,6 +46,16 @@
   }
 
   function unlockFloorMilestones(state, floorNumber, log, battle) {
+    if (floorNumber === 20) {
+      addRewardEvent(log, battle, "reward", "Marco vencido: andares finais da torre liberados.");
+      return;
+    }
+
+    if (floorNumber === 30) {
+      addRewardEvent(log, battle, "reward", "Torre de 30 andares concluida.");
+      return;
+    }
+
     if (floorNumber !== 10) return;
 
     state.baseRooms.workshop = Math.max(1, state.baseRooms.workshop || 0);

@@ -29,6 +29,64 @@
       role: "chefe",
       stats: { hp: 210, atk: 23, def: 14, spd: 5, focus: 8, luck: 4 },
     },
+    emberHound: {
+      name: "Sabueso de Brasa",
+      role: "dano",
+      stats: { hp: 70, atk: 20, def: 6, spd: 11, focus: 5, luck: 8 },
+    },
+    graveWarden: {
+      name: "Vigia Tumular",
+      role: "tanque",
+      stats: { hp: 96, atk: 16, def: 13, spd: 6, focus: 7, luck: 4 },
+    },
+    crystalSeer: {
+      name: "Vidente Cristalino",
+      role: "suporte",
+      stats: { hp: 68, atk: 17, def: 7, spd: 9, focus: 15, luck: 8 },
+    },
+    stormHarpy: {
+      name: "Harpia Tempestuosa",
+      role: "veloz",
+      stats: { hp: 64, atk: 19, def: 5, spd: 15, focus: 8, luck: 11 },
+    },
+    voidReaver: {
+      name: "Ceifador do Vazio",
+      role: "dano",
+      stats: { hp: 88, atk: 25, def: 8, spd: 10, focus: 9, luck: 9 },
+    },
+    shardOracle: {
+      name: "Oraculo Estilhacado",
+      role: "chefe",
+      stats: { hp: 310, atk: 28, def: 15, spd: 9, focus: 18, luck: 8 },
+    },
+    eclipseAvatar: {
+      name: "Avatar do Eclipse",
+      role: "chefe",
+      stats: { hp: 430, atk: 36, def: 20, spd: 10, focus: 20, luck: 10 },
+    },
+  };
+
+  const FLOOR_MODIFIERS = {
+    reducedHealing: {
+      label: "Cura reduzida",
+      description: "curas da equipe -25%",
+      healingDoneMultiplier: 0.75,
+    },
+    fastEnemies: {
+      label: "Inimigos mais rapidos",
+      description: "SPD inimiga +14%",
+      enemySpeedMultiplier: 1.14,
+    },
+    exposedTeam: {
+      label: "Dano recebido aumentado",
+      description: "equipe recebe +12% dano",
+      playerDamageTakenMultiplier: 1.12,
+    },
+    drainedStart: {
+      label: "Energia inicial reduzida",
+      description: "herois com -15 energia inicial",
+      playerInitialEnergyPenalty: 15,
+    },
   };
 
   const TOWER_FLOORS = [
@@ -70,7 +128,7 @@
       recommendedLevel: 3,
       mechanic: "Mini-chefe",
       enemyKeys: ["ridgeRaider", "ridgeRaider", "stoneSlime"],
-      rewardHint: "Chance de equipamento futuro",
+      rewardHint: "Chance de equipamento",
     },
     {
       floor: 6,
@@ -78,7 +136,7 @@
       recommendedLevel: 3,
       mechanic: "Marca",
       enemyKeys: ["markedAcolyte", "markedAcolyte", "stoneSlime"],
-      modifier: "Maldição leve: inimigos focam alvos feridos.",
+      modifier: "Maldicao leve: inimigos focam alvos feridos.",
       rewardHint: "Essencia",
     },
     {
@@ -106,16 +164,198 @@
       mechanic: "Pressao",
       enemyKeys: ["markedAcolyte", "ridgeRaider", "ridgeRaider", "duskBat"],
       modifier: "Mana instavel: habilidades aparecem mais cedo.",
-      rewardHint: "Chance de equipamento incomum futuro",
+      rewardHint: "Chance de equipamento incomum",
     },
     {
       floor: 10,
       title: "Nucleo do Golem",
       recommendedLevel: 5,
-      mechanic: "Chefe",
+      mechanic: "Chefe: esmagamento em area",
       enemyKeys: ["ironGolem", "markedAcolyte"],
-      modifier: "Chefe de marco: vitoria desbloqueia a Oficina.",
+      modifier: "Chefe de marco: o Golem atinge ate 2 alvos com sua habilidade.",
       rewardHint: "Ouro, cristais e Oficina",
+    },
+    {
+      floor: 11,
+      title: "Enfermaria Quebrada",
+      recommendedLevel: 6,
+      mechanic: "Cura reduzida",
+      enemyKeys: ["emberHound", "stoneSlime", "markedAcolyte"],
+      modifierKeys: ["reducedHealing"],
+      rewardHint: "Ouro e XP",
+    },
+    {
+      floor: 12,
+      title: "Galeria dos Uivos",
+      recommendedLevel: 6,
+      mechanic: "Velocidade inimiga",
+      enemyKeys: ["emberHound", "emberHound", "duskBat"],
+      modifierKeys: ["fastEnemies"],
+      rewardHint: "Cristais",
+    },
+    {
+      floor: 13,
+      title: "Passagem Tumular",
+      recommendedLevel: 7,
+      mechanic: "Defesa inimiga",
+      enemyKeys: ["graveWarden", "ridgeRaider", "markedAcolyte"],
+      modifierKeys: ["exposedTeam"],
+      rewardHint: "Essencia",
+    },
+    {
+      floor: 14,
+      title: "Escadaria Sem Folego",
+      recommendedLevel: 7,
+      mechanic: "Energia inicial baixa",
+      enemyKeys: ["graveWarden", "duskBat", "emberHound"],
+      modifierKeys: ["drainedStart"],
+      rewardHint: "Fragmentos",
+    },
+    {
+      floor: 15,
+      title: "Forja Fraturada",
+      recommendedLevel: 8,
+      mechanic: "Dano constante",
+      enemyKeys: ["emberHound", "graveWarden", "ridgeRaider"],
+      modifierKeys: ["exposedTeam"],
+      rewardHint: "Equipamento garantido",
+    },
+    {
+      floor: 16,
+      title: "Sala dos Prismas",
+      recommendedLevel: 8,
+      mechanic: "Suporte inimigo",
+      enemyKeys: ["crystalSeer", "stoneSlime", "emberHound"],
+      modifierKeys: ["reducedHealing"],
+      rewardHint: "Cristais",
+    },
+    {
+      floor: 17,
+      title: "Corrente de Vidro",
+      recommendedLevel: 9,
+      mechanic: "Rapidez e foco",
+      enemyKeys: ["crystalSeer", "duskBat", "stormHarpy"],
+      modifierKeys: ["fastEnemies"],
+      rewardHint: "XP alto",
+    },
+    {
+      floor: 18,
+      title: "Patio dos Vigias",
+      recommendedLevel: 9,
+      mechanic: "Tanques",
+      enemyKeys: ["graveWarden", "graveWarden", "crystalSeer"],
+      modifierKeys: ["drainedStart"],
+      rewardHint: "Ouro alto",
+    },
+    {
+      floor: 19,
+      title: "Antesala Estilhada",
+      recommendedLevel: 10,
+      mechanic: "Preparacao de chefe",
+      enemyKeys: ["stormHarpy", "voidReaver", "crystalSeer"],
+      modifierKeys: ["reducedHealing", "fastEnemies"],
+      rewardHint: "Chance alta de equipamento",
+    },
+    {
+      floor: 20,
+      title: "Trono do Oraculo",
+      recommendedLevel: 10,
+      mechanic: "Chefe: marcas multiplas",
+      enemyKeys: ["shardOracle", "crystalSeer"],
+      modifierKeys: ["reducedHealing"],
+      modifier: "Chefe de marco: o Oraculo marca dois alvos vulneraveis.",
+      rewardHint: "Equipamento garantido e cristais",
+    },
+    {
+      floor: 21,
+      title: "Ponte Tempestuosa",
+      recommendedLevel: 11,
+      mechanic: "Velocidade alta",
+      enemyKeys: ["stormHarpy", "stormHarpy", "emberHound"],
+      modifierKeys: ["fastEnemies", "exposedTeam"],
+      rewardHint: "Ouro e XP",
+    },
+    {
+      floor: 22,
+      title: "Cripta Veloz",
+      recommendedLevel: 11,
+      mechanic: "Pressao na retaguarda",
+      enemyKeys: ["stormHarpy", "voidReaver", "duskBat"],
+      modifierKeys: ["fastEnemies"],
+      rewardHint: "Cristais",
+    },
+    {
+      floor: 23,
+      title: "Camara Sem Pulso",
+      recommendedLevel: 12,
+      mechanic: "Cura limitada",
+      enemyKeys: ["voidReaver", "graveWarden", "markedAcolyte"],
+      modifierKeys: ["reducedHealing", "drainedStart"],
+      rewardHint: "Essencia",
+    },
+    {
+      floor: 24,
+      title: "Muralha dos Ceifadores",
+      recommendedLevel: 12,
+      mechanic: "Dano pesado",
+      enemyKeys: ["voidReaver", "voidReaver", "graveWarden"],
+      modifierKeys: ["exposedTeam"],
+      rewardHint: "Fragmentos",
+    },
+    {
+      floor: 25,
+      title: "Forja do Eclipse",
+      recommendedLevel: 13,
+      mechanic: "Elite",
+      enemyKeys: ["voidReaver", "crystalSeer", "graveWarden", "emberHound"],
+      modifierKeys: ["exposedTeam", "drainedStart"],
+      rewardHint: "Equipamento garantido",
+    },
+    {
+      floor: 26,
+      title: "Galeria Invertida",
+      recommendedLevel: 13,
+      mechanic: "Turnos rapidos",
+      enemyKeys: ["stormHarpy", "stormHarpy", "crystalSeer", "duskBat"],
+      modifierKeys: ["fastEnemies", "reducedHealing"],
+      rewardHint: "Cristais",
+    },
+    {
+      floor: 27,
+      title: "Fenda Abissal",
+      recommendedLevel: 14,
+      mechanic: "Dano e marca",
+      enemyKeys: ["voidReaver", "markedAcolyte", "voidReaver"],
+      modifierKeys: ["exposedTeam", "reducedHealing"],
+      rewardHint: "XP alto",
+    },
+    {
+      floor: 28,
+      title: "Guarda do Eclipse",
+      recommendedLevel: 14,
+      mechanic: "Tanque e suporte",
+      enemyKeys: ["graveWarden", "graveWarden", "crystalSeer", "voidReaver"],
+      modifierKeys: ["drainedStart", "fastEnemies"],
+      rewardHint: "Ouro alto",
+    },
+    {
+      floor: 29,
+      title: "Limiar Escurecido",
+      recommendedLevel: 15,
+      mechanic: "Teste final",
+      enemyKeys: ["stormHarpy", "voidReaver", "crystalSeer", "emberHound"],
+      modifierKeys: ["reducedHealing", "fastEnemies", "exposedTeam"],
+      rewardHint: "Chance muito alta de equipamento",
+    },
+    {
+      floor: 30,
+      title: "Coroa do Eclipse",
+      recommendedLevel: 15,
+      mechanic: "Chefe: dreno de energia",
+      enemyKeys: ["eclipseAvatar", "voidReaver", "crystalSeer"],
+      modifierKeys: ["drainedStart", "exposedTeam"],
+      modifier: "Chefe final: o Avatar drena energia da equipe e causa dano em area.",
+      rewardHint: "Grande recompensa final",
     },
   ];
 
@@ -124,12 +364,47 @@
   }
 
   function getFloorPower(floorNumber) {
-    return Math.round(80 + floorNumber * 35 + Math.pow(floorNumber, 1.25) * 10);
+    return Math.round(90 + floorNumber * 42 + Math.pow(floorNumber, 1.18) * 15 + Math.max(0, floorNumber - 10) * 18);
+  }
+
+  function getFloorModifierValues(floorData) {
+    const modifierKeys = (floorData && floorData.modifierKeys) || [];
+
+    return modifierKeys.reduce(
+      (modifiers, modifierKey) => {
+        const rule = FLOOR_MODIFIERS[modifierKey];
+        if (!rule) return modifiers;
+
+        modifiers.keys.push(modifierKey);
+        modifiers.labels.push(rule.label);
+        modifiers.descriptions.push(rule.description);
+        modifiers.healingDoneMultiplier *= rule.healingDoneMultiplier || 1;
+        modifiers.enemySpeedMultiplier *= rule.enemySpeedMultiplier || 1;
+        modifiers.playerDamageTakenMultiplier *= rule.playerDamageTakenMultiplier || 1;
+        modifiers.playerInitialEnergyPenalty += rule.playerInitialEnergyPenalty || 0;
+
+        return modifiers;
+      },
+      {
+        keys: [],
+        labels: [],
+        descriptions: [],
+        healingDoneMultiplier: 1,
+        enemySpeedMultiplier: 1,
+        playerDamageTakenMultiplier: 1,
+        playerInitialEnergyPenalty: 0,
+      }
+    );
+  }
+
+  function getFloorModifierSummary(floorData) {
+    const modifiers = getFloorModifierValues(floorData);
+    return modifiers.descriptions.length > 0 ? modifiers.descriptions.join(" | ") : "";
   }
 
   function scaleEnemyStats(baseStats, floorNumber, isBoss) {
-    const floorScale = 0.75 + floorNumber * 0.12;
-    const bossScale = isBoss ? 1.18 : 1;
+    const floorScale = 0.82 + floorNumber * 0.085 + Math.max(0, floorNumber - 10) * 0.018;
+    const bossScale = isBoss ? 1.2 : 1;
 
     return Object.keys(baseStats).reduce((stats, key) => {
       const value = baseStats[key] * floorScale * bossScale;
@@ -138,10 +413,21 @@
     }, {});
   }
 
-  function createEnemyUnit(enemyKey, floorNumber, index) {
+  function getEnemyStartingEnergy(enemyKey, floorNumber, isBoss) {
+    if (enemyKey === "shardOracle" || enemyKey === "eclipseAvatar") return 45;
+    if (isBoss) return 35;
+    return floorNumber >= 21 ? 30 : floorNumber >= 9 ? 25 : 0;
+  }
+
+  function createEnemyUnit(enemyKey, floorNumber, index, floorData) {
     const archetype = ENEMY_ARCHETYPES[enemyKey] || ENEMY_ARCHETYPES.stoneSlime;
-    const isBoss = archetype.role === "chefe" || floorNumber === 10;
+    const isBoss = archetype.role === "chefe";
+    const modifiers = getFloorModifierValues(floorData);
     const stats = scaleEnemyStats(archetype.stats, floorNumber, isBoss);
+
+    if (modifiers.enemySpeedMultiplier > 1) {
+      stats.spd = Math.max(1, Math.round(stats.spd * modifiers.enemySpeedMultiplier));
+    }
 
     return {
       id: `enemy_${floorNumber}_${index}_${enemyKey}`,
@@ -154,9 +440,9 @@
       stats,
       maxHp: stats.hp,
       hp: stats.hp,
-      energy: floorNumber >= 9 ? 25 : 0,
+      energy: getEnemyStartingEnergy(enemyKey, floorNumber, isBoss),
       statuses: {},
-      position: isBoss ? "front" : index < 2 ? "front" : "back",
+      position: isBoss || index < 2 ? "front" : "back",
     };
   }
 
@@ -164,20 +450,23 @@
     const floorData = getFloorData(floorNumber);
     if (!floorData) return [];
 
-    return floorData.enemyKeys.map((enemyKey, index) => createEnemyUnit(enemyKey, floorNumber, index));
+    return floorData.enemyKeys.map((enemyKey, index) => createEnemyUnit(enemyKey, floorNumber, index, floorData));
   }
 
   function getFloorReward(floorNumber) {
+    const bossFloor = floorNumber === 10 || floorNumber === 20 || floorNumber === 30;
+    const milestoneFloor = floorNumber === 5 || floorNumber === 9 || floorNumber === 15 || floorNumber === 19 || floorNumber === 25 || floorNumber === 29;
+
     return {
-      gold: 50 + floorNumber * 15,
-      xp: 30 + floorNumber * 10,
-      energyRefund: 3,
-      crystalChance: Math.min(0.1 + floorNumber * 0.015, 0.28),
-      crystalAmount: 8 + floorNumber * 2,
-      essence: floorNumber === 6 ? 15 : floorNumber === 10 ? 20 : 0,
-      fragments: floorNumber === 7 ? 15 : floorNumber === 10 ? 20 : 0,
-      equipmentChance: Math.min(5 + floorNumber * 0.5, 35) / 100,
-      guaranteedEquipment: floorNumber === 5 || floorNumber === 9 || floorNumber === 10,
+      gold: 45 + floorNumber * 18 + Math.floor(Math.max(0, floorNumber - 10) * 9),
+      xp: 28 + floorNumber * 11 + Math.floor(Math.max(0, floorNumber - 10) * 5),
+      energyRefund: bossFloor ? 5 : floorNumber >= 11 ? 4 : 3,
+      crystalChance: Math.min(0.1 + floorNumber * 0.012, 0.42),
+      crystalAmount: 8 + floorNumber * 2 + Math.floor(floorNumber / 10) * 8,
+      essence: floorNumber === 6 ? 15 : floorNumber === 10 ? 20 : floorNumber >= 13 && floorNumber % 5 === 3 ? 18 + floorNumber : 0,
+      fragments: floorNumber === 7 ? 15 : floorNumber === 10 ? 20 : floorNumber >= 14 && floorNumber % 5 === 4 ? 18 + floorNumber : 0,
+      equipmentChance: Math.min(8 + floorNumber * 0.9, 48) / 100,
+      guaranteedEquipment: bossFloor || milestoneFloor,
     };
   }
 
@@ -203,7 +492,7 @@
 
   function validateTowerBattleStart(state, floorData, formationHeroes) {
     if (!floorData) {
-      return { ok: false, message: "A torre inicial ja foi concluida." };
+      return { ok: false, message: "A torre atual ja foi concluida." };
     }
 
     if (formationHeroes.length === 0) {
@@ -224,10 +513,25 @@
   }
 
   function buildTowerBattleIntro(floorNumber, floorData, playerTeam, enemyTeam, isRepeat) {
-    return [
+    const intro = [
       `${isRepeat ? "Repeticao do andar" : "Andar"} ${floorNumber}: ${floorData.title}.`,
       `Equipe entrou com ${playerTeam.length} heroi(s). Inimigos: ${enemyTeam.map((enemy) => enemy.name).join(", ")}.`,
     ];
+    const modifierSummary = getFloorModifierSummary(floorData);
+
+    if (modifierSummary) {
+      intro.push(`Modificadores: ${modifierSummary}.`);
+    }
+
+    return intro;
+  }
+
+  function applyPreBattleFloorModifiers(playerTeam, floorModifiers) {
+    if (!floorModifiers || floorModifiers.playerInitialEnergyPenalty <= 0) return;
+
+    playerTeam.forEach((unit) => {
+      unit.energy = Math.max(0, unit.energy - floorModifiers.playerInitialEnergyPenalty);
+    });
   }
 
   function runTowerBattle(state, options) {
@@ -251,9 +555,17 @@
     Echoes.spendResource(state, "energy", Echoes.CONFIG.towerEnergyCost);
     state.lastEnergyAt = Date.now();
 
+    const floorModifiers = getFloorModifierValues(floorData);
     const playerTeam = Echoes.createPlayerTeam(formationHeroes, state);
     const enemyTeam = createEnemiesForFloor(floorNumber);
-    const battle = Echoes.runAutoBattle(playerTeam, enemyTeam, buildTowerBattleIntro(floorNumber, floorData, playerTeam, enemyTeam, isRepeat));
+    applyPreBattleFloorModifiers(playerTeam, floorModifiers);
+
+    const battle = Echoes.runAutoBattle(
+      playerTeam,
+      enemyTeam,
+      buildTowerBattleIntro(floorNumber, floorData, playerTeam, enemyTeam, isRepeat),
+      floorModifiers
+    );
 
     if (battle.result === "victory") {
       Echoes.addBattleEvent(battle, "victory", `Equipe ${isRepeat ? "repetiu e venceu" : "venceu"} o andar ${floorNumber}.`);
@@ -286,9 +598,12 @@
   }
 
   Echoes.ENEMY_ARCHETYPES = ENEMY_ARCHETYPES;
+  Echoes.FLOOR_MODIFIERS = FLOOR_MODIFIERS;
   Echoes.TOWER_FLOORS = TOWER_FLOORS;
   Echoes.getFloorData = getFloorData;
   Echoes.getFloorPower = getFloorPower;
+  Echoes.getFloorModifierValues = getFloorModifierValues;
+  Echoes.getFloorModifierSummary = getFloorModifierSummary;
   Echoes.getHighestCompletedFloor = getHighestCompletedFloor;
   Echoes.canRepeatTowerFloor = canRepeatTowerFloor;
   Echoes.createEnemiesForFloor = createEnemiesForFloor;

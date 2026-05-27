@@ -151,13 +151,14 @@
     return event;
   }
 
-  function createBattleContext(playerTeam, enemyTeam, introLines) {
+  function createBattleContext(playerTeam, enemyTeam, introLines, modifiers) {
     const battle = {
       playerTeam,
       enemyTeam,
       log: [],
       events: [],
       round: 0,
+      modifiers: modifiers || {},
     };
 
     introLines.forEach((line) => addBattleEvent(battle, "info", line));
@@ -169,22 +170,24 @@
     return (unit.stats.def || 0) * guardMultiplier;
   }
 
-  function calculateDamage(attacker, target, multiplier, critBonus) {
+  function calculateDamage(attacker, target, multiplier, critBonus, battle) {
     const critChance = Math.min(0.55, (attacker.stats.luck || 0) / 100 + (critBonus || 0));
     const critical = Math.random() < critChance;
     const variance = 0.9 + Math.random() * 0.2;
     const markedMultiplier = target.statuses && target.statuses.mark ? 1.2 : 1;
     const rawDamage = attacker.stats.atk * multiplier * variance * (critical ? 1.75 : 1) * markedMultiplier;
     const mitigation = getEffectiveDefense(target) * 0.48;
+    const playerDamageTakenMultiplier =
+      target.side === "player" && battle && battle.modifiers ? battle.modifiers.playerDamageTakenMultiplier || 1 : 1;
 
     return {
-      amount: Math.max(1, Math.round(rawDamage - mitigation)),
+      amount: Math.max(1, Math.round((rawDamage - mitigation) * playerDamageTakenMultiplier)),
       critical,
     };
   }
 
   function applyDamage(attacker, target, multiplier, battle, label, critBonus) {
-    const damage = calculateDamage(attacker, target, multiplier, critBonus);
+    const damage = calculateDamage(attacker, target, multiplier, critBonus, battle);
 
     target.hp = Math.max(0, target.hp - damage.amount);
     addUnitEnergy(attacker, BATTLE_CONFIG.attackEnergyGain);
@@ -208,7 +211,12 @@
   }
 
   function healUnit(healer, target, multiplier, battle, label, isSpecial) {
-    const amount = Math.max(8, Math.round((healer.stats.atk * multiplier + healer.stats.focus * 2) * (0.9 + Math.random() * 0.2)));
+    const healingMultiplier =
+      healer.side === "player" && battle && battle.modifiers ? battle.modifiers.healingDoneMultiplier || 1 : 1;
+    const amount = Math.max(
+      8,
+      Math.round((healer.stats.atk * multiplier + healer.stats.focus * 2) * (0.9 + Math.random() * 0.2) * healingMultiplier)
+    );
 
     target.hp = Math.min(target.maxHp, target.hp + amount);
     addUnitEnergy(healer, BATTLE_CONFIG.attackEnergyGain);
@@ -323,6 +331,14 @@
       return;
     }
 
+    if (unit.enemyKey === "crystalSeer") {
+      const woundedAlly = selectMostWoundedUnit(battle.enemyTeam);
+      if (woundedAlly) {
+        healUnit(unit, woundedAlly, 1.15, battle, "restaurou", true);
+        return;
+      }
+    }
+
     if (unit.enemyKey === "ironGolem") {
       const targets = getLivingUnits(enemies).slice(0, 2);
       addBattleEvent(battle, "skill", `${unit.name} esmagou o chao com peso antigo.`, {
@@ -330,6 +346,35 @@
         skillName: "Esmagamento",
       });
       targets.forEach((target) => applyDamage(unit, target, 1.15, battle, "atingiu", 0));
+      return;
+    }
+
+    if (unit.enemyKey === "shardOracle") {
+      const targets = getLivingUnits(enemies)
+        .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)
+        .slice(0, 2);
+
+      addBattleEvent(battle, "skill", `${unit.name} abriu o Selo Prismal e marcou alvos vulneraveis.`, {
+        actorId: unit.id,
+        skillName: "Selo Prismal",
+      });
+      targets.forEach((target) => {
+        target.statuses.mark = 2;
+        applyDamage(unit, target, 0.9, battle, "estilhacou", 0.03);
+      });
+      return;
+    }
+
+    if (unit.enemyKey === "eclipseAvatar") {
+      const targets = getLivingUnits(enemies);
+      addBattleEvent(battle, "skill", `${unit.name} liberou Eclipse Total e drenou energia da equipe.`, {
+        actorId: unit.id,
+        skillName: "Eclipse Total",
+      });
+      targets.forEach((target) => {
+        target.energy = Math.max(0, (target.energy || 0) - 25);
+        applyDamage(unit, target, 0.78, battle, "consumiu", 0.04);
+      });
       return;
     }
 
@@ -459,8 +504,8 @@
     };
   }
 
-  function runAutoBattle(playerTeam, enemyTeam, introLines) {
-    const battle = createBattleContext(playerTeam, enemyTeam, introLines);
+  function runAutoBattle(playerTeam, enemyTeam, introLines, modifiers) {
+    const battle = createBattleContext(playerTeam, enemyTeam, introLines, modifiers);
 
     while (hasLivingUnits(playerTeam) && hasLivingUnits(enemyTeam) && battle.round < BATTLE_CONFIG.maxRounds) {
       battle.round += 1;

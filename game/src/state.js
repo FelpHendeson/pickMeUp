@@ -12,7 +12,7 @@
     energyRegenMs: 5 * 60 * 1000,
     maxFormationSize: 5,
     frontSlots: 2,
-    towerMaxFloor: 10,
+    towerMaxFloor: 30,
     maxExpeditionHeroes: 3,
   };
 

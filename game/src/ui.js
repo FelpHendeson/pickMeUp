@@ -12,9 +12,10 @@
   const formatNumber = Echoes.formatNumber;
 
   function getResourceItems(state) {
+    const maxFloor = Echoes.CONFIG.towerMaxFloor;
     return [
       ["Conta", `Nv. ${state.accountLevel}`],
-      ["Andar", state.towerFloor > Echoes.CONFIG.towerMaxFloor ? "10/10" : state.towerFloor],
+      ["Andar", state.towerFloor > maxFloor ? `${maxFloor}/${maxFloor}` : state.towerFloor],
       ["Ouro", formatNumber(state.resources.gold)],
       ["Cristais", formatNumber(state.resources.crystals)],
       ["Essencia", formatNumber(state.resources.essence)],
@@ -77,7 +78,7 @@
         <article class="panel focus-panel">
           <p class="eyebrow">Comando</p>
           <h2>Base dimensional</h2>
-          <p class="muted">Gerencie recursos, invoque herois e avance pela torre inicial de 10 andares.</p>
+          <p class="muted">Gerencie recursos, invoque herois e avance pela torre inicial de ${Echoes.CONFIG.towerMaxFloor} andares.</p>
           <div class="summary-grid">
             <div><span>Poder da equipe</span><strong>${formatNumber(formationPower)}</strong></div>
             <div><span>Herois</span><strong>${state.heroes.length}</strong></div>
@@ -598,8 +599,8 @@
         <section class="panel-grid">
           <article class="panel focus-panel">
             <p class="eyebrow">Torre inicial</p>
-            <h2>10 andares concluidos</h2>
-            <p class="muted">O MVP termina aqui. A Oficina foi desbloqueada e a proxima expansao pode adicionar novos andares.</p>
+            <h2>${Echoes.CONFIG.towerMaxFloor} andares concluidos</h2>
+            <p class="muted">A torre atual foi concluida. Continue repetindo andares para fortalecer a equipe.</p>
           </article>
           ${repeatFloors}
         </section>
@@ -608,6 +609,7 @@
 
     const enemies = floorData.enemyKeys.map((key) => Echoes.ENEMY_ARCHETYPES[key].name);
     const battleStatus = getTowerBattleStatus(state);
+    const modifierSummary = Echoes.getFloorModifierSummary ? Echoes.getFloorModifierSummary(floorData) : "";
 
     return `
       <section class="panel-grid two-columns">
@@ -621,6 +623,7 @@
             <div><span>Poder equipe</span><strong>${formatNumber(Echoes.getFormationPower(state))}</strong></div>
           </div>
           ${floorData.modifier ? `<p class="modifier">${floorData.modifier}</p>` : ""}
+          ${modifierSummary ? `<p class="modifier">Modificadores: ${escapeHtml(modifierSummary)}.</p>` : ""}
           ${renderTowerBattleStatus(battleStatus)}
           <button type="button" data-action="battle" ${battleStatus.canBattle ? "" : "disabled"}>Iniciar combate automatico</button>
         </article>

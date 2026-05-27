@@ -35,6 +35,9 @@
   function getEquipmentRarityForFloor(floorNumber) {
     const roll = Math.random();
 
+    if (floorNumber >= 30 && roll < 0.1) return 4;
+    if (floorNumber >= 20 && roll < 0.24) return 3;
+    if (floorNumber >= 11 && roll < 0.36) return 2;
     if (floorNumber >= 9 && roll < 0.08) return 3;
     if (floorNumber >= 5 && roll < 0.28) return 2;
     return 1;
