@@ -195,6 +195,18 @@ Arquivo principal:
 
 - `game/src/specializations.js`
 
+### Missoes e conquistas
+
+O jogo possui uma aba de objetivos com missoes diarias simuladas e conquistas permanentes.
+
+Missoes diarias usam reset por data local do navegador e recompensam acoes como vencer combates, invocar herois, enviar expedicoes, equipar itens e coletar expedicoes.
+
+Conquistas permanentes recompensam marcos como chegar a andares importantes, invocar varios herois, obter herois raros, vencer chefes sem baixas, equipar itens e completar expedicoes.
+
+Arquivo principal:
+
+- `game/src/missions.js`
+
 ### Expedicoes
 
 Herois podem ser enviados para expedicoes automaticas em troca de recompensas.
@@ -234,6 +246,7 @@ Arquivo principal:
 |       +-- injuries.js
 |       +-- morale.js
 |       +-- specializations.js
+|       +-- missions.js
 |       +-- view-utils.js
 |       +-- ui.js
 |       +-- main.js
@@ -289,6 +302,7 @@ Responsabilidades principais:
 - `tower-events.js`: eventos aleatorios;
 - `battle.js`: simulacao de combate;
 - `rewards.js`: recompensas;
+- `missions.js`: missoes diarias, conquistas e recompensas de objetivos;
 - `ui.js`: renderizacao das telas;
 - `main.js`: handlers de interface e orquestracao.
 
@@ -333,4 +347,5 @@ O foco atual e consolidar o loop principal:
 3. equipar personagens;
 4. enfrentar andares da torre;
 5. lidar com eventos, moral e ferimentos;
-6. evoluir herois e desbloquear especializacoes.
+6. cumprir missoes e conquistas;
+7. evoluir herois e desbloquear especializacoes.
