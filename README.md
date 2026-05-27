@@ -115,6 +115,15 @@ Arquivo principal:
 
 A torre e o modo principal de progressao. Cada andar define inimigos, recomendacao de nivel, mecanicas e recompensas.
 
+A campanha atual possui 40 andares divididos em capitulos:
+
+- Capitulo 1: Ruinas do Despertar, andares 1 a 10;
+- Capitulo 2: Floresta Bestial, andares 11 a 20;
+- Capitulo 3: Cripta Espectral, andares 21 a 30;
+- Capitulo 4: Abismo Infernal, andares 31 a 40.
+
+Cada capitulo possui tema, inimigos predominantes, eventos especificos, chefe final, modificador regional e recompensa especial ao derrotar o chefe do capitulo.
+
 Arquivos principais:
 
 - `game/src/tower.js`
