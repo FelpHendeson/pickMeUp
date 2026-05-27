@@ -86,7 +86,7 @@
     const percent = Math.max(0, Math.min(100, Math.round((current / safeMax) * 100)));
 
     return `
-      <div class="${kind}-track">
+      <div class="${kind}-track" aria-hidden="true">
         <div class="${kind}-fill" style="width: ${percent}%"></div>
       </div>
     `;
@@ -99,7 +99,7 @@
     const statusLabels = getUnitStatusLabels(unit);
 
     return `
-      <article class="battle-unit ${aliveClass}">
+      <article class="battle-unit ${unit.side || ""} ${aliveClass}">
         <div class="battle-unit-head">
           <div>
             <strong>${Echoes.escapeHtml(unit.name)}</strong>
@@ -180,7 +180,7 @@
         ${events
           .map(
             (event) => `
-              <li class="log-${event.type}">
+              <li class="log-${event.type} ${event === events[events.length - 1] ? "latest" : ""}">
                 <span>${getBattleEventLabel(event.type)}</span>
                 ${Echoes.escapeHtml(event.message)}
               </li>

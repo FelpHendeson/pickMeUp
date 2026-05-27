@@ -55,7 +55,14 @@
 
   function renderMessage() {
     if (!UI.message) return "";
-    return `<div class="notice">${escapeHtml(UI.message)}</div>`;
+    const text = UI.message;
+    const tone = /erro|inval|insuficiente|perdid|derrot|falha|bloquead/i.test(text)
+      ? "error"
+      : /conquista|missao|recompensa|cristais|ouro|essencia|fragmentos|salvo|concluida|venceu|respond(eu|eu)|equipado/i.test(text)
+        ? "success"
+        : "info";
+
+    return `<div class="notice notice-${tone}" role="status">${escapeHtml(text)}</div>`;
   }
 
   function renderRoomCard(title, level, description) {
@@ -301,6 +308,21 @@
     `;
   }
 
+  function getClassBadgeLabel(hero) {
+    const initial = hero.className ? hero.className.charAt(0).toUpperCase() : "?";
+    return `${initial} ${hero.className}`;
+  }
+
+  function renderHeroStateBadges(hero, inFormation, expedition) {
+    const badges = [];
+
+    if (inFormation) badges.push(`<span class="state-badge formation">Na formacao</span>`);
+    if (expedition) badges.push(`<span class="state-badge expedition">Em expedicao</span>`);
+    if (Echoes.hasHeroInjuries && Echoes.hasHeroInjuries(hero)) badges.push(`<span class="state-badge injured">Ferido</span>`);
+
+    return badges.length > 0 ? `<div class="hero-state-row">${badges.join("")}</div>` : "";
+  }
+
   function renderSpecializationControls(hero) {
     if (!Echoes.getClassSpecializations || !Echoes.canHeroSpecialize) return "";
 
@@ -356,16 +378,19 @@
     const injuredClass = Echoes.hasHeroInjuries && Echoes.hasHeroInjuries(hero) ? "injured" : "";
     const moraleState = Echoes.getHeroMoraleState ? Echoes.getHeroMoraleState(hero) : null;
     const moraleClass = moraleState ? `morale-${moraleState.tone}` : "";
+    const formationClass = inFormation ? "in-formation" : "";
+    const expeditionClass = expedition ? "on-expedition" : "";
 
     return `
-      <article class="card hero-card rarity-${hero.rarity} ${injuredClass} ${moraleClass}">
+      <article class="card hero-card rarity-${hero.rarity} class-${hero.classKey} ${injuredClass} ${moraleClass} ${formationClass} ${expeditionClass}">
         <div class="hero-topline">
           <div>
             <h3>${escapeHtml(hero.name)}</h3>
             <p class="stars">${Echoes.getRarityStars(hero.rarity)}</p>
           </div>
-          <span class="class-badge">${hero.className}</span>
+          <span class="class-badge class-${hero.classKey}">${escapeHtml(getClassBadgeLabel(hero))}</span>
         </div>
+        ${renderHeroStateBadges(hero, inFormation, expedition)}
         <div class="stat-line">
           <span>Nv. ${hero.level}/${hero.maxLevel}</span>
           <span>XP ${hero.xp}/${xpNext}</span>
@@ -899,6 +924,41 @@
     `;
   }
 
+  function renderTowerProgress(state) {
+    const currentFloor = Math.min(Echoes.CONFIG.towerMaxFloor, Math.max(1, state.towerFloor || 1));
+    const completedFloor = Math.min(Echoes.CONFIG.towerMaxFloor, Math.max(0, currentFloor - 1));
+
+    return `
+      <div class="tower-progress-panel">
+        <div class="tower-progress-head">
+          <span>Progresso da torre</span>
+          <strong>${completedFloor}/${Echoes.CONFIG.towerMaxFloor}</strong>
+        </div>
+        <div class="tower-floor-track">
+          ${Echoes.TOWER_FLOORS.map((floor) => {
+            const isCompleted = floor.floor < currentFloor;
+            const isCurrent = floor.floor === currentFloor;
+            const isBoss = Echoes.isBossFloor ? Echoes.isBossFloor(floor) : false;
+
+            return `
+              <span
+                class="tower-floor-dot ${isCompleted ? "completed" : ""} ${isCurrent ? "current" : ""} ${isBoss ? "boss" : ""}"
+                title="Andar ${floor.floor}: ${escapeHtml(floor.title)}"
+              >${floor.floor}</span>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderFloorTypeBadge(floorData) {
+    const isBoss = Echoes.isBossFloor ? Echoes.isBossFloor(floorData) : false;
+    if (isBoss) return `<span class="floor-badge boss">Chefe</span>`;
+    if (floorData.floor % 5 === 0) return `<span class="floor-badge elite">Marco</span>`;
+    return `<span class="floor-badge">Andar comum</span>`;
+  }
+
   function renderRepeatFloors(state) {
     const completedFloors = Echoes.TOWER_FLOORS.filter((floor) => Echoes.canRepeatTowerFloor(state, floor.floor));
     const battleStatus = getTowerBattleStatus(state);
@@ -964,17 +1024,23 @@
       `;
     }
 
-    const enemies = floorData.enemyKeys.map((key) => Echoes.ENEMY_ARCHETYPES[key].name);
     const battleStatus = getTowerBattleStatus(state);
     const modifierSummary = Echoes.getFloorModifierSummary ? Echoes.getFloorModifierSummary(floorData) : "";
+    const isBoss = Echoes.isBossFloor ? Echoes.isBossFloor(floorData) : false;
 
     return `
       <section class="panel-grid two-columns">
         ${pendingEvent}
-        <article class="panel focus-panel">
-          <p class="eyebrow">Andar atual</p>
-          <h2>${floorData.floor}. ${floorData.title}</h2>
+        <article class="panel focus-panel tower-current-panel ${isBoss ? "boss-floor" : ""}">
+          <div class="tower-title-row">
+            <div>
+              <p class="eyebrow">Andar atual</p>
+              <h2>${floorData.floor}. ${floorData.title}</h2>
+            </div>
+            ${renderFloorTypeBadge(floorData)}
+          </div>
           <p class="muted">Nivel recomendado ${floorData.recommendedLevel}. Dificuldade estimada ${Echoes.getFloorPower(floorData.floor)}.</p>
+          ${renderTowerProgress(state)}
           <div class="summary-grid">
             <div><span>Mecanica</span><strong>${floorData.mechanic}</strong></div>
             <div><span>Custo</span><strong>${Echoes.CONFIG.towerEnergyCost} energia</strong></div>
@@ -989,7 +1055,13 @@
         <article class="panel">
           <h2>Previa</h2>
           <div class="enemy-list">
-            ${enemies.map((enemyName) => `<span>${enemyName}</span>`).join("")}
+            ${floorData.enemyKeys
+              .map((enemyKey) => {
+                const enemy = Echoes.ENEMY_ARCHETYPES[enemyKey];
+                const bossClass = enemy && enemy.role === "chefe" ? "boss" : "";
+                return `<span class="${bossClass}">${escapeHtml(enemy.name)}</span>`;
+              })
+              .join("")}
           </div>
           <h3 class="subheading">Recompensa</h3>
           <p class="muted">${Echoes.describeReward(floorData.floor)}</p>
