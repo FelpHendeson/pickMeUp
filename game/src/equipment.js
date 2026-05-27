@@ -158,6 +158,10 @@
       Echoes.applyHeroInjuryModifiers(stats, hero);
     }
 
+    if (Echoes.applyHeroMoraleModifiers) {
+      Echoes.applyHeroMoraleModifiers(stats, hero);
+    }
+
     return stats;
   }
 

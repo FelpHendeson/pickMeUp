@@ -94,6 +94,15 @@
     `;
   }
 
+  function renderMoraleBadge(hero) {
+    if (!Echoes.getHeroMoraleState) return "";
+
+    const moraleState = Echoes.getHeroMoraleState(hero);
+    const morale = Number.isFinite(hero.morale) ? hero.morale : 80;
+
+    return `<span class="morale-badge morale-${moraleState.tone}">Moral ${morale}/100 | ${moraleState.label}</span>`;
+  }
+
   function renderInfirmaryPatient(hero, state) {
     const goldCost = Echoes.getHeroInjuryTreatmentCost(hero, "gold");
     const essenceCost = Echoes.getHeroInjuryTreatmentCost(hero, "essence");
@@ -284,9 +293,11 @@
     const power = state ? Echoes.getHeroPower(hero, state) : Echoes.getHeroPower(hero);
     const expedition = state && Echoes.getHeroExpedition(state, hero.id);
     const injuredClass = Echoes.hasHeroInjuries && Echoes.hasHeroInjuries(hero) ? "injured" : "";
+    const moraleState = Echoes.getHeroMoraleState ? Echoes.getHeroMoraleState(hero) : null;
+    const moraleClass = moraleState ? `morale-${moraleState.tone}` : "";
 
     return `
-      <article class="card hero-card rarity-${hero.rarity} ${injuredClass}">
+      <article class="card hero-card rarity-${hero.rarity} ${injuredClass} ${moraleClass}">
         <div class="hero-topline">
           <div>
             <h3>${escapeHtml(hero.name)}</h3>
@@ -298,6 +309,7 @@
           <span>Nv. ${hero.level}/${hero.maxLevel}</span>
           <span>XP ${hero.xp}/${xpNext}</span>
           <span>Poder ${power}</span>
+          ${renderMoraleBadge(hero)}
           ${expedition ? `<span>Expedicao: ${expedition.name}</span>` : ""}
         </div>
         ${renderInjuryList(hero, compact)}

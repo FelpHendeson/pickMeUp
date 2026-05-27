@@ -280,6 +280,13 @@
     return hero;
   }
 
+  function appendMoraleChange(state, message, amount, reason) {
+    if (!Echoes.adjustFormationMorale || amount === 0) return message;
+
+    const moraleMessage = Echoes.adjustFormationMorale(state, amount, reason);
+    return moraleMessage ? `${message} ${moraleMessage}` : message;
+  }
+
   function resolveHealingFountain(state, event, choiceId) {
     if (choiceId === "carefulDrink") {
       const cleared = clearInitialDamageEffects(state);
@@ -289,9 +296,10 @@
         modifiers: { initialEnergyBonus: 10, healingDoneMultiplier: 1.08 },
       });
 
-      return cleared > 0
+      const message = cleared > 0
         ? "A fonte fechou ferimentos recentes e fortaleceu a equipe para a proxima luta."
         : "A equipe bebeu com cuidado. A proxima luta comeca com energia extra.";
+      return appendMoraleChange(state, message, 2, "A fonte acalmou a equipe.");
     }
 
     if (Math.random() < 0.72) {
@@ -301,7 +309,7 @@
         description: "ATK +12%, +18 energia inicial e curas +12% na proxima luta.",
         modifiers: { atkMultiplier: 1.12, initialEnergyBonus: 18, healingDoneMultiplier: 1.12 },
       });
-      return "A corrente aceitou a equipe. Um vigor azul envolve os herois.";
+      return appendMoraleChange(state, "A corrente aceitou a equipe. Um vigor azul envolve os herois.", 4, "A bencao elevou o animo.");
     }
 
     addTowerBattleEffect(state, {
@@ -309,7 +317,7 @@
       description: "A equipe entra com 12% de dano na proxima luta.",
       modifiers: { initialDamagePct: 0.12 },
     });
-    return "A fonte estava corrompida. A equipe segue ferida para o proximo combate.";
+    return appendMoraleChange(state, "A fonte estava corrompida. A equipe segue ferida para o proximo combate.", -4, "A corrupcao abalou a equipe.");
   }
 
   function resolveMysteryChest(state, event, choiceId) {
@@ -318,16 +326,21 @@
 
     if (choiceId === "openCarefully") {
       if (roll < 0.45) {
-        return `O bau continha moedas antigas: ${grantGold(state, 55 + floorScale * 11)}.`;
+        return appendMoraleChange(state, `O bau continha moedas antigas: ${grantGold(state, 55 + floorScale * 11)}.`, 1, "O achado animou a equipe.");
       }
 
       if (roll < 0.7) {
-        return `Cristais cairam do lacre quebrado: ${grantCrystals(state, 8 + Math.floor(floorScale * 1.4))}.`;
+        return appendMoraleChange(
+          state,
+          `Cristais cairam do lacre quebrado: ${grantCrystals(state, 8 + Math.floor(floorScale * 1.4))}.`,
+          1,
+          "O achado animou a equipe."
+        );
       }
 
       if (roll < 0.88) {
         const item = grantEquipment(state, event.floor);
-        return `Equipamento encontrado: ${item.name}.`;
+        return appendMoraleChange(state, `Equipamento encontrado: ${item.name}.`, 1, "O achado animou a equipe.");
       }
 
       addTowerBattleEffect(state, {
@@ -335,12 +348,12 @@
         description: "A equipe entra com 8% de dano na proxima luta.",
         modifiers: { initialDamagePct: 0.08 },
       });
-      return "O bau disparou dardos ocultos. A equipe foi ferida.";
+      return appendMoraleChange(state, "O bau disparou dardos ocultos. A equipe foi ferida.", -3, "A armadilha reduziu a confianca.");
     }
 
     if (roll < 0.35) {
       const item = grantEquipment(state, event.floor + 2);
-      return `O selo se partiu e revelou equipamento melhor: ${item.name}.`;
+      return appendMoraleChange(state, `O selo se partiu e revelou equipamento melhor: ${item.name}.`, 2, "A recompensa fortaleceu a confianca.");
     }
 
     if (roll < 0.65) {
@@ -348,7 +361,7 @@
       const crystals = 10 + Math.floor(floorScale * 1.8);
       Echoes.addResource(state, "gold", gold);
       Echoes.addResource(state, "crystals", crystals);
-      return `O bau despejou riqueza instavel: +${gold} ouro e +${crystals} cristais.`;
+      return appendMoraleChange(state, `O bau despejou riqueza instavel: +${gold} ouro e +${crystals} cristais.`, 2, "A recompensa fortaleceu a confianca.");
     }
 
     addTowerBattleEffect(state, {
@@ -356,7 +369,7 @@
       description: "A equipe entra com 14% de dano e DEF -8% na proxima luta.",
       modifiers: { initialDamagePct: 0.14, defMultiplier: 0.92 },
     });
-    return "O selo explodiu. A recompensa virou uma armadilha.";
+    return appendMoraleChange(state, "O selo explodiu. A recompensa virou uma armadilha.", -4, "A explosao abalou a equipe.");
   }
 
   function resolveLostMerchant(state, event, choice) {
@@ -367,12 +380,12 @@
         description: "HP maximo +6% e curas +12% na proxima luta.",
         modifiers: { maxHpMultiplier: 1.06, healingDoneMultiplier: 1.12 },
       });
-      return "A pocao tem gosto pessimo, mas estabiliza a equipe.";
+      return appendMoraleChange(state, "A pocao tem gosto pessimo, mas estabiliza a equipe.", 2, "Os suprimentos trouxeram alivio.");
     }
 
     if (choice.id === "buyEquipment") {
       const item = grantEquipment(state, Math.max(1, event.floor - 1), 1);
-      return `O mercador entregou ${item.name}.`;
+      return appendMoraleChange(state, `O mercador entregou ${item.name}.`, 1, "O novo equipamento animou a equipe.");
     }
 
     if (choice.id === "buyTonic") {
@@ -381,7 +394,7 @@
         description: "ATK +10% e SPD +8% na proxima luta.",
         modifiers: { atkMultiplier: 1.1, spdMultiplier: 1.08 },
       });
-      return "O tonico aquece o sangue da equipe. A proxima luta sera mais agressiva.";
+      return appendMoraleChange(state, "O tonico aquece o sangue da equipe. A proxima luta sera mais agressiva.", 1, "A preparacao trouxe foco.");
     }
 
     return "A equipe recusou a oferta e guardou o ouro.";
@@ -394,7 +407,7 @@
         description: "ATK +20%, mas HP maximo -10% na proxima luta.",
         modifiers: { atkMultiplier: 1.2, maxHpMultiplier: 0.9 },
       });
-      return "O altar aceitou sangue. Poder bruto acompanha a equipe.";
+      return appendMoraleChange(state, "O altar aceitou sangue. Poder bruto acompanha a equipe.", -5, "O pacto cobrou um peso emocional.");
     }
 
     if (choiceId === "consumeAshes") {
@@ -403,11 +416,11 @@
         description: "ATK +25%, mas 8% de dano inicial e dano recebido +10%.",
         modifiers: { atkMultiplier: 1.25, initialDamagePct: 0.08, playerDamageTakenMultiplier: 1.1 },
       });
-      return "As cinzas queimam por dentro. A equipe ganhou forca, mas ficou vulneravel.";
+      return appendMoraleChange(state, "As cinzas queimam por dentro. A equipe ganhou forca, mas ficou vulneravel.", -7, "As cinzas perturbaram a equipe.");
     }
 
     const fragments = 8 + Math.floor(getFloorEventScale(event.floor) * 1.5);
-    return `O circulo foi quebrado sem pacto. ${grantFragments(state, fragments)}.`;
+    return appendMoraleChange(state, `O circulo foi quebrado sem pacto. ${grantFragments(state, fragments)}.`, 2, "Recusar o altar firmou a vontade.");
   }
 
   function resolvePrisoner(state, event, choiceId) {
@@ -416,12 +429,12 @@
     if (choiceId === "freePrisoner") {
       if (roll < 0.55) {
         const hero = grantHero(state, Math.random() < 0.22 ? 2 : 1);
-        return `${hero.name} se juntou a equipe.`;
+        return appendMoraleChange(state, `${hero.name} se juntou a equipe.`, 3, "Salvar o prisioneiro inspirou a equipe.");
       }
 
       if (roll < 0.75) {
         const gold = 45 + getFloorEventScale(event.floor) * 9;
-        return `O prisioneiro fugiu, mas deixou uma bolsa: ${grantGold(state, gold)}.`;
+        return appendMoraleChange(state, `O prisioneiro fugiu, mas deixou uma bolsa: ${grantGold(state, gold)}.`, 1, "A equipe aceitou o pequeno ganho.");
       }
 
       addTowerBattleEffect(state, {
@@ -429,17 +442,17 @@
         description: "A equipe entra com 10% de dano e dano recebido +6% na proxima luta.",
         modifiers: { initialDamagePct: 0.1, playerDamageTakenMultiplier: 1.06 },
       });
-      return "Era uma emboscada. A equipe escapou, mas sofreu ferimentos.";
+      return appendMoraleChange(state, "Era uma emboscada. A equipe escapou, mas sofreu ferimentos.", -5, "A traicao abalou a equipe.");
     }
 
     if (roll < 0.42) {
       const hero = grantHero(state, Math.random() < 0.45 ? 2 : 1);
-      return `${hero.name} aceitou o juramento e foi recrutado.`;
+      return appendMoraleChange(state, `${hero.name} aceitou o juramento e foi recrutado.`, 2, "O juramento trouxe esperanca.");
     }
 
     if (roll < 0.62) {
       const crystals = 6 + Math.floor(getFloorEventScale(event.floor) * 1.2);
-      return `O prisioneiro comprou a liberdade com ${grantCrystals(state, crystals)}.`;
+      return appendMoraleChange(state, `O prisioneiro comprou a liberdade com ${grantCrystals(state, crystals)}.`, 1, "A equipe aceitou o acordo.");
     }
 
     addTowerBattleEffect(state, {
@@ -447,14 +460,14 @@
       description: "A equipe entra com 14% de dano na proxima luta.",
       modifiers: { initialDamagePct: 0.14 },
     });
-    return "O juramento era falso. A cela escondia uma emboscada.";
+    return appendMoraleChange(state, "O juramento era falso. A cela escondia uma emboscada.", -6, "A emboscada quebrou a confianca.");
   }
 
   function resolveTrap(state, event, choiceId) {
     if (choiceId === "disarmTrap") {
       if (Math.random() < 0.6) {
         const fragments = 6 + Math.floor(getFloorEventScale(event.floor));
-        return `A armadilha foi desmontada. ${grantFragments(state, fragments)}.`;
+        return appendMoraleChange(state, `A armadilha foi desmontada. ${grantFragments(state, fragments)}.`, 2, "A precisao da equipe elevou a moral.");
       }
 
       addTowerBattleEffect(state, {
@@ -462,7 +475,7 @@
         description: "A equipe entra com 10% de dano na proxima luta.",
         modifiers: { initialDamagePct: 0.1 },
       });
-      return "O mecanismo disparou durante a tentativa. A equipe sofreu dano.";
+      return appendMoraleChange(state, "O mecanismo disparou durante a tentativa. A equipe sofreu dano.", -4, "A falha abalou a equipe.");
     }
 
     if (choiceId === "rushThrough") {
@@ -471,7 +484,7 @@
         description: "A equipe entra com 8% de dano, mas SPD +12% na proxima luta.",
         modifiers: { initialDamagePct: 0.08, spdMultiplier: 1.12 },
       });
-      return "A equipe atravessou a zona letal correndo. Houve ferimentos, mas todos estao alertas.";
+      return appendMoraleChange(state, "A equipe atravessou a zona letal correndo. Houve ferimentos, mas todos estao alertas.", -2, "A corrida deixou a equipe tensa.");
     }
 
     addTowerBattleEffect(state, {
@@ -479,7 +492,7 @@
       description: "A equipe entra com 5% de dano e DEF +12% na proxima luta.",
       modifiers: { initialDamagePct: 0.05, defMultiplier: 1.12 },
     });
-    return "A linha de frente conteve o impacto e reorganizou a defesa.";
+    return appendMoraleChange(state, "A linha de frente conteve o impacto e reorganizou a defesa.", 1, "A defesa bem sucedida conteve o medo.");
   }
 
   function resolveEventEffect(state, event, choice) {

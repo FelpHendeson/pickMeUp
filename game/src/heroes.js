@@ -188,6 +188,9 @@
       traitName: TRAITS[traitKey].name,
       traitDescription: TRAITS[traitKey].description,
       injuries: [],
+      morale: Echoes.createStartingMorale ? Echoes.createStartingMorale() : 80,
+      battlesSinceLastUsed: 0,
+      lastUsedAt: null,
       equipment: {
         weapon: null,
         armor: null,
@@ -208,6 +211,9 @@
         traitKey: "brave",
         statRolls: createStatRolls(),
         injuries: [],
+        morale: Echoes.createStartingMorale ? Echoes.createStartingMorale() : 80,
+        battlesSinceLastUsed: 0,
+        lastUsedAt: null,
         equipment: { weapon: null, armor: null, accessory: null },
       },
       hero || {}
@@ -221,6 +227,9 @@
     }
     if (Echoes.normalizeHeroInjuries) {
       Echoes.normalizeHeroInjuries(normalized);
+    }
+    if (Echoes.normalizeHeroMorale) {
+      Echoes.normalizeHeroMorale(normalized);
     }
 
     return recalculateHeroStats(normalized);

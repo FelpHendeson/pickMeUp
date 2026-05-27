@@ -39,6 +39,7 @@
       maxHp: effectiveStats.hp,
       hp: effectiveStats.hp,
       energy: isFrontSlot ? BATTLE_CONFIG.frontSlotStartingEnergy : 0,
+      morale: Number.isFinite(hero.morale) ? hero.morale : 80,
       statuses: {},
       position: isFrontSlot ? "front" : "back",
     };
@@ -442,6 +443,13 @@
     if (unit.hp <= 0) return;
 
     decrementStatuses(unit);
+
+    if (Echoes.shouldUnitFailMoraleAction && Echoes.shouldUnitFailMoraleAction(unit)) {
+      addBattleEvent(battle, "morale", `${unit.name} hesitou por causa da moral baixa e perdeu a acao.`, {
+        actorId: unit.id,
+      });
+      return;
+    }
 
     if (tryPriestHeal(unit, allies, battle)) {
       return;

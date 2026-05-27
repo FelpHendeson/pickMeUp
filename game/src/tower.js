@@ -626,6 +626,10 @@
       Echoes.resolveBattleInjuries(state, playerTeam, battle.result, battle);
     }
 
+    if (Echoes.applyBattleMoraleChanges) {
+      Echoes.applyBattleMoraleChanges(state, playerTeam, battle.result, battle);
+    }
+
     state.lastBattle = Echoes.createBattleResult(
       battle.result,
       floorNumber,
