@@ -40,6 +40,7 @@
         summonPortal: 1,
         barracks: 1,
         trainingGround: 1,
+        infirmary: 1,
         workshop: 0,
         missionBoard: 1,
       },

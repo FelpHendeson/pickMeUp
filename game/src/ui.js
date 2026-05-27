@@ -22,6 +22,7 @@
       ["Fragmentos", formatNumber(state.resources.fragments)],
       ["Energia", `${state.resources.energy}/${state.resources.maxEnergy}`],
       ["Equip.", state.inventory.length],
+      ["Feridos", Echoes.getInjuredHeroes ? Echoes.getInjuredHeroes(state).length : 0],
       ["Exped.", state.activeExpeditions.length],
     ];
   }
@@ -69,6 +70,89 @@
     `;
   }
 
+  function renderInjuryList(hero, compact) {
+    if (!Echoes.getHeroActiveInjuries) return "";
+
+    const injuries = Echoes.getHeroActiveInjuries(hero);
+    if (injuries.length === 0) return "";
+
+    return `
+      <div class="injury-list ${compact ? "compact" : ""}">
+        ${compact ? "" : `<h4>Ferimentos</h4>`}
+        ${injuries
+          .map((injury) => {
+            const definition = Echoes.getInjuryDefinition(injury.typeKey);
+            return `
+              <span class="injury-pill">
+                <strong>${escapeHtml(definition.name)}</strong>
+                <em>${escapeHtml(definition.description)} | ${injury.remainingBattles} batalha${injury.remainingBattles === 1 ? "" : "s"}</em>
+              </span>
+            `;
+          })
+          .join("")}
+      </div>
+    `;
+  }
+
+  function renderInfirmaryPatient(hero, state) {
+    const goldCost = Echoes.getHeroInjuryTreatmentCost(hero, "gold");
+    const essenceCost = Echoes.getHeroInjuryTreatmentCost(hero, "essence");
+    const canPayGold = Echoes.canSpendResource(state, "gold", goldCost);
+    const canPayEssence = Echoes.canSpendResource(state, "essence", essenceCost);
+
+    return `
+      <article class="card infirmary-patient">
+        <div>
+          <h3>${escapeHtml(hero.name)}</h3>
+          ${renderInjuryList(hero, false)}
+        </div>
+        <div class="button-row">
+          <button
+            type="button"
+            data-action="treatInjuries"
+            data-hero-id="${hero.id}"
+            data-treatment-resource="gold"
+            ${canPayGold ? "" : "disabled"}
+          >
+            Curar por ${goldCost} ouro
+          </button>
+          <button
+            type="button"
+            class="secondary"
+            data-action="treatInjuries"
+            data-hero-id="${hero.id}"
+            data-treatment-resource="essence"
+            ${canPayEssence ? "" : "disabled"}
+          >
+            Curar por ${essenceCost} essencia
+          </button>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderInfirmary(state) {
+    const injuredHeroes = Echoes.getInjuredHeroes ? Echoes.getInjuredHeroes(state) : [];
+
+    return `
+      <article class="panel wide infirmary-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Enfermaria</p>
+            <h2>Tratamento de ferimentos</h2>
+          </div>
+          <strong>${injuredHeroes.length} ferido(s)</strong>
+        </div>
+        <p class="muted">Herois derrotados podem voltar com penalidades por 3 batalhas. Trate ferimentos usando ouro ou essencia.</p>
+        ${
+          injuredHeroes.length === 0
+            ? `<p class="muted">Nenhum heroi precisa de tratamento agora.</p>`
+            : `<div class="card-grid infirmary-grid">${injuredHeroes.map((hero) => renderInfirmaryPatient(hero, state)).join("")}</div>`
+        }
+      </article>
+    `;
+  }
+
   function renderBase(state) {
     const formationPower = Echoes.getFormationPower(state);
     const accountNext = Echoes.getAccountXpForNextLevel(state.accountLevel);
@@ -93,9 +177,11 @@
           ${renderRoomCard("Portal de Invocacao", state.baseRooms.summonPortal, "Recruta novos herois com ouro ou cristais.")}
           ${renderRoomCard("Quartel", state.baseRooms.barracks, "Organiza a lista de herois e a equipe ativa.")}
           ${renderRoomCard("Campo de Treino", state.baseRooms.trainingGround, "Base para progressao futura de XP passivo.")}
+          ${renderRoomCard("Enfermaria", state.baseRooms.infirmary, "Trata ferimentos de herois derrotados na torre.")}
           ${renderRoomCard("Oficina", state.baseRooms.workshop, "Desbloqueia ao vencer o andar 10.")}
           ${renderRoomCard("Conselho de Missoes", state.baseRooms.missionBoard, "Preparado para expedicoes em versoes futuras.")}
         </section>
+        ${renderInfirmary(state)}
       </section>
     `;
   }
@@ -122,7 +208,7 @@
       return `
         <span>
           ${statKey.toUpperCase()} <strong>${stats[statKey]}</strong>
-          ${bonus > 0 ? `<em>+${bonus}</em>` : ""}
+          ${bonus !== 0 ? `<em class="${bonus > 0 ? "positive" : "negative"}">${bonus > 0 ? "+" : ""}${bonus}</em>` : ""}
         </span>
       `;
     }
@@ -197,9 +283,10 @@
     const xpNext = Echoes.getHeroXpForNextLevel(hero.level);
     const power = state ? Echoes.getHeroPower(hero, state) : Echoes.getHeroPower(hero);
     const expedition = state && Echoes.getHeroExpedition(state, hero.id);
+    const injuredClass = Echoes.hasHeroInjuries && Echoes.hasHeroInjuries(hero) ? "injured" : "";
 
     return `
-      <article class="card hero-card rarity-${hero.rarity}">
+      <article class="card hero-card rarity-${hero.rarity} ${injuredClass}">
         <div class="hero-topline">
           <div>
             <h3>${escapeHtml(hero.name)}</h3>
@@ -213,6 +300,7 @@
           <span>Poder ${power}</span>
           ${expedition ? `<span>Expedicao: ${expedition.name}</span>` : ""}
         </div>
+        ${renderInjuryList(hero, compact)}
         ${
           compact
             ? ""

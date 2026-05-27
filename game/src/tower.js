@@ -622,6 +622,10 @@
       }
     }
 
+    if (Echoes.resolveBattleInjuries) {
+      Echoes.resolveBattleInjuries(state, playerTeam, battle.result, battle);
+    }
+
     state.lastBattle = Echoes.createBattleResult(
       battle.result,
       floorNumber,

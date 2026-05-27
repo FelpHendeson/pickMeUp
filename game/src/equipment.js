@@ -154,6 +154,10 @@
       stats[item.bonusStat] = Math.max(1, Math.round((stats[item.bonusStat] || 0) + item.bonusValue));
     });
 
+    if (Echoes.applyHeroInjuryModifiers) {
+      Echoes.applyHeroInjuryModifiers(stats, hero);
+    }
+
     return stats;
   }
 

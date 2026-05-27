@@ -312,6 +312,10 @@ h3 {
   border-left-color: var(--gold);
 }
 
+.hero-card.injured {
+  border-bottom-color: rgba(184, 91, 91, 0.58);
+}
+
 .hero-topline {
   align-items: flex-start;
   display: flex;
@@ -370,6 +374,14 @@ h3 {
   margin-left: 0.25rem;
 }
 
+.stat-grid em.negative {
+  color: #ffb1b1;
+}
+
+.stat-grid em.positive {
+  color: var(--green);
+}
+
 .trait,
 .rates,
 .modifier {
@@ -380,6 +392,57 @@ h3 {
 
 .modifier {
   color: #e9d4a1;
+}
+
+.injury-list {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.75rem 0 0;
+}
+
+.injury-list.compact {
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+
+.injury-list h4 {
+  color: #ffcccc;
+  font-size: 0.8rem;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.injury-pill {
+  background: rgba(184, 91, 91, 0.13);
+  border: 1px solid rgba(184, 91, 91, 0.38);
+  border-radius: 8px;
+  color: #ffe3e3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  padding: 0.45rem 0.55rem;
+}
+
+.injury-pill em {
+  color: #e7baba;
+  font-size: 0.76rem;
+  font-style: normal;
+  line-height: 1.35;
+}
+
+.infirmary-panel {
+  background:
+    linear-gradient(135deg, rgba(184, 91, 91, 0.1), transparent 38%),
+    rgba(28, 25, 24, 0.96);
+}
+
+.infirmary-grid {
+  margin-top: 0.85rem;
+}
+
+.infirmary-patient {
+  border-left: 4px solid var(--red);
+  padding: 0.9rem;
 }
 
 .formation-grid {
@@ -994,25 +1057,29 @@ h3 {
 }
 
 .log-death,
-.log-defeat {
+.log-defeat,
+.log-injury {
   border-left-color: var(--red) !important;
   color: #ffd6d6;
 }
 
 .log-death span,
-.log-defeat span {
+.log-defeat span,
+.log-injury span {
   background: rgba(184, 91, 91, 0.17);
   color: #ffbbbb;
 }
 
 .log-victory,
-.log-reward {
+.log-reward,
+.log-recovery {
   border-left-color: var(--teal) !important;
   color: #d8fffb;
 }
 
 .log-victory span,
-.log-reward span {
+.log-reward span,
+.log-recovery span {
   background: rgba(86, 199, 189, 0.14);
   color: var(--teal);
 }

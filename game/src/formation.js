@@ -16,7 +16,9 @@
   }
 
   function addHeroToFormation(state, heroId) {
-    if (!findHero(state, heroId)) {
+    const hero = findHero(state, heroId);
+
+    if (!hero) {
       return { ok: false, message: "Heroi nao encontrado." };
     }
 
@@ -30,6 +32,14 @@
     }
 
     state.formation[emptySlot] = heroId;
+    if (Echoes.hasHeroInjuries && Echoes.hasHeroInjuries(hero)) {
+      return {
+        ok: true,
+        message: `Heroi adicionado a formacao. Aviso: ${hero.name} esta ferido (${Echoes.getHeroInjurySummary(hero)}).`,
+        slot: emptySlot,
+      };
+    }
+
     return { ok: true, message: "Heroi adicionado a formacao.", slot: emptySlot };
   }
 

@@ -187,6 +187,7 @@
       traitKey,
       traitName: TRAITS[traitKey].name,
       traitDescription: TRAITS[traitKey].description,
+      injuries: [],
       equipment: {
         weapon: null,
         armor: null,
@@ -206,6 +207,7 @@
         xp: 0,
         traitKey: "brave",
         statRolls: createStatRolls(),
+        injuries: [],
         equipment: { weapon: null, armor: null, accessory: null },
       },
       hero || {}
@@ -216,6 +218,9 @@
     normalized.traitDescription = TRAITS[normalized.traitKey]?.description || TRAITS.brave.description;
     if (Echoes.normalizeHeroEquipmentSlots) {
       Echoes.normalizeHeroEquipmentSlots(normalized);
+    }
+    if (Echoes.normalizeHeroInjuries) {
+      Echoes.normalizeHeroInjuries(normalized);
     }
 
     return recalculateHeroStats(normalized);

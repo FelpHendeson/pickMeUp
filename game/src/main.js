@@ -140,6 +140,18 @@
     saveAndRender(result.message);
   }
 
+  function handleTreatInjuriesAction(target) {
+    const result = Echoes.treatHeroInjuries(state, target.dataset.heroId, target.dataset.treatmentResource);
+
+    if (!result.ok) {
+      renderTransientMessage(result.message);
+      return;
+    }
+
+    Echoes.setTab("base");
+    saveAndRender(result.message);
+  }
+
   function getSelectedExpeditionHeroIds(expeditionId) {
     const choices = Array.from(document.querySelectorAll(`[data-expedition-choice="${expeditionId}"]`));
     return choices.filter((choice) => choice.checked && !choice.disabled).map((choice) => choice.value);
@@ -194,6 +206,7 @@
     if (action === "towerEventChoice") return handleTowerEventChoiceAction(target);
     if (action === "equipItem") return handleEquipItemAction(target);
     if (action === "unequipItem") return handleUnequipItemAction(target);
+    if (action === "treatInjuries") return handleTreatInjuriesAction(target);
     if (action === "startExpedition") return handleStartExpeditionAction(target);
     if (action === "collectExpedition") return handleCollectExpeditionAction(target);
     if (action === "setBattleSpeed") {
