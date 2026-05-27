@@ -137,6 +137,23 @@ Arquivo principal:
 
 - `game/src/tower-events.js`
 
+### Eventos semanais locais
+
+O jogo possui eventos temporarios simulados pelo calendario local do navegador. O evento ativo e determinado pela semana do ano e aparece como banner na Base.
+
+Eventos atuais:
+
+- Semana da Torre Instavel;
+- Festival de Invocacao;
+- Cacada aos Fragmentos;
+- Treinamento Intensivo.
+
+Esses eventos podem alterar recompensas da torre, atributos de inimigos, custos e chances de invocacao, chance de equipamento e ganho de XP dos herois.
+
+Arquivo principal:
+
+- `game/src/weekly-events.js`
+
 ### Combate automatico
 
 O combate e simulado em turnos rapidos. Unidades agem conforme seus atributos, escolhem alvos, causam dano, curam, aplicam efeitos e acumulam energia.
@@ -232,6 +249,7 @@ Arquivo principal:
 |   |   +-- style.css
 |   +-- src/
 |       +-- state.js
+|       +-- weekly-events.js
 |       +-- storage.js
 |       +-- heroes.js
 |       +-- formation.js
@@ -294,6 +312,7 @@ Padrao usado nos modulos:
 Responsabilidades principais:
 
 - `state.js`: estado inicial, recursos e normalizacao de save;
+- `weekly-events.js`: eventos semanais locais e modificadores temporarios;
 - `storage.js`: carregar, salvar e resetar progresso;
 - `heroes.js`: criacao, atributos e progressao de herois;
 - `formation.js`: equipe ativa;
