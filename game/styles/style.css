@@ -637,6 +637,80 @@ h3 {
   color: #ffe6ad;
 }
 
+.tower-event-panel {
+  background:
+    linear-gradient(135deg, rgba(155, 127, 232, 0.16), transparent 42%),
+    rgba(28, 25, 24, 0.97);
+  border-color: rgba(155, 127, 232, 0.48);
+}
+
+.tower-event-panel.tone-reward,
+.tower-event-panel.tone-merchant {
+  background:
+    linear-gradient(135deg, rgba(214, 168, 78, 0.16), transparent 42%),
+    rgba(28, 25, 24, 0.97);
+  border-color: rgba(214, 168, 78, 0.48);
+}
+
+.tower-event-panel.tone-support {
+  background:
+    linear-gradient(135deg, rgba(86, 199, 189, 0.16), transparent 42%),
+    rgba(28, 25, 24, 0.97);
+  border-color: rgba(86, 199, 189, 0.48);
+}
+
+.tower-event-panel.tone-danger {
+  background:
+    linear-gradient(135deg, rgba(184, 91, 91, 0.18), transparent 42%),
+    rgba(28, 25, 24, 0.97);
+  border-color: rgba(184, 91, 91, 0.5);
+}
+
+.tower-event-choice-grid,
+.tower-effect-list {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+}
+
+.tower-event-choice-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.tower-event-choice {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-height: 96px;
+  text-align: left;
+  white-space: normal;
+}
+
+.tower-event-choice span,
+.tower-event-choice em,
+.tower-effect-list span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.tower-event-choice em {
+  color: #ffe6ad;
+}
+
+.tower-effect-list div {
+  background: #171514;
+  border: 1px solid rgba(214, 168, 78, 0.28);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.65rem;
+}
+
 .repeat-floor-button {
   align-items: flex-start;
   display: flex;

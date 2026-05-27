@@ -69,8 +69,52 @@
       return;
     }
 
+    if (result.event) {
+      Echoes.setTab("tower");
+      saveAndRender(result.message);
+      return;
+    }
+
+    if (state.pendingTowerEvent && state.pendingTowerEvent.phase === "post") {
+      Echoes.setTab("tower");
+      saveAndRender("Um evento apareceu depois do combate. Escolha como resolver.");
+      return;
+    }
+
     Echoes.setTab("battle");
     saveAndRender(getBattleMessage(result, repeatFloor));
+  }
+
+  function handleTowerEventChoiceAction(target) {
+    const eventResult = Echoes.resolveTowerEventChoice(state, target.dataset.eventChoice);
+
+    if (!eventResult.ok) {
+      renderTransientMessage(eventResult.message);
+      return;
+    }
+
+    if (!eventResult.startBattle) {
+      Echoes.setTab("tower");
+      saveAndRender(eventResult.message);
+      return;
+    }
+
+    const battleResult = Echoes.runTowerBattle(state, { skipEventRoll: true });
+
+    if (!battleResult.ok) {
+      Echoes.setTab("tower");
+      saveAndRender(`${eventResult.message} ${battleResult.message}`);
+      return;
+    }
+
+    if (state.pendingTowerEvent && state.pendingTowerEvent.phase === "post") {
+      Echoes.setTab("tower");
+      saveAndRender(`${eventResult.message} Depois do combate, outro evento apareceu.`);
+      return;
+    }
+
+    Echoes.setTab("battle");
+    saveAndRender(`${eventResult.message} ${getBattleMessage(battleResult)}`);
   }
 
   function getEquipmentSelectValue(heroId, slot) {
@@ -147,6 +191,7 @@
     if (action === "removeFormation") return handleFormationAction(target, false);
     if (action === "battle") return handleBattleAction();
     if (action === "repeatBattle") return handleBattleAction({ repeatFloor: Number(target.dataset.repeatFloor) });
+    if (action === "towerEventChoice") return handleTowerEventChoiceAction(target);
     if (action === "equipItem") return handleEquipItemAction(target);
     if (action === "unequipItem") return handleUnequipItemAction(target);
     if (action === "startExpedition") return handleStartExpeditionAction(target);

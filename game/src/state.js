@@ -45,6 +45,10 @@
       },
       summonHistory: [],
       lastBattle: null,
+      pendingTowerEvent: null,
+      plannedTowerPostEvent: null,
+      towerBattleEffects: [],
+      towerEventHistory: [],
       lastSavedAt: null,
       lastEnergyAt: now,
     };
@@ -131,6 +135,12 @@
     safe.inventory = Array.isArray(safe.inventory) ? safe.inventory : [];
     safe.activeExpeditions = Array.isArray(safe.activeExpeditions) ? safe.activeExpeditions : [];
     safe.formation = Array.isArray(safe.formation) ? safe.formation.slice(0, CONFIG.maxFormationSize) : fresh.formation;
+    safe.pendingTowerEvent =
+      safe.pendingTowerEvent && typeof safe.pendingTowerEvent === "object" ? safe.pendingTowerEvent : null;
+    safe.plannedTowerPostEvent =
+      safe.plannedTowerPostEvent && typeof safe.plannedTowerPostEvent === "object" ? safe.plannedTowerPostEvent : null;
+    safe.towerBattleEffects = Array.isArray(safe.towerBattleEffects) ? safe.towerBattleEffects : [];
+    safe.towerEventHistory = Array.isArray(safe.towerEventHistory) ? safe.towerEventHistory.slice(0, 8) : [];
 
     while (safe.formation.length < CONFIG.maxFormationSize) {
       safe.formation.push(null);

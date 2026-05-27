@@ -517,6 +517,10 @@
     const energyCost = Echoes.CONFIG.towerEnergyCost;
     const currentEnergy = Echoes.getResourceAmount(state, "energy");
 
+    if (state.pendingTowerEvent) {
+      return { canBattle: false, message: "Resolva o evento pendente da torre antes de continuar." };
+    }
+
     if (formationHeroes.length === 0) {
       return { canBattle: false, message: "Monte uma formacao antes de entrar na torre." };
     }
@@ -542,6 +546,79 @@
 
   function renderTowerBattleStatus(status) {
     return `<p class="tower-status ${status.canBattle ? "ready" : "blocked"}">${escapeHtml(status.message)}</p>`;
+  }
+
+  function renderTowerEventChoice(state, event, choice) {
+    const availability = Echoes.canChooseTowerEventOption
+      ? Echoes.canChooseTowerEventOption(state, event, choice.id)
+      : { ok: true };
+    const costText = choice.cost ? ` Custo: ${choice.cost.amount} ${choice.cost.resource === "gold" ? "ouro" : choice.cost.resource}.` : "";
+    const disabled = availability.ok ? "" : "disabled";
+
+    return `
+      <button
+        type="button"
+        class="secondary tower-event-choice"
+        data-action="towerEventChoice"
+        data-event-choice="${choice.id}"
+        ${disabled}
+      >
+        <strong>${escapeHtml(choice.label)}</strong>
+        <span>${escapeHtml(choice.description + costText)}</span>
+        ${availability.ok ? "" : `<em>${escapeHtml(availability.message)}</em>`}
+      </button>
+    `;
+  }
+
+  function renderTowerEvent(state) {
+    const event = state.pendingTowerEvent;
+    const definition = event && Echoes.getTowerEventDefinition ? Echoes.getTowerEventDefinition(event.typeKey) : null;
+
+    if (!event || !definition) return "";
+
+    const phaseLabel = Echoes.getTowerEventPhaseLabel ? Echoes.getTowerEventPhaseLabel(event.phase) : "Evento";
+    const nextStep =
+      event.phase === "pre"
+        ? "A escolha sera aplicada e o combate comecara em seguida."
+        : "A escolha sera aplicada ao progresso atual da torre.";
+
+    return `
+      <article class="panel wide tower-event-panel tone-${definition.tone}">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">${escapeHtml(phaseLabel)}</p>
+            <h2>${escapeHtml(definition.title)}</h2>
+          </div>
+          <strong>Andar ${event.floor}</strong>
+        </div>
+        <p class="muted">${escapeHtml(definition.description)}</p>
+        <p class="modifier">${nextStep}</p>
+        <div class="tower-event-choice-grid">
+          ${definition.choices.map((choice) => renderTowerEventChoice(state, event, choice)).join("")}
+        </div>
+      </article>
+    `;
+  }
+
+  function renderTowerBattleEffects(state) {
+    const effects = Array.isArray(state.towerBattleEffects) ? state.towerBattleEffects : [];
+    if (effects.length === 0) return "";
+
+    return `
+      <div class="tower-effect-list">
+        <h3 class="subheading">Efeitos na proxima luta</h3>
+        ${effects
+          .map(
+            (effect) => `
+              <div>
+                <strong>${escapeHtml(effect.label)}</strong>
+                <span>${escapeHtml(effect.description)}</span>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+    `;
   }
 
   function renderRepeatFloors(state) {
@@ -593,10 +670,12 @@
   function renderTower(state) {
     const floorData = Echoes.getFloorData(state.towerFloor);
     const repeatFloors = renderRepeatFloors(state);
+    const pendingEvent = renderTowerEvent(state);
 
     if (!floorData) {
       return `
         <section class="panel-grid">
+          ${pendingEvent}
           <article class="panel focus-panel">
             <p class="eyebrow">Torre inicial</p>
             <h2>${Echoes.CONFIG.towerMaxFloor} andares concluidos</h2>
@@ -613,6 +692,7 @@
 
     return `
       <section class="panel-grid two-columns">
+        ${pendingEvent}
         <article class="panel focus-panel">
           <p class="eyebrow">Andar atual</p>
           <h2>${floorData.floor}. ${floorData.title}</h2>
@@ -624,6 +704,7 @@
           </div>
           ${floorData.modifier ? `<p class="modifier">${floorData.modifier}</p>` : ""}
           ${modifierSummary ? `<p class="modifier">Modificadores: ${escapeHtml(modifierSummary)}.</p>` : ""}
+          ${renderTowerBattleEffects(state)}
           ${renderTowerBattleStatus(battleStatus)}
           <button type="button" data-action="battle" ${battleStatus.canBattle ? "" : "disabled"}>Iniciar combate automatico</button>
         </article>

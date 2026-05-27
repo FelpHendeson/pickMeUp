@@ -512,6 +512,16 @@
     return { ok: true };
   }
 
+  function isBossFloor(floorData) {
+    return Boolean(
+      floorData &&
+        floorData.enemyKeys.some((enemyKey) => {
+          const enemy = ENEMY_ARCHETYPES[enemyKey];
+          return enemy && enemy.role === "chefe";
+        })
+    );
+  }
+
   function buildTowerBattleIntro(floorNumber, floorData, playerTeam, enemyTeam, isRepeat) {
     const intro = [
       `${isRepeat ? "Repeticao do andar" : "Andar"} ${floorNumber}: ${floorData.title}.`,
@@ -552,18 +562,37 @@
       return validation;
     }
 
+    if (!isRepeat && !(options && options.skipEventRoll) && Echoes.planTowerEventForAttempt) {
+      const plannedEvent = Echoes.planTowerEventForAttempt(state, { floorNumber, floorData, isBoss: isBossFloor(floorData) });
+
+      if (plannedEvent && plannedEvent.phase === "pre") {
+        return {
+          ok: true,
+          event: true,
+          phase: "pre",
+          message: plannedEvent.message,
+        };
+      }
+    }
+
     Echoes.spendResource(state, "energy", Echoes.CONFIG.towerEnergyCost);
     state.lastEnergyAt = Date.now();
 
     const floorModifiers = getFloorModifierValues(floorData);
     const playerTeam = Echoes.createPlayerTeam(formationHeroes, state);
     const enemyTeam = createEnemiesForFloor(floorNumber);
+    const introLines = buildTowerBattleIntro(floorNumber, floorData, playerTeam, enemyTeam, isRepeat);
+
     applyPreBattleFloorModifiers(playerTeam, floorModifiers);
+
+    if (Echoes.applyAndConsumeTowerBattleEffects) {
+      introLines.push(...Echoes.applyAndConsumeTowerBattleEffects(state, playerTeam, floorModifiers));
+    }
 
     const battle = Echoes.runAutoBattle(
       playerTeam,
       enemyTeam,
-      buildTowerBattleIntro(floorNumber, floorData, playerTeam, enemyTeam, isRepeat),
+      introLines,
       floorModifiers
     );
 
@@ -577,12 +606,20 @@
         battle,
         { advanceFloor: !isRepeat }
       );
+
+      if (!isRepeat && Echoes.activatePlannedTowerPostEvent && Echoes.activatePlannedTowerPostEvent(state, floorNumber)) {
+        Echoes.addBattleEvent(battle, "info", "Um evento surgiu depois do combate. Volte para a Torre para decidir.");
+      }
     } else {
       Echoes.addBattleEvent(
         battle,
         "defeat",
         `Equipe foi derrotada ${isRepeat ? "ao repetir" : "no"} andar ${floorNumber}. O andar permanece disponivel.`
       );
+
+      if (Echoes.clearPlannedTowerPostEvent) {
+        Echoes.clearPlannedTowerPostEvent(state);
+      }
     }
 
     state.lastBattle = Echoes.createBattleResult(
@@ -606,6 +643,8 @@
   Echoes.getFloorModifierSummary = getFloorModifierSummary;
   Echoes.getHighestCompletedFloor = getHighestCompletedFloor;
   Echoes.canRepeatTowerFloor = canRepeatTowerFloor;
+  Echoes.validateTowerBattleStart = validateTowerBattleStart;
+  Echoes.isBossFloor = isBossFloor;
   Echoes.createEnemiesForFloor = createEnemiesForFloor;
   Echoes.getFloorReward = getFloorReward;
   Echoes.describeReward = describeReward;
