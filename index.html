@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Menu inicial de Ascensao dos Ecos, um tower gacha RPG web."
+    />
+    <title>Ascensao dos Ecos</title>
+    <link rel="preload" as="image" href="./ArtPickMeUp.png" />
+    <link rel="stylesheet" href="./styles/menu.css" />
+  </head>
+  <body>
+    <div class="menu-page">
+      <header class="menu-header">
+        <a class="brand-mark" href="./" aria-label="Ascensao dos Ecos">
+          Ascensao dos Ecos
+        </a>
+        <span class="header-status">Portao da Torre ativo</span>
+      </header>
+
+      <main class="hero-menu">
+        <section class="hero-copy" aria-labelledby="gameTitle">
+          <p class="eyebrow">Tower Gacha RPG</p>
+          <h1 id="gameTitle">Ascensao dos Ecos</h1>
+          <p class="hero-subtitle">
+            Monte sua equipe, desafie a torre e sobreviva a cada andar.
+          </p>
+
+          <div class="menu-actions">
+            <a class="primary-action" href="./game/index.html" data-play-link>
+              Jogar Agora
+            </a>
+            <button
+              class="secondary-action"
+              type="button"
+              aria-expanded="false"
+              aria-controls="aboutPanel"
+              data-about-toggle
+            >
+              Sobre
+            </button>
+          </div>
+        </section>
+
+        <aside
+          class="about-panel"
+          id="aboutPanel"
+          tabindex="-1"
+          hidden
+          aria-label="Sobre o jogo"
+        >
+          <p class="panel-kicker">A Torre</p>
+          <h2>Uma escalada entre ecos, invocacoes e risco.</h2>
+          <p>
+            Recrute herois, ajuste sua formacao e avance por combates
+            automaticos em andares cada vez mais hostis.
+          </p>
+          <ul>
+            <li>Equipe estrategica</li>
+            <li>Recompensas por andar</li>
+            <li>Progressao persistente</li>
+          </ul>
+        </aside>
+      </main>
+
+      <footer class="menu-footer">
+        <span>MVP Web</span>
+        <span>Save local no navegador</span>
+      </footer>
+    </div>
+
+    <script defer src="./src/menu.js"></script>
+  </body>
+</html>
