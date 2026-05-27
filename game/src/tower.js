@@ -399,7 +399,14 @@
 
   function getFloorModifierSummary(floorData) {
     const modifiers = getFloorModifierValues(floorData);
-    return modifiers.descriptions.length > 0 ? modifiers.descriptions.join(" | ") : "";
+    const descriptions = modifiers.descriptions.slice();
+    const enemyAtkMultiplier = Echoes.getWeeklyEventModifier ? Echoes.getWeeklyEventModifier("enemyAtkMultiplier", 1) : 1;
+
+    if (enemyAtkMultiplier > 1) {
+      descriptions.push(`evento semanal: ATK inimigo +${Math.round((enemyAtkMultiplier - 1) * 100)}%`);
+    }
+
+    return descriptions.length > 0 ? descriptions.join(" | ") : "";
   }
 
   function scaleEnemyStats(baseStats, floorNumber, isBoss) {
@@ -427,6 +434,10 @@
 
     if (modifiers.enemySpeedMultiplier > 1) {
       stats.spd = Math.max(1, Math.round(stats.spd * modifiers.enemySpeedMultiplier));
+    }
+
+    if (Echoes.getWeeklyEventModifier) {
+      stats.atk = Math.max(1, Math.round(stats.atk * Echoes.getWeeklyEventModifier("enemyAtkMultiplier", 1)));
     }
 
     return {
@@ -457,7 +468,7 @@
     const bossFloor = floorNumber === 10 || floorNumber === 20 || floorNumber === 30;
     const milestoneFloor = floorNumber === 5 || floorNumber === 9 || floorNumber === 15 || floorNumber === 19 || floorNumber === 25 || floorNumber === 29;
 
-    return {
+    const reward = {
       gold: 45 + floorNumber * 18 + Math.floor(Math.max(0, floorNumber - 10) * 9),
       xp: 28 + floorNumber * 11 + Math.floor(Math.max(0, floorNumber - 10) * 5),
       energyRefund: bossFloor ? 5 : floorNumber >= 11 ? 4 : 3,
@@ -468,11 +479,22 @@
       equipmentChance: Math.min(8 + floorNumber * 0.9, 48) / 100,
       guaranteedEquipment: bossFloor || milestoneFloor,
     };
+
+    if (Echoes.getWeeklyEventModifier) {
+      reward.gold = Math.max(1, Math.round(reward.gold * Echoes.getWeeklyEventModifier("towerGoldMultiplier", 1)));
+      reward.equipmentChance = Math.min(0.9, reward.equipmentChance * Echoes.getWeeklyEventModifier("equipmentDropMultiplier", 1));
+    }
+
+    return reward;
   }
 
   function describeReward(floorNumber) {
     const reward = getFloorReward(floorNumber);
-    const parts = [`${reward.gold} ouro`, `${reward.xp} XP por heroi`, `${reward.energyRefund} energia recuperada`];
+    const displayedXp = Math.max(
+      1,
+      Math.round(reward.xp * (Echoes.getWeeklyEventModifier ? Echoes.getWeeklyEventModifier("heroXpMultiplier", 1) : 1))
+    );
+    const parts = [`${reward.gold} ouro`, `${displayedXp} XP por heroi`, `${reward.energyRefund} energia recuperada`];
 
     if (reward.essence > 0) parts.push(`${reward.essence} essencia`);
     if (reward.fragments > 0) parts.push(`${reward.fragments} fragmentos`);
@@ -531,6 +553,10 @@
 
     if (modifierSummary) {
       intro.push(`Modificadores: ${modifierSummary}.`);
+    }
+
+    if (Echoes.getActiveWeeklyEventSummary) {
+      intro.push(`Evento semanal ativo: ${Echoes.getActiveWeeklyEventSummary()}.`);
     }
 
     return intro;

@@ -185,12 +185,34 @@
     `;
   }
 
+  function renderWeeklyEventBanner() {
+    if (!Echoes.getActiveWeeklyEvent) return "";
+
+    const event = Echoes.getActiveWeeklyEvent();
+
+    return `
+      <article class="panel wide weekly-event-banner tone-${event.tone}">
+        <div class="weekly-event-content">
+          <div>
+            <p class="eyebrow">Evento semanal | Semana ${event.weekNumber}</p>
+            <h2>${escapeHtml(event.name)}</h2>
+            <p class="muted">${escapeHtml(event.summary)}</p>
+          </div>
+          <div class="weekly-event-effects">
+            ${event.effects.map((effect) => `<span>${escapeHtml(effect)}</span>`).join("")}
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
   function renderBase(state) {
     const formationPower = Echoes.getFormationPower(state);
     const accountNext = Echoes.getAccountXpForNextLevel(state.accountLevel);
 
     return `
       <section class="panel-grid">
+        ${renderWeeklyEventBanner()}
         <article class="panel focus-panel">
           <p class="eyebrow">Comando</p>
           <h2>Base dimensional</h2>
@@ -644,7 +666,8 @@
   }
 
   function renderSummonRates(type) {
-    return Echoes.SUMMON_RARITY_TABLES[type].map((entry) => `${entry.rarity}★ ${entry.chance}%`).join(" | ");
+    const table = Echoes.getAdjustedSummonRarityTable ? Echoes.getAdjustedSummonRarityTable(type) : Echoes.SUMMON_RARITY_TABLES[type];
+    return table.map((entry) => `${entry.rarity}★ ${entry.chance}%`).join(" | ");
   }
 
   function renderSummon(state) {

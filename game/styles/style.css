@@ -277,6 +277,76 @@ h3 {
     rgba(28, 25, 24, 0.96);
 }
 
+.weekly-event-banner {
+  overflow: hidden;
+  position: relative;
+}
+
+.weekly-event-banner::before {
+  background: linear-gradient(90deg, rgba(214, 168, 78, 0.32), transparent);
+  content: "";
+  height: 3px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.weekly-event-banner.tone-danger {
+  background:
+    linear-gradient(135deg, rgba(184, 91, 91, 0.16), transparent 42%),
+    rgba(28, 25, 24, 0.97);
+  border-color: rgba(184, 91, 91, 0.42);
+}
+
+.weekly-event-banner.tone-arcane {
+  background:
+    linear-gradient(135deg, rgba(155, 127, 232, 0.16), transparent 42%),
+    rgba(28, 25, 24, 0.97);
+  border-color: rgba(155, 127, 232, 0.42);
+}
+
+.weekly-event-banner.tone-reward {
+  background:
+    linear-gradient(135deg, rgba(214, 168, 78, 0.15), transparent 42%),
+    rgba(28, 25, 24, 0.97);
+  border-color: rgba(214, 168, 78, 0.42);
+}
+
+.weekly-event-banner.tone-support {
+  background:
+    linear-gradient(135deg, rgba(86, 199, 189, 0.15), transparent 42%),
+    rgba(28, 25, 24, 0.97);
+  border-color: rgba(86, 199, 189, 0.42);
+}
+
+.weekly-event-content {
+  align-items: flex-start;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 0.8fr) minmax(260px, 0.45fr);
+}
+
+.weekly-event-content h2 {
+  margin-bottom: 0.35rem;
+}
+
+.weekly-event-effects {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.weekly-event-effects span {
+  background: rgba(17, 15, 14, 0.58);
+  border: 1px solid rgba(214, 168, 78, 0.24);
+  border-radius: 8px;
+  color: #ffe6ad;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.35;
+  padding: 0.55rem 0.65rem;
+}
+
 .wide {
   grid-column: 1 / -1;
 }
@@ -1653,7 +1723,8 @@ h3 {
   .battle-layout,
   .battlefield,
   .equipment-row,
-  .helper-panel {
+  .helper-panel,
+  .weekly-event-content {
     grid-template-columns: 1fr;
   }
 

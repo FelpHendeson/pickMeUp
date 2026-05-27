@@ -12,12 +12,14 @@
     log.push(message);
   }
 
-  function addRewardLogLines(reward, crystalDrop, equipmentDrop, log, battle) {
+  function addRewardLogLines(reward, crystalDrop, equipmentDrop, log, battle, heroXpReward) {
+    const displayedHeroXp = heroXpReward || reward.xp;
+
     addRewardEvent(
       log,
       battle,
       "reward",
-      `Recompensa: +${reward.gold} ouro, +${reward.energyRefund} energia e +${reward.xp} XP para cada heroi da formacao.`
+      `Recompensa: +${reward.gold} ouro, +${reward.energyRefund} energia e +${displayedHeroXp} XP para cada heroi da formacao.`
     );
 
     if (crystalDrop > 0) addRewardEvent(log, battle, "reward", `Cristais encontrados: +${crystalDrop}.`);
@@ -65,6 +67,10 @@
   function grantTowerVictoryRewards(state, floorNumber, participatingHeroIds, log, battle, options) {
     const shouldAdvanceFloor = !options || options.advanceFloor !== false;
     const reward = Echoes.getFloorReward(floorNumber);
+    const heroXpReward = Math.max(
+      1,
+      Math.round(reward.xp * (Echoes.getWeeklyEventModifier ? Echoes.getWeeklyEventModifier("heroXpMultiplier", 1) : 1))
+    );
     const crystalDrop = Math.random() < reward.crystalChance ? reward.crystalAmount : 0;
     const shouldDropEquipment = reward.guaranteedEquipment || Math.random() < reward.equipmentChance;
     const equipmentDrop = shouldDropEquipment ? Echoes.addEquipmentToInventory(state, Echoes.generateEquipment(floorNumber)) : null;
@@ -76,8 +82,8 @@
     Echoes.addResource(state, "energy", reward.energyRefund);
     Echoes.addAccountXp(state, Math.ceil(reward.xp / 2));
 
-    addRewardLogLines(reward, crystalDrop, equipmentDrop, log, battle);
-    grantHeroXpRewards(state, participatingHeroIds, reward.xp, log, battle);
+    addRewardLogLines(reward, crystalDrop, equipmentDrop, log, battle, heroXpReward);
+    grantHeroXpRewards(state, participatingHeroIds, heroXpReward, log, battle);
 
     if (shouldAdvanceFloor) {
       unlockFloorMilestones(state, floorNumber, log, battle);

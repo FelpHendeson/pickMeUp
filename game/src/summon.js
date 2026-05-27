@@ -22,8 +22,30 @@
     return type === "superior" ? "superior" : "common";
   }
 
+  function getAdjustedSummonRarityTable(type) {
+    const summonType = normalizeSummonType(type);
+    const table = (SUMMON_RARITY_TABLES[summonType] || SUMMON_RARITY_TABLES.common).map((entry) => Object.assign({}, entry));
+
+    if (summonType !== "superior" || !Echoes.getWeeklyEventBonus) {
+      return table;
+    }
+
+    const fourStarBonus = Echoes.getWeeklyEventBonus("superiorFourStarBonus");
+    if (fourStarBonus <= 0) return table;
+
+    const fourStar = table.find((entry) => entry.rarity === 4);
+    const lowestRarity = table[0];
+
+    if (fourStar && lowestRarity && lowestRarity.chance > fourStarBonus) {
+      fourStar.chance += fourStarBonus;
+      lowestRarity.chance -= fourStarBonus;
+    }
+
+    return table;
+  }
+
   function rollSummonRarity(type) {
-    const table = SUMMON_RARITY_TABLES[type] || SUMMON_RARITY_TABLES.common;
+    const table = getAdjustedSummonRarityTable(type);
     const roll = Math.random() * 100;
     let accumulated = 0;
 
@@ -39,7 +61,8 @@
 
   function getSummonCost(type) {
     if (normalizeSummonType(type) === "superior") {
-      return { resource: "crystals", amount: Echoes.CONFIG.superiorSummonCost };
+      const multiplier = Echoes.getWeeklyEventModifier ? Echoes.getWeeklyEventModifier("superiorSummonCostMultiplier", 1) : 1;
+      return { resource: "crystals", amount: Math.max(1, Math.round(Echoes.CONFIG.superiorSummonCost * multiplier)) };
     }
 
     return { resource: "gold", amount: Echoes.CONFIG.commonSummonCost };
@@ -85,6 +108,7 @@
   }
 
   Echoes.SUMMON_RARITY_TABLES = SUMMON_RARITY_TABLES;
+  Echoes.getAdjustedSummonRarityTable = getAdjustedSummonRarityTable;
   Echoes.rollSummonRarity = rollSummonRarity;
   Echoes.getSummonCost = getSummonCost;
   Echoes.summonHero = summonHero;
