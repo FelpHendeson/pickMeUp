@@ -24,6 +24,7 @@
       ["Equip.", state.inventory.length],
       ["Feridos", Echoes.getInjuredHeroes ? Echoes.getInjuredHeroes(state).length : 0],
       ["Exped.", state.activeExpeditions.length],
+      ["Missoes", Echoes.getClaimableMissionCount ? Echoes.getClaimableMissionCount(state) : 0],
     ];
   }
 
@@ -673,6 +674,122 @@
     `;
   }
 
+  function renderProgressBar(current, target) {
+    const safeTarget = Math.max(1, target);
+
+    return `
+      <progress class="mission-progress" value="${Math.min(current, safeTarget)}" max="${safeTarget}" aria-label="Progresso ${current} de ${target}"></progress>
+    `;
+  }
+
+  function renderMissionReward(reward) {
+    return Echoes.formatMissionReward ? Echoes.formatMissionReward(reward) : "";
+  }
+
+  function renderDailyMissionCard(state, mission) {
+    const progress = Echoes.getDailyMissionProgress(state, mission);
+    const complete = Echoes.isDailyMissionComplete(state, mission);
+    const claimed = Boolean(state.dailyMissions && state.dailyMissions.claimed && state.dailyMissions.claimed[mission.id]);
+
+    return `
+      <article class="card mission-card ${complete ? "complete" : ""} ${claimed ? "claimed" : ""}">
+        <div class="mission-card-head">
+          <div>
+            <h3>${escapeHtml(mission.title)}</h3>
+            <p class="muted">${escapeHtml(mission.description)}</p>
+          </div>
+          <span class="class-badge">${progress}/${mission.target}</span>
+        </div>
+        ${renderProgressBar(progress, mission.target)}
+        <p class="mission-reward">Recompensa: ${escapeHtml(renderMissionReward(mission.reward))}</p>
+        <button
+          type="button"
+          data-action="claimDailyMission"
+          data-mission-id="${mission.id}"
+          ${complete && !claimed ? "" : "disabled"}
+        >
+          ${claimed ? "Coletada" : complete ? "Coletar recompensa" : "Em progresso"}
+        </button>
+      </article>
+    `;
+  }
+
+  function renderAchievementCard(state, achievement) {
+    const progress = Echoes.getAchievementProgress(state, achievement);
+    const complete = Echoes.isAchievementComplete(state, achievement);
+    const claimed = Boolean(state.achievements && state.achievements[achievement.id] && state.achievements[achievement.id].claimed);
+
+    return `
+      <article class="card mission-card achievement-card ${complete ? "complete" : ""} ${claimed ? "claimed" : ""}">
+        <div class="mission-card-head">
+          <div>
+            <h3>${escapeHtml(achievement.title)}</h3>
+            <p class="muted">${escapeHtml(achievement.description)}</p>
+          </div>
+          <span class="class-badge">${progress}/${achievement.target}</span>
+        </div>
+        ${renderProgressBar(progress, achievement.target)}
+        <p class="mission-reward">Recompensa: ${escapeHtml(renderMissionReward(achievement.reward))}</p>
+        <button
+          type="button"
+          data-action="claimAchievement"
+          data-achievement-id="${achievement.id}"
+          ${complete && !claimed ? "" : "disabled"}
+        >
+          ${claimed ? "Coletada" : complete ? "Coletar recompensa" : "Bloqueada"}
+        </button>
+      </article>
+    `;
+  }
+
+  function renderMissions(state) {
+    if (Echoes.normalizeMissionState) {
+      Echoes.normalizeMissionState(state);
+    }
+
+    const claimable = Echoes.getClaimableMissionCount ? Echoes.getClaimableMissionCount(state) : 0;
+    const dailyDate = state.dailyMissions && state.dailyMissions.dateKey ? state.dailyMissions.dateKey : "";
+
+    return `
+      <section class="panel-grid">
+        <article class="panel focus-panel mission-hero-panel">
+          <p class="eyebrow">Objetivos</p>
+          <h2>Missoes e conquistas</h2>
+          <p class="muted">Complete objetivos jogando normalmente e colete recompensas uma unica vez. Missoes diarias reiniciam pela data local do navegador.</p>
+          <div class="summary-grid">
+            <div><span>Data diaria</span><strong>${escapeHtml(dailyDate)}</strong></div>
+            <div><span>Recompensas prontas</span><strong>${claimable}</strong></div>
+            <div><span>Vitorias na torre</span><strong>${state.missionStats.towerVictories || 0}</strong></div>
+          </div>
+        </article>
+        <article class="panel wide">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Reset diario</p>
+              <h2>Missoes diarias</h2>
+            </div>
+            <strong>${dailyDate}</strong>
+          </div>
+          <div class="card-grid mission-grid">
+            ${Echoes.DAILY_MISSION_DEFINITIONS.map((mission) => renderDailyMissionCard(state, mission)).join("")}
+          </div>
+        </article>
+        <article class="panel wide">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Permanentes</p>
+              <h2>Conquistas</h2>
+            </div>
+            <strong>${Echoes.ACHIEVEMENT_DEFINITIONS.length} objetivo(s)</strong>
+          </div>
+          <div class="card-grid mission-grid">
+            ${Echoes.ACHIEVEMENT_DEFINITIONS.map((achievement) => renderAchievementCard(state, achievement)).join("")}
+          </div>
+        </article>
+      </section>
+    `;
+  }
+
   function getTowerBattleStatus(state) {
     const formationHeroes = Echoes.getFormationHeroes(state).filter(Boolean);
     const energyCost = Echoes.CONFIG.towerEnergyCost;
@@ -898,6 +1015,7 @@
       formation: renderFormation,
       inventory: renderInventory,
       expeditions: renderExpeditions,
+      missions: renderMissions,
       summon: renderSummon,
       tower: renderTower,
       battle: renderBattle,

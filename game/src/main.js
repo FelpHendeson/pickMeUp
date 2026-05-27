@@ -40,6 +40,10 @@
       return;
     }
 
+    if (Echoes.recordMissionProgress) {
+      Echoes.recordMissionProgress(state, "summons", 1);
+    }
+
     Echoes.setTab("summon");
     saveAndRender(result.message);
   }
@@ -132,6 +136,9 @@
     }
 
     const result = Echoes.equipItem(state, target.dataset.heroId, equipmentId);
+    if (result.ok && Echoes.recordMissionProgress) {
+      Echoes.recordMissionProgress(state, "itemsEquipped", 1);
+    }
     saveAndRender(result.message);
   }
 
@@ -167,6 +174,30 @@
     saveAndRender(result.message);
   }
 
+  function handleClaimDailyMissionAction(target) {
+    const result = Echoes.claimDailyMissionReward(state, target.dataset.missionId);
+
+    if (!result.ok) {
+      renderTransientMessage(result.message);
+      return;
+    }
+
+    Echoes.setTab("missions");
+    saveAndRender(result.message);
+  }
+
+  function handleClaimAchievementAction(target) {
+    const result = Echoes.claimAchievementReward(state, target.dataset.achievementId);
+
+    if (!result.ok) {
+      renderTransientMessage(result.message);
+      return;
+    }
+
+    Echoes.setTab("missions");
+    saveAndRender(result.message);
+  }
+
   function handleTreatInjuriesAction(target) {
     const result = Echoes.treatHeroInjuries(state, target.dataset.heroId, target.dataset.treatmentResource);
 
@@ -193,6 +224,10 @@
       return;
     }
 
+    if (Echoes.recordMissionProgress) {
+      Echoes.recordMissionProgress(state, "expeditionsStarted", 1);
+    }
+
     Echoes.setTab("expeditions");
     saveAndRender(result.message);
   }
@@ -203,6 +238,10 @@
     if (!result.ok) {
       renderTransientMessage(result.message);
       return;
+    }
+
+    if (Echoes.recordMissionProgress) {
+      Echoes.recordMissionProgress(state, "expeditionsCollected", 1);
     }
 
     Echoes.setTab("expeditions");
@@ -234,6 +273,8 @@
     if (action === "equipItem") return handleEquipItemAction(target);
     if (action === "unequipItem") return handleUnequipItemAction(target);
     if (action === "chooseSpecialization") return handleChooseSpecializationAction(target);
+    if (action === "claimDailyMission") return handleClaimDailyMissionAction(target);
+    if (action === "claimAchievement") return handleClaimAchievementAction(target);
     if (action === "treatInjuries") return handleTreatInjuriesAction(target);
     if (action === "startExpedition") return handleStartExpeditionAction(target);
     if (action === "collectExpedition") return handleCollectExpeditionAction(target);

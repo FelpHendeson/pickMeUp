@@ -50,6 +50,9 @@
       plannedTowerPostEvent: null,
       towerBattleEffects: [],
       towerEventHistory: [],
+      missionStats: {},
+      dailyMissions: null,
+      achievements: {},
       lastSavedAt: null,
       lastEnergyAt: now,
     };
@@ -142,6 +145,8 @@
       safe.plannedTowerPostEvent && typeof safe.plannedTowerPostEvent === "object" ? safe.plannedTowerPostEvent : null;
     safe.towerBattleEffects = Array.isArray(safe.towerBattleEffects) ? safe.towerBattleEffects : [];
     safe.towerEventHistory = Array.isArray(safe.towerEventHistory) ? safe.towerEventHistory.slice(0, 8) : [];
+    safe.missionStats = safe.missionStats && typeof safe.missionStats === "object" ? safe.missionStats : {};
+    safe.achievements = safe.achievements && typeof safe.achievements === "object" ? safe.achievements : {};
 
     while (safe.formation.length < CONFIG.maxFormationSize) {
       safe.formation.push(null);
@@ -158,6 +163,10 @@
 
     if (Echoes.normalizeExpeditions) {
       Echoes.normalizeExpeditions(safe);
+    }
+
+    if (Echoes.normalizeMissionState) {
+      Echoes.normalizeMissionState(safe);
     }
 
     return safe;

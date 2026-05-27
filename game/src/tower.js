@@ -598,6 +598,15 @@
 
     if (battle.result === "victory") {
       Echoes.addBattleEvent(battle, "victory", `Equipe ${isRepeat ? "repetiu e venceu" : "venceu"} o andar ${floorNumber}.`);
+      if (Echoes.recordMissionProgress) {
+        Echoes.recordMissionProgress(state, "towerVictories", 1);
+      }
+
+      if (isBossFloor(floorData) && playerTeam.every((unit) => unit.hp > 0) && Echoes.recordMissionProgress) {
+        Echoes.recordMissionProgress(state, "bossNoCasualtyWins", 1);
+        Echoes.addBattleEvent(battle, "reward", "Conquista possivel: chefe vencido sem herois caidos.");
+      }
+
       Echoes.grantTowerVictoryRewards(
         state,
         floorNumber,
