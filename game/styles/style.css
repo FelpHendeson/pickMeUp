@@ -1143,6 +1143,81 @@ h3 {
   border-color: rgba(184, 91, 91, 0.46);
 }
 
+.tower-chapter-panel,
+.chapter-completion-panel {
+  overflow: hidden;
+  position: relative;
+}
+
+.tower-chapter-panel::before,
+.chapter-completion-panel::before {
+  background: linear-gradient(90deg, rgba(214, 168, 78, 0.36), transparent);
+  content: "";
+  height: 3px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.tower-chapter-panel.tone-ruins {
+  background:
+    linear-gradient(135deg, rgba(214, 168, 78, 0.1), transparent 42%),
+    rgba(28, 25, 24, 0.97);
+}
+
+.tower-chapter-panel.tone-forest {
+  background:
+    linear-gradient(135deg, rgba(120, 184, 109, 0.12), transparent 42%),
+    rgba(28, 25, 24, 0.97);
+  border-color: rgba(120, 184, 109, 0.32);
+}
+
+.tower-chapter-panel.tone-crypt {
+  background:
+    linear-gradient(135deg, rgba(155, 127, 232, 0.13), transparent 42%),
+    rgba(28, 25, 24, 0.97);
+  border-color: rgba(155, 127, 232, 0.34);
+}
+
+.tower-chapter-panel.tone-abyss,
+.chapter-completion-panel {
+  background:
+    linear-gradient(135deg, rgba(184, 91, 91, 0.14), transparent 42%),
+    rgba(28, 25, 24, 0.97);
+  border-color: rgba(184, 91, 91, 0.4);
+}
+
+.chapter-detail-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  margin-top: 0.9rem;
+}
+
+.chapter-detail-grid div {
+  background: rgba(17, 15, 14, 0.62);
+  border: 1px solid rgba(59, 52, 48, 0.9);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.7rem;
+}
+
+.chapter-detail-grid span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.chapter-detail-grid strong {
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
 .tower-title-row,
 .tower-progress-head {
   align-items: flex-start;

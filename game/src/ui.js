@@ -947,6 +947,63 @@
     `;
   }
 
+  function renderChapterCompletion(state) {
+    const completion = state.lastChapterCompletion;
+    if (!completion || !completion.chapterName) return "";
+
+    const reward = completion.reward || {};
+    const rewardText = Echoes.formatMissionReward
+      ? Echoes.formatMissionReward(reward)
+      : Object.keys(reward).map((key) => `${reward[key]} ${key}`).join(" | ");
+
+    return `
+      <article class="panel wide chapter-completion-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Capitulo concluido</p>
+            <h2>${escapeHtml(completion.chapterName)}</h2>
+            <p class="muted">A regiao foi estabilizada e o proximo trecho da torre foi desbloqueado.</p>
+          </div>
+          <strong>Capitulo ${completion.chapterNumber}</strong>
+        </div>
+        <div class="summary-grid">
+          <div><span>Recompensa especial</span><strong>${escapeHtml(rewardText)}</strong></div>
+          <div><span>Proximo capitulo</span><strong>${escapeHtml(completion.nextChapterName || "Campanha atual concluida")}</strong></div>
+        </div>
+        <button type="button" class="secondary" data-action="clearChapterCompletion">Continuar campanha</button>
+      </article>
+    `;
+  }
+
+  function renderTowerChapterPanel(state, floorData) {
+    const chapter = Echoes.getTowerChapterByFloor ? Echoes.getTowerChapterByFloor(floorData ? floorData.floor : state.towerFloor) : null;
+    if (!chapter) return "";
+
+    const completedIds = Echoes.getCompletedTowerChapterIds ? Echoes.getCompletedTowerChapterIds(state) : [];
+    const completed = completedIds.includes(chapter.id);
+    const regional = chapter.regionalModifier || {};
+
+    return `
+      <article class="panel wide tower-chapter-panel tone-${chapter.tone}">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Capitulo ${chapter.number} | Andares ${chapter.startFloor}-${chapter.endFloor}</p>
+            <h2>${escapeHtml(chapter.name)}</h2>
+            <p class="muted">${escapeHtml(chapter.description)}</p>
+          </div>
+          <span class="floor-badge ${completed ? "" : "elite"}">${completed ? "Concluido" : "Em campanha"}</span>
+        </div>
+        <div class="chapter-detail-grid">
+          <div><span>Tema</span><strong>${escapeHtml(chapter.theme)}</strong></div>
+          <div><span>Inimigos predominantes</span><strong>${chapter.predominantEnemies.map(escapeHtml).join(" | ")}</strong></div>
+          <div><span>Eventos especificos</span><strong>${chapter.specificEvents.map(escapeHtml).join(" | ")}</strong></div>
+          <div><span>Chefe final</span><strong>${escapeHtml(chapter.finalBoss)}</strong></div>
+          <div><span>Modificador regional</span><strong>${escapeHtml(regional.label || "Sem modificador")}: ${escapeHtml(regional.description || "")}</strong></div>
+        </div>
+      </article>
+    `;
+  }
+
   function renderTowerProgress(state) {
     const currentFloor = Math.min(Echoes.CONFIG.towerMaxFloor, Math.max(1, state.towerFloor || 1));
     const completedFloor = Math.min(Echoes.CONFIG.towerMaxFloor, Math.max(0, currentFloor - 1));
@@ -1032,11 +1089,14 @@
     const floorData = Echoes.getFloorData(state.towerFloor);
     const repeatFloors = renderRepeatFloors(state);
     const pendingEvent = renderTowerEvent(state);
+    const chapterCompletion = renderChapterCompletion(state);
 
     if (!floorData) {
       return `
         <section class="panel-grid">
+          ${chapterCompletion}
           ${pendingEvent}
+          ${renderTowerChapterPanel(state, null)}
           <article class="panel focus-panel">
             <p class="eyebrow">Torre inicial</p>
             <h2>${Echoes.CONFIG.towerMaxFloor} andares concluidos</h2>
@@ -1053,7 +1113,9 @@
 
     return `
       <section class="panel-grid two-columns">
+        ${chapterCompletion}
         ${pendingEvent}
+        ${renderTowerChapterPanel(state, floorData)}
         <article class="panel focus-panel tower-current-panel ${isBoss ? "boss-floor" : ""}">
           <div class="tower-title-row">
             <div>

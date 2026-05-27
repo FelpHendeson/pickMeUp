@@ -64,7 +64,128 @@
       role: "chefe",
       stats: { hp: 430, atk: 36, def: 20, spd: 10, focus: 20, luck: 10 },
     },
+    ashImp: {
+      name: "Diabrete de Cinzas",
+      role: "veloz",
+      stats: { hp: 82, atk: 24, def: 7, spd: 16, focus: 10, luck: 12 },
+    },
+    brimstoneBrute: {
+      name: "Brutamontes de Enxofre",
+      role: "tanque",
+      stats: { hp: 138, atk: 27, def: 17, spd: 6, focus: 8, luck: 5 },
+    },
+    cinderWitch: {
+      name: "Bruxa da Cinza",
+      role: "suporte",
+      stats: { hp: 94, atk: 24, def: 9, spd: 11, focus: 20, luck: 9 },
+    },
+    hellboundKnight: {
+      name: "Cavaleiro Acorrentado",
+      role: "dano",
+      stats: { hp: 122, atk: 32, def: 14, spd: 10, focus: 12, luck: 8 },
+    },
+    abyssalSerpent: {
+      name: "Serpente Abissal",
+      role: "chefe",
+      stats: { hp: 560, atk: 43, def: 24, spd: 12, focus: 24, luck: 12 },
+    },
   };
+
+  const TOWER_CHAPTERS = [
+    {
+      id: "awakening_ruins",
+      number: 1,
+      name: "Ruinas do Despertar",
+      description: "Pedras antigas, ecos fracos e os primeiros sinais da torre consciente.",
+      theme: "Runas antigas e corredores quebrados",
+      tone: "ruins",
+      startFloor: 1,
+      endFloor: 10,
+      predominantEnemies: ["Slimes de pedra", "Morcegos sombrios", "Saqueadores", "Acolitos marcados"],
+      specificEvents: ["Fonte de cura", "Bau misterioso", "Prisioneiro"],
+      eventKeys: {
+        pre: ["healingFountain", "mysteryChest", "prisoner", "trap"],
+        post: ["healingFountain", "mysteryChest", "prisoner"],
+      },
+      finalBoss: "Golem Antigo",
+      regionalModifier: {
+        label: "Pedra desperta",
+        description: "DEF inimiga +4%",
+        enemyDefMultiplier: 1.04,
+      },
+      completionReward: { gold: 420, crystals: 60, essence: 25, fragments: 25 },
+    },
+    {
+      id: "bestial_forest",
+      number: 2,
+      name: "Floresta Bestial",
+      description: "Raizes invadem a torre e criaturas famintas perseguem qualquer ruido.",
+      theme: "Vegetacao escura, feras e emboscadas",
+      tone: "forest",
+      startFloor: 11,
+      endFloor: 20,
+      predominantEnemies: ["Sabuesos de brasa", "Harpias", "Vigias tumulares", "Videntes cristalinos"],
+      specificEvents: ["Armadilha", "Prisioneiro", "Mercador perdido"],
+      eventKeys: {
+        pre: ["trap", "prisoner", "lostMerchant", "mysteryChest"],
+        post: ["prisoner", "lostMerchant", "mysteryChest"],
+      },
+      finalBoss: "Oraculo Estilhacado",
+      regionalModifier: {
+        label: "Cacada viva",
+        description: "SPD inimiga +6%",
+        enemySpeedMultiplier: 1.06,
+      },
+      completionReward: { gold: 760, crystals: 90, essence: 45, fragments: 45 },
+    },
+    {
+      id: "spectral_crypt",
+      number: 3,
+      name: "Cripta Espectral",
+      description: "A torre mergulha em corredores frios, marcas e ecos de mortos inquietos.",
+      theme: "Criptas, espectros e marcas sombrias",
+      tone: "crypt",
+      startFloor: 21,
+      endFloor: 30,
+      predominantEnemies: ["Ceifadores do vazio", "Vigias tumulares", "Harpias", "Oraculos"],
+      specificEvents: ["Altar sombrio", "Fonte de cura", "Bau misterioso"],
+      eventKeys: {
+        pre: ["darkAltar", "healingFountain", "mysteryChest", "trap"],
+        post: ["darkAltar", "healingFountain", "mysteryChest"],
+      },
+      finalBoss: "Avatar do Eclipse",
+      regionalModifier: {
+        label: "Assombro persistente",
+        description: "equipe recebe +7% dano",
+        playerDamageTakenMultiplier: 1.07,
+      },
+      completionReward: { gold: 1150, crystals: 130, essence: 70, fragments: 70 },
+    },
+    {
+      id: "infernal_abyss",
+      number: 4,
+      name: "Abismo Infernal",
+      description: "A torre abre uma fenda ardente onde correntes, cinzas e demonios testam a equipe.",
+      theme: "Fogo negro, correntes e abismos vivos",
+      tone: "abyss",
+      startFloor: 31,
+      endFloor: 40,
+      predominantEnemies: ["Diabretes", "Brutamontes de enxofre", "Bruxas da cinza", "Cavaleiros acorrentados"],
+      specificEvents: ["Altar sombrio", "Armadilha", "Mercador perdido"],
+      eventKeys: {
+        pre: ["darkAltar", "trap", "lostMerchant", "mysteryChest"],
+        post: ["darkAltar", "trap", "lostMerchant"],
+      },
+      finalBoss: "Serpente Abissal",
+      regionalModifier: {
+        label: "Calor infernal",
+        description: "ATK inimigo +8% e curas da equipe -8%",
+        enemyAtkMultiplier: 1.08,
+        healingDoneMultiplier: 0.92,
+      },
+      completionReward: { gold: 1600, crystals: 180, essence: 100, fragments: 100 },
+    },
+  ];
 
   const FLOOR_MODIFIERS = {
     reducedHealing: {
@@ -357,10 +478,132 @@
       modifier: "Chefe final: o Avatar drena energia da equipe e causa dano em area.",
       rewardHint: "Grande recompensa final",
     },
+    {
+      floor: 31,
+      title: "Portao de Enxofre",
+      recommendedLevel: 16,
+      mechanic: "Pressao inicial",
+      enemyKeys: ["ashImp", "ashImp", "brimstoneBrute"],
+      modifierKeys: ["fastEnemies"],
+      rewardHint: "Ouro e XP",
+    },
+    {
+      floor: 32,
+      title: "Pontes de Correntes",
+      recommendedLevel: 16,
+      mechanic: "Dano focado",
+      enemyKeys: ["hellboundKnight", "ashImp", "ashImp"],
+      modifierKeys: ["exposedTeam"],
+      rewardHint: "Cristais",
+    },
+    {
+      floor: 33,
+      title: "Caldeirao das Cinzas",
+      recommendedLevel: 17,
+      mechanic: "Suporte infernal",
+      enemyKeys: ["cinderWitch", "brimstoneBrute", "ashImp"],
+      modifierKeys: ["reducedHealing"],
+      rewardHint: "Essencia",
+    },
+    {
+      floor: 34,
+      title: "Muralha de Ossos Quentes",
+      recommendedLevel: 17,
+      mechanic: "Defesa alta",
+      enemyKeys: ["brimstoneBrute", "brimstoneBrute", "cinderWitch"],
+      modifierKeys: ["drainedStart"],
+      rewardHint: "Fragmentos",
+    },
+    {
+      floor: 35,
+      title: "Arena dos Acorrentados",
+      recommendedLevel: 18,
+      mechanic: "Elite",
+      enemyKeys: ["hellboundKnight", "hellboundKnight", "brimstoneBrute"],
+      modifierKeys: ["exposedTeam", "fastEnemies"],
+      rewardHint: "Equipamento garantido",
+    },
+    {
+      floor: 36,
+      title: "Forno Sem Ceu",
+      recommendedLevel: 18,
+      mechanic: "Cura pressionada",
+      enemyKeys: ["cinderWitch", "ashImp", "hellboundKnight", "ashImp"],
+      modifierKeys: ["reducedHealing", "fastEnemies"],
+      rewardHint: "Cristais",
+    },
+    {
+      floor: 37,
+      title: "Desfiladeiro Rubro",
+      recommendedLevel: 19,
+      mechanic: "Ataques pesados",
+      enemyKeys: ["hellboundKnight", "brimstoneBrute", "hellboundKnight"],
+      modifierKeys: ["exposedTeam"],
+      rewardHint: "XP alto",
+    },
+    {
+      floor: 38,
+      title: "Capela da Brasa Negra",
+      recommendedLevel: 19,
+      mechanic: "Marca e suporte",
+      enemyKeys: ["cinderWitch", "markedAcolyte", "brimstoneBrute", "ashImp"],
+      modifierKeys: ["reducedHealing", "drainedStart"],
+      rewardHint: "Ouro alto",
+    },
+    {
+      floor: 39,
+      title: "Limiar do Abismo",
+      recommendedLevel: 20,
+      mechanic: "Teste final",
+      enemyKeys: ["ashImp", "hellboundKnight", "cinderWitch", "brimstoneBrute"],
+      modifierKeys: ["fastEnemies", "exposedTeam", "reducedHealing"],
+      rewardHint: "Chance muito alta de equipamento",
+    },
+    {
+      floor: 40,
+      title: "Garganta da Serpente",
+      recommendedLevel: 20,
+      mechanic: "Chefe: veneno abissal",
+      enemyKeys: ["abyssalSerpent", "cinderWitch", "hellboundKnight"],
+      modifierKeys: ["drainedStart", "exposedTeam", "reducedHealing"],
+      modifier: "Chefe final do Abismo: a Serpente pressiona toda a equipe com ataques brutais.",
+      rewardHint: "Grande recompensa final do capitulo",
+    },
   ];
 
   function getFloorData(floorNumber) {
     return TOWER_FLOORS.find((floor) => floor.floor === floorNumber) || null;
+  }
+
+  function getTowerChapterByFloor(floorNumber) {
+    return TOWER_CHAPTERS.find((chapter) => floorNumber >= chapter.startFloor && floorNumber <= chapter.endFloor) || TOWER_CHAPTERS[TOWER_CHAPTERS.length - 1];
+  }
+
+  function getTowerChapterById(chapterId) {
+    return TOWER_CHAPTERS.find((chapter) => chapter.id === chapterId) || null;
+  }
+
+  function getCompletedTowerChapterIds(state) {
+    const completed = new Set(Array.isArray(state.completedTowerChapters) ? state.completedTowerChapters : []);
+    const currentFloor = Number(state.towerFloor) || 1;
+
+    TOWER_CHAPTERS.forEach((chapter) => {
+      if (currentFloor > chapter.endFloor) {
+        completed.add(chapter.id);
+      }
+    });
+
+    return Array.from(completed);
+  }
+
+  function isTowerChapterCompleted(state, chapterId) {
+    return getCompletedTowerChapterIds(state).includes(chapterId);
+  }
+
+  function getChapterEventKeys(floorNumber, phase, fallbackKeys) {
+    const chapter = getTowerChapterByFloor(floorNumber);
+    const keys = chapter && chapter.eventKeys && chapter.eventKeys[phase];
+    return Array.isArray(keys) && keys.length > 0 ? keys : fallbackKeys;
   }
 
   function getFloorPower(floorNumber) {
@@ -369,8 +612,9 @@
 
   function getFloorModifierValues(floorData) {
     const modifierKeys = (floorData && floorData.modifierKeys) || [];
+    const chapter = floorData ? getTowerChapterByFloor(floorData.floor) : null;
 
-    return modifierKeys.reduce(
+    const modifiers = modifierKeys.reduce(
       (modifiers, modifierKey) => {
         const rule = FLOOR_MODIFIERS[modifierKey];
         if (!rule) return modifiers;
@@ -393,8 +637,29 @@
         enemySpeedMultiplier: 1,
         playerDamageTakenMultiplier: 1,
         playerInitialEnergyPenalty: 0,
+        enemyAtkMultiplier: 1,
+        enemyDefMultiplier: 1,
+        enemyHpMultiplier: 1,
+        enemyFocusMultiplier: 1,
       }
     );
+
+    if (chapter && chapter.regionalModifier) {
+      const regional = chapter.regionalModifier;
+      modifiers.keys.push(`chapter_${chapter.id}`);
+      modifiers.labels.push(regional.label);
+      modifiers.descriptions.push(regional.description);
+      modifiers.healingDoneMultiplier *= regional.healingDoneMultiplier || 1;
+      modifiers.enemySpeedMultiplier *= regional.enemySpeedMultiplier || 1;
+      modifiers.enemyAtkMultiplier *= regional.enemyAtkMultiplier || 1;
+      modifiers.enemyDefMultiplier *= regional.enemyDefMultiplier || 1;
+      modifiers.enemyHpMultiplier *= regional.enemyHpMultiplier || 1;
+      modifiers.enemyFocusMultiplier *= regional.enemyFocusMultiplier || 1;
+      modifiers.playerDamageTakenMultiplier *= regional.playerDamageTakenMultiplier || 1;
+      modifiers.playerInitialEnergyPenalty += regional.playerInitialEnergyPenalty || 0;
+    }
+
+    return modifiers;
   }
 
   function getFloorModifierSummary(floorData) {
@@ -436,6 +701,11 @@
       stats.spd = Math.max(1, Math.round(stats.spd * modifiers.enemySpeedMultiplier));
     }
 
+    stats.hp = Math.max(1, Math.round(stats.hp * (modifiers.enemyHpMultiplier || 1)));
+    stats.atk = Math.max(1, Math.round(stats.atk * (modifiers.enemyAtkMultiplier || 1)));
+    stats.def = Math.max(1, Math.round(stats.def * (modifiers.enemyDefMultiplier || 1)));
+    stats.focus = Math.max(1, Math.round(stats.focus * (modifiers.enemyFocusMultiplier || 1)));
+
     if (Echoes.getWeeklyEventModifier) {
       stats.atk = Math.max(1, Math.round(stats.atk * Echoes.getWeeklyEventModifier("enemyAtkMultiplier", 1)));
     }
@@ -465,8 +735,17 @@
   }
 
   function getFloorReward(floorNumber) {
-    const bossFloor = floorNumber === 10 || floorNumber === 20 || floorNumber === 30;
-    const milestoneFloor = floorNumber === 5 || floorNumber === 9 || floorNumber === 15 || floorNumber === 19 || floorNumber === 25 || floorNumber === 29;
+    const chapter = getTowerChapterByFloor(floorNumber);
+    const bossFloor = chapter && floorNumber === chapter.endFloor;
+    const milestoneFloor =
+      floorNumber === 5 ||
+      floorNumber === 9 ||
+      floorNumber === 15 ||
+      floorNumber === 19 ||
+      floorNumber === 25 ||
+      floorNumber === 29 ||
+      floorNumber === 35 ||
+      floorNumber === 39;
 
     const reward = {
       gold: 45 + floorNumber * 18 + Math.floor(Math.max(0, floorNumber - 10) * 9),
@@ -542,6 +821,11 @@
           return enemy && enemy.role === "chefe";
         })
     );
+  }
+
+  function isChapterFinalFloor(floorNumber) {
+    const chapter = getTowerChapterByFloor(floorNumber);
+    return Boolean(chapter && chapter.endFloor === floorNumber);
   }
 
   function buildTowerBattleIntro(floorNumber, floorData, playerTeam, enemyTeam, isRepeat) {
@@ -679,8 +963,14 @@
 
   Echoes.ENEMY_ARCHETYPES = ENEMY_ARCHETYPES;
   Echoes.FLOOR_MODIFIERS = FLOOR_MODIFIERS;
+  Echoes.TOWER_CHAPTERS = TOWER_CHAPTERS;
   Echoes.TOWER_FLOORS = TOWER_FLOORS;
   Echoes.getFloorData = getFloorData;
+  Echoes.getTowerChapterByFloor = getTowerChapterByFloor;
+  Echoes.getTowerChapterById = getTowerChapterById;
+  Echoes.getCompletedTowerChapterIds = getCompletedTowerChapterIds;
+  Echoes.isTowerChapterCompleted = isTowerChapterCompleted;
+  Echoes.getChapterEventKeys = getChapterEventKeys;
   Echoes.getFloorPower = getFloorPower;
   Echoes.getFloorModifierValues = getFloorModifierValues;
   Echoes.getFloorModifierSummary = getFloorModifierSummary;
@@ -688,6 +978,7 @@
   Echoes.canRepeatTowerFloor = canRepeatTowerFloor;
   Echoes.validateTowerBattleStart = validateTowerBattleStart;
   Echoes.isBossFloor = isBossFloor;
+  Echoes.isChapterFinalFloor = isChapterFinalFloor;
   Echoes.createEnemiesForFloor = createEnemiesForFloor;
   Echoes.getFloorReward = getFloorReward;
   Echoes.describeReward = describeReward;

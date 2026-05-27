@@ -12,7 +12,7 @@
     energyRegenMs: 5 * 60 * 1000,
     maxFormationSize: 5,
     frontSlots: 2,
-    towerMaxFloor: 30,
+    towerMaxFloor: 40,
     maxExpeditionHeroes: 3,
   };
 
@@ -50,6 +50,8 @@
       plannedTowerPostEvent: null,
       towerBattleEffects: [],
       towerEventHistory: [],
+      completedTowerChapters: [],
+      lastChapterCompletion: null,
       missionStats: {},
       dailyMissions: null,
       achievements: {},
@@ -145,6 +147,9 @@
       safe.plannedTowerPostEvent && typeof safe.plannedTowerPostEvent === "object" ? safe.plannedTowerPostEvent : null;
     safe.towerBattleEffects = Array.isArray(safe.towerBattleEffects) ? safe.towerBattleEffects : [];
     safe.towerEventHistory = Array.isArray(safe.towerEventHistory) ? safe.towerEventHistory.slice(0, 8) : [];
+    safe.completedTowerChapters = Array.isArray(safe.completedTowerChapters) ? safe.completedTowerChapters : [];
+    safe.lastChapterCompletion =
+      safe.lastChapterCompletion && typeof safe.lastChapterCompletion === "object" ? safe.lastChapterCompletion : null;
     safe.missionStats = safe.missionStats && typeof safe.missionStats === "object" ? safe.missionStats : {};
     safe.achievements = safe.achievements && typeof safe.achievements === "object" ? safe.achievements : {};
 

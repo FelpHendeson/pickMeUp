@@ -437,6 +437,19 @@
       return;
     }
 
+    if (unit.enemyKey === "abyssalSerpent") {
+      const targets = getLivingUnits(enemies);
+      addBattleEvent(battle, "skill", `${unit.name} cuspiu Veneno Abissal sobre a equipe.`, {
+        actorId: unit.id,
+        skillName: "Veneno Abissal",
+      });
+      targets.forEach((target) => {
+        target.energy = Math.max(0, (target.energy || 0) - 12);
+        applyDamage(unit, target, 0.86, battle, "envenenou", 0.05);
+      });
+      return;
+    }
+
     const target = selectAttackTarget(enemies, unit);
     if (target) {
       addBattleEvent(battle, "skill", `${unit.name} usou golpe feroz em ${target.name}.`, {

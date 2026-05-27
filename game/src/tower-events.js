@@ -550,7 +550,10 @@
     if (Math.random() >= TOWER_EVENT_CHANCE) return null;
 
     const phase = context.isBoss || Math.random() < 0.42 ? "post" : "pre";
-    const eventKeys = phase === "post" ? POST_EVENT_KEYS : PRE_EVENT_KEYS;
+    const fallbackEventKeys = phase === "post" ? POST_EVENT_KEYS : PRE_EVENT_KEYS;
+    const eventKeys = Echoes.getChapterEventKeys
+      ? Echoes.getChapterEventKeys(context.floorNumber, phase, fallbackEventKeys)
+      : fallbackEventKeys;
     const event = createTowerEvent(pickRandom(eventKeys), phase, context.floorNumber, context.floorData.title);
     const definition = getTowerEventDefinition(event.typeKey);
 

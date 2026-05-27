@@ -49,12 +49,17 @@
 
   function unlockFloorMilestones(state, floorNumber, log, battle) {
     if (floorNumber === 20) {
-      addRewardEvent(log, battle, "reward", "Marco vencido: andares finais da torre liberados.");
+      addRewardEvent(log, battle, "reward", "Marco vencido: proximo capitulo liberado.");
       return;
     }
 
     if (floorNumber === 30) {
-      addRewardEvent(log, battle, "reward", "Torre de 30 andares concluida.");
+      addRewardEvent(log, battle, "reward", "Marco vencido: o Abismo Infernal foi liberado.");
+      return;
+    }
+
+    if (floorNumber === 40) {
+      addRewardEvent(log, battle, "reward", "Campanha atual concluida: todos os capitulos foram vencidos.");
       return;
     }
 
@@ -62,6 +67,45 @@
 
     state.baseRooms.workshop = Math.max(1, state.baseRooms.workshop || 0);
     addRewardEvent(log, battle, "reward", "Oficina desbloqueada na base.");
+  }
+
+  function getResourceRewardText(reward) {
+    return Object.keys(reward)
+      .filter((resourceKey) => reward[resourceKey] > 0)
+      .map((resourceKey) => `+${reward[resourceKey]} ${resourceKey === "gold" ? "ouro" : resourceKey === "crystals" ? "cristais" : resourceKey === "essence" ? "essencia" : "fragmentos"}`)
+      .join(", ");
+  }
+
+  function grantChapterCompletionReward(state, floorNumber, log, battle) {
+    if (!Echoes.isChapterFinalFloor || !Echoes.isChapterFinalFloor(floorNumber)) return;
+
+    const chapter = Echoes.getTowerChapterByFloor ? Echoes.getTowerChapterByFloor(floorNumber) : null;
+    if (!chapter) return;
+
+    state.completedTowerChapters = Array.isArray(state.completedTowerChapters) ? state.completedTowerChapters : [];
+    if (state.completedTowerChapters.includes(chapter.id)) return;
+
+    const reward = chapter.completionReward || {};
+    Object.keys(reward).forEach((resourceKey) => {
+      Echoes.addResource(state, resourceKey, reward[resourceKey]);
+    });
+
+    state.completedTowerChapters.push(chapter.id);
+    state.lastChapterCompletion = {
+      chapterId: chapter.id,
+      chapterNumber: chapter.number,
+      chapterName: chapter.name,
+      nextChapterName: Echoes.TOWER_CHAPTERS[chapter.number] ? Echoes.TOWER_CHAPTERS[chapter.number].name : "",
+      reward,
+      completedAt: new Date().toISOString(),
+    };
+
+    addRewardEvent(
+      log,
+      battle,
+      "reward",
+      `Capitulo concluido: ${chapter.name}. Recompensa especial: ${getResourceRewardText(reward)}.`
+    );
   }
 
   function grantTowerVictoryRewards(state, floorNumber, participatingHeroIds, log, battle, options) {
@@ -87,6 +131,7 @@
 
     if (shouldAdvanceFloor) {
       unlockFloorMilestones(state, floorNumber, log, battle);
+      grantChapterCompletionReward(state, floorNumber, log, battle);
       state.towerFloor = Math.max(state.towerFloor, Math.min(Echoes.CONFIG.towerMaxFloor + 1, floorNumber + 1));
     }
   }

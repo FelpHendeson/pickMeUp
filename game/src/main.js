@@ -210,6 +210,12 @@
     saveAndRender(result.message);
   }
 
+  function handleClearChapterCompletionAction() {
+    state.lastChapterCompletion = null;
+    Echoes.setTab("tower");
+    saveAndRender("Campanha atualizada.");
+  }
+
   function getSelectedExpeditionHeroIds(expeditionId) {
     const choices = Array.from(document.querySelectorAll(`[data-expedition-choice="${expeditionId}"]`));
     return choices.filter((choice) => choice.checked && !choice.disabled).map((choice) => choice.value);
@@ -275,6 +281,7 @@
     if (action === "chooseSpecialization") return handleChooseSpecializationAction(target);
     if (action === "claimDailyMission") return handleClaimDailyMissionAction(target);
     if (action === "claimAchievement") return handleClaimAchievementAction(target);
+    if (action === "clearChapterCompletion") return handleClearChapterCompletionAction();
     if (action === "treatInjuries") return handleTreatInjuriesAction(target);
     if (action === "startExpedition") return handleStartExpeditionAction(target);
     if (action === "collectExpedition") return handleCollectExpeditionAction(target);
