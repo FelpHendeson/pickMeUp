@@ -1,0 +1,690 @@
+(function (global) {
+  "use strict";
+
+  const Echoes = (global.Echoes = global.Echoes || {});
+
+  const UI = {
+    currentTab: "base",
+    message: "",
+  };
+
+  const escapeHtml = Echoes.escapeHtml;
+  const formatNumber = Echoes.formatNumber;
+
+  function getResourceItems(state) {
+    return [
+      ["Conta", `Nv. ${state.accountLevel}`],
+      ["Andar", state.towerFloor > Echoes.CONFIG.towerMaxFloor ? "10/10" : state.towerFloor],
+      ["Ouro", formatNumber(state.resources.gold)],
+      ["Cristais", formatNumber(state.resources.crystals)],
+      ["Essencia", formatNumber(state.resources.essence)],
+      ["Fragmentos", formatNumber(state.resources.fragments)],
+      ["Energia", `${state.resources.energy}/${state.resources.maxEnergy}`],
+      ["Equip.", state.inventory.length],
+      ["Exped.", state.activeExpeditions.length],
+    ];
+  }
+
+  function renderResourceBar(state) {
+    const resourceBar = document.getElementById("resourceBar");
+    resourceBar.innerHTML = getResourceItems(state)
+      .map(
+        ([label, value]) => `
+          <div class="resource-pill">
+            <span>${label}</span>
+            <strong>${value}</strong>
+          </div>
+        `
+      )
+      .join("");
+  }
+
+  function renderSaveStatus(state) {
+    const saveStatus = document.getElementById("saveStatus");
+    if (!state.lastSavedAt) {
+      saveStatus.textContent = "Save local pronto";
+      return;
+    }
+
+    const savedAt = new Date(state.lastSavedAt);
+    saveStatus.textContent = `Salvo ${savedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+  }
+
+  function renderMessage() {
+    if (!UI.message) return "";
+    return `<div class="notice">${escapeHtml(UI.message)}</div>`;
+  }
+
+  function renderRoomCard(title, level, description) {
+    const levelText = level > 0 ? `Nivel ${level}` : "Bloqueada";
+    return `
+      <article class="card room-card ${level > 0 ? "" : "locked"}">
+        <div>
+          <h3>${title}</h3>
+          <p>${description}</p>
+        </div>
+        <strong>${levelText}</strong>
+      </article>
+    `;
+  }
+
+  function renderBase(state) {
+    const formationPower = Echoes.getFormationPower(state);
+    const accountNext = Echoes.getAccountXpForNextLevel(state.accountLevel);
+
+    return `
+      <section class="panel-grid">
+        <article class="panel focus-panel">
+          <p class="eyebrow">Comando</p>
+          <h2>Base dimensional</h2>
+          <p class="muted">Gerencie recursos, invoque herois e avance pela torre inicial de 10 andares.</p>
+          <div class="summary-grid">
+            <div><span>Poder da equipe</span><strong>${formatNumber(formationPower)}</strong></div>
+            <div><span>Herois</span><strong>${state.heroes.length}</strong></div>
+            <div><span>XP da conta</span><strong>${state.accountXp}/${accountNext}</strong></div>
+          </div>
+          <div class="button-row">
+            <button type="button" data-action="save">Salvar jogo</button>
+            <button type="button" class="danger" data-action="reset">Resetar progresso</button>
+          </div>
+        </article>
+        <section class="room-grid">
+          ${renderRoomCard("Portal de Invocacao", state.baseRooms.summonPortal, "Recruta novos herois com ouro ou cristais.")}
+          ${renderRoomCard("Quartel", state.baseRooms.barracks, "Organiza a lista de herois e a equipe ativa.")}
+          ${renderRoomCard("Campo de Treino", state.baseRooms.trainingGround, "Base para progressao futura de XP passivo.")}
+          ${renderRoomCard("Oficina", state.baseRooms.workshop, "Desbloqueia ao vencer o andar 10.")}
+          ${renderRoomCard("Conselho de Missoes", state.baseRooms.missionBoard, "Preparado para expedicoes em versoes futuras.")}
+        </section>
+      </section>
+    `;
+  }
+
+  function renderHeroActionButton(hero, inFormation, state) {
+    const expedition = state && Echoes.getHeroExpedition ? Echoes.getHeroExpedition(state, hero.id) : null;
+    if (inFormation) {
+      return `<button type="button" class="secondary" data-action="removeFormation" data-hero-id="${hero.id}">Remover da formacao</button>`;
+    }
+
+    if (expedition) {
+      return `<button type="button" class="secondary" disabled>Em expedicao</button>`;
+    }
+
+    return `<button type="button" data-action="addFormation" data-hero-id="${hero.id}">Adicionar a formacao</button>`;
+  }
+
+  function renderHeroStatGrid(hero, state) {
+    const stats = Echoes.getHeroEffectiveStats(state, hero);
+    const baseStats = hero.stats || {};
+
+    function renderStat(statKey) {
+      const bonus = stats[statKey] - (baseStats[statKey] || 0);
+      return `
+        <span>
+          ${statKey.toUpperCase()} <strong>${stats[statKey]}</strong>
+          ${bonus > 0 ? `<em>+${bonus}</em>` : ""}
+        </span>
+      `;
+    }
+
+    return `
+      <div class="stat-grid">
+        ${renderStat("hp")}
+        ${renderStat("atk")}
+        ${renderStat("def")}
+        ${renderStat("spd")}
+        ${renderStat("focus")}
+        ${renderStat("luck")}
+      </div>
+      <p class="trait">${hero.traitName}: ${hero.traitDescription}</p>
+    `;
+  }
+
+  function renderEquipmentOptions(state, slot, currentItemId) {
+    const items = state.inventory.filter((item) => item.type === slot);
+
+    if (items.length === 0) {
+      return `<option value="">Sem itens disponiveis</option>`;
+    }
+
+    return [`<option value="">Escolher ${Echoes.getEquipmentTypeName(slot).toLowerCase()}</option>`]
+      .concat(
+        items.map((item) => {
+          const owner = Echoes.findEquipmentOwner(state, item.id);
+          const ownerText = owner ? ` - equipado: ${owner.name}` : "";
+          const selected = item.id === currentItemId ? "selected" : "";
+
+          return `<option value="${item.id}" ${selected}>${item.rarity}★ ${escapeHtml(item.name)} (${Echoes.getEquipmentBonusLabel(item)}${escapeHtml(ownerText)})</option>`;
+        })
+      )
+      .join("");
+  }
+
+  function renderHeroEquipmentControls(hero, state) {
+    Echoes.normalizeHeroEquipmentSlots(hero);
+
+    return `
+      <div class="equipment-controls">
+        <h4>Equipamentos</h4>
+        ${Echoes.EQUIPMENT_SLOTS.map((slot) => {
+          const equippedItem = hero.equipment[slot] ? Echoes.findEquipment(state, hero.equipment[slot]) : null;
+          return `
+            <div class="equipment-row">
+              <div>
+                <strong>${Echoes.getEquipmentTypeName(slot)}</strong>
+                <span>${equippedItem ? `${escapeHtml(equippedItem.name)} | ${Echoes.getEquipmentBonusLabel(equippedItem)}` : "Vazio"}</span>
+              </div>
+              <select data-equipment-select="${slot}" data-hero-id="${hero.id}">
+                ${renderEquipmentOptions(state, slot, equippedItem && equippedItem.id)}
+              </select>
+              <button type="button" class="secondary" data-action="equipItem" data-hero-id="${hero.id}" data-slot="${slot}">Equipar</button>
+              ${
+                equippedItem
+                  ? `<button type="button" class="secondary" data-action="unequipItem" data-hero-id="${hero.id}" data-slot="${slot}">Remover</button>`
+                  : ""
+              }
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
+
+  function renderHeroCard(hero, options) {
+    const inFormation = options && options.inFormation;
+    const compact = options && options.compact;
+    const state = options && options.state;
+    const xpNext = Echoes.getHeroXpForNextLevel(hero.level);
+    const power = state ? Echoes.getHeroPower(hero, state) : Echoes.getHeroPower(hero);
+    const expedition = state && Echoes.getHeroExpedition(state, hero.id);
+
+    return `
+      <article class="card hero-card rarity-${hero.rarity}">
+        <div class="hero-topline">
+          <div>
+            <h3>${escapeHtml(hero.name)}</h3>
+            <p class="stars">${Echoes.getRarityStars(hero.rarity)}</p>
+          </div>
+          <span class="class-badge">${hero.className}</span>
+        </div>
+        <div class="stat-line">
+          <span>Nv. ${hero.level}/${hero.maxLevel}</span>
+          <span>XP ${hero.xp}/${xpNext}</span>
+          <span>Poder ${power}</span>
+          ${expedition ? `<span>Expedicao: ${expedition.name}</span>` : ""}
+        </div>
+        ${
+          compact
+            ? ""
+            : `${renderHeroStatGrid(hero, state)}${renderHeroEquipmentControls(hero, state)}`
+        }
+        <div class="button-row">
+          ${renderHeroActionButton(hero, inFormation, state)}
+        </div>
+      </article>
+    `;
+  }
+
+  function renderHeroes(state) {
+    if (state.heroes.length === 0) {
+      return `
+        <section class="panel">
+          <h2>Herois</h2>
+          <p class="muted">Nenhum heroi recrutado ainda. Va ate Invocacao para chamar a primeira equipe.</p>
+        </section>
+      `;
+    }
+
+    const sortedHeroes = sortHeroesForDisplay(state.heroes, state);
+
+    return `
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Quartel</p>
+            <h2>Lista de herois</h2>
+          </div>
+          <strong>${state.heroes.length} recrutado(s)</strong>
+        </div>
+        <div class="card-grid">
+          ${sortedHeroes.map((hero) => renderHeroCard(hero, { inFormation: Echoes.isHeroInFormation(state, hero.id), state })).join("")}
+        </div>
+      </section>
+    `;
+  }
+
+  function sortHeroesForDisplay(heroes, state) {
+    return heroes
+      .slice()
+      .sort((a, b) => b.rarity - a.rarity || b.level - a.level || Echoes.getHeroPower(b, state) - Echoes.getHeroPower(a, state));
+  }
+
+  function renderFormationSlot(hero, index, state) {
+    const rowName = index < Echoes.CONFIG.frontSlots ? "Frente" : "Tras";
+    const slotNumber = index < Echoes.CONFIG.frontSlots ? index + 1 : index - 1;
+
+    return `
+      <article class="formation-slot ${hero ? "filled" : ""}">
+        <div class="slot-label">${rowName} ${slotNumber}</div>
+        ${
+          hero
+            ? `${renderHeroCard(hero, { inFormation: true, compact: true, state })}`
+            : `<div class="empty-slot">Slot vazio</div>`
+        }
+      </article>
+    `;
+  }
+
+  function renderFormation(state) {
+    const formationHeroes = Echoes.getFormationHeroes(state);
+    const slots = formationHeroes.map((hero, index) => renderFormationSlot(hero, index, state)).join("");
+
+    const availableHeroes = state.heroes.filter((hero) => !Echoes.isHeroInFormation(state, hero.id));
+
+    return `
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Equipe ativa</p>
+            <h2>Formacao</h2>
+          </div>
+          <strong>Poder ${formatNumber(Echoes.getFormationPower(state))}</strong>
+        </div>
+        <div class="formation-grid">${slots}</div>
+        <h3 class="subheading">Reservas</h3>
+        ${
+          availableHeroes.length === 0
+            ? `<p class="muted">Nao ha herois fora da formacao.</p>`
+            : `<div class="card-grid compact-grid">${availableHeroes.map((hero) => renderHeroCard(hero, { compact: true, state })).join("")}</div>`
+        }
+      </section>
+    `;
+  }
+
+  function renderInventoryItem(item, state) {
+    const owner = Echoes.findEquipmentOwner(state, item.id);
+
+    return `
+      <article class="card inventory-card rarity-${item.rarity}">
+        <div class="hero-topline">
+          <div>
+            <h3>${escapeHtml(item.name)}</h3>
+            <p class="stars">${Echoes.getRarityStars(item.rarity)}</p>
+          </div>
+          <span class="class-badge">${Echoes.getEquipmentTypeName(item.type)}</span>
+        </div>
+        <p class="trait">${Echoes.getEquipmentBonusLabel(item)}</p>
+        <p class="muted">${owner ? `Equipado por ${owner.name}` : "Disponivel no inventario"}</p>
+      </article>
+    `;
+  }
+
+  function renderInventory(state) {
+    const sortedItems = state.inventory
+      .slice()
+      .sort((a, b) => b.rarity - a.rarity || a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
+
+    return `
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Inventario</p>
+            <h2>Equipamentos</h2>
+          </div>
+          <strong>${state.inventory.length} item(ns)</strong>
+        </div>
+        ${
+          sortedItems.length === 0
+            ? `<p class="muted">Nenhum equipamento encontrado ainda. Vença andares da torre para ter chance de obter itens.</p>`
+            : `<div class="card-grid">${sortedItems.map((item) => renderInventoryItem(item, state)).join("")}</div>`
+        }
+      </section>
+    `;
+  }
+
+  function renderExpeditionHeroOption(hero, definition, state) {
+    const busyExpedition = Echoes.getHeroExpedition(state, hero.id);
+    const disabled = busyExpedition ? "disabled" : "";
+    const busyText = busyExpedition ? ` - em ${busyExpedition.name}` : "";
+
+    return `
+      <label class="expedition-hero-option ${busyExpedition ? "busy" : ""}">
+        <input
+          type="checkbox"
+          data-expedition-choice="${definition.id}"
+          value="${hero.id}"
+          ${disabled}
+        />
+        <span>${escapeHtml(hero.name)} | Poder ${Echoes.getHeroPower(hero, state)}${busyText}</span>
+      </label>
+    `;
+  }
+
+  function renderExpeditionHelper() {
+    return `
+      <aside class="helper-panel">
+        <div>
+          <p class="eyebrow">Ajuda rapida</p>
+          <h3>Como expedir</h3>
+        </div>
+        <div class="helper-list">
+          <span><strong>${Echoes.CONFIG.maxExpeditionHeroes}</strong> herois no maximo por expedicao.</span>
+          <span>Herois enviados nao entram na torre ate retornarem.</span>
+          <span>Poder abaixo do recomendado reduz a recompensa, sem chance de falha.</span>
+          <span>O tempo continua contando com o jogo fechado.</span>
+        </div>
+      </aside>
+    `;
+  }
+
+  function renderActiveExpedition(definition, activeExpedition, state) {
+    const remainingMs = Echoes.getExpeditionRemainingMs(activeExpedition);
+    const isComplete = Echoes.isExpeditionComplete(activeExpedition);
+    const sentHeroes = activeExpedition.heroIds.map((heroId) => Echoes.findHero(state, heroId)).filter(Boolean);
+    const reward = Echoes.getActiveExpeditionReward(state, activeExpedition);
+
+    return `
+      <div class="expedition-active">
+        <div class="summary-grid">
+          <div><span>Tempo restante</span><strong>${isComplete ? "Pronta" : Echoes.formatDuration(remainingMs)}</strong></div>
+          <div><span>Poder enviado</span><strong>${reward.power}/${definition.recommendedPower}</strong></div>
+          <div><span>Recompensa</span><strong>${reward.amount} ${Echoes.getExpeditionRewardName(reward.type)}</strong></div>
+        </div>
+        <p class="muted">Herois enviados: ${sentHeroes.map((hero) => hero.name).join(", ")}</p>
+        <button type="button" data-action="collectExpedition" data-expedition-id="${definition.id}" ${isComplete ? "" : "disabled"}>
+          Coletar recompensa
+        </button>
+      </div>
+    `;
+  }
+
+  function renderAvailableExpedition(definition, state) {
+    const availableHeroes = state.heroes.slice().sort((a, b) => Echoes.getHeroPower(b, state) - Echoes.getHeroPower(a, state));
+    const selectableHeroes = availableHeroes.filter((hero) => !Echoes.getHeroExpedition(state, hero.id));
+    const baseReward = `${definition.reward.amount} ${Echoes.getExpeditionRewardName(definition.reward.type)}`;
+
+    return `
+      <div class="expedition-setup">
+        <div class="summary-grid">
+          <div><span>Duracao</span><strong>${Echoes.formatDuration(definition.durationMs)}</strong></div>
+          <div><span>Poder recomendado</span><strong>${definition.recommendedPower}</strong></div>
+          <div><span>Recompensa base</span><strong>${baseReward}</strong></div>
+        </div>
+        <div class="expedition-hero-list" data-expedition-list="${definition.id}">
+          ${
+            availableHeroes.length === 0
+              ? `<p class="muted">Nenhum heroi disponivel.</p>`
+              : availableHeroes.map((hero) => renderExpeditionHeroOption(hero, definition, state)).join("")
+          }
+        </div>
+        <button type="button" data-action="startExpedition" data-expedition-id="${definition.id}" ${
+          selectableHeroes.length === 0 ? "disabled" : ""
+        }>Enviar expedicao</button>
+      </div>
+    `;
+  }
+
+  function renderExpeditions(state) {
+    return `
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Missoes idle</p>
+            <h2>Expedicoes</h2>
+          </div>
+          <strong>${state.activeExpeditions.length}/3 em andamento</strong>
+        </div>
+        <div class="card-grid expedition-grid">
+          ${Echoes.EXPEDITION_DEFINITIONS.map((definition) => {
+            const activeExpedition = Echoes.getActiveExpedition(state, definition.id);
+            return `
+              <article class="card expedition-card">
+                <div class="hero-topline">
+                  <div>
+                    <h3>${definition.name}</h3>
+                    <p class="muted">${definition.description}</p>
+                  </div>
+                  <span class="class-badge">${definition.reward.type === "xp" ? "XP" : Echoes.getExpeditionRewardName(definition.reward.type)}</span>
+                </div>
+                ${activeExpedition ? renderActiveExpedition(definition, activeExpedition, state) : renderAvailableExpedition(definition, state)}
+              </article>
+            `;
+          }).join("")}
+        </div>
+        ${renderExpeditionHelper()}
+      </section>
+    `;
+  }
+
+  function renderSummonRates(type) {
+    return Echoes.SUMMON_RARITY_TABLES[type].map((entry) => `${entry.rarity}★ ${entry.chance}%`).join(" | ");
+  }
+
+  function renderSummon(state) {
+    const commonCost = Echoes.getSummonCost("common");
+    const superiorCost = Echoes.getSummonCost("superior");
+    const last = state.summonHistory[0];
+
+    return `
+      <section class="panel-grid two-columns">
+        <article class="panel summon-panel">
+          <p class="eyebrow">Portal</p>
+          <h2>Invocacao comum</h2>
+          <p class="muted">Custo: ${commonCost.amount} ouro.</p>
+          <p class="rates">${renderSummonRates("common")}</p>
+          <button type="button" data-action="summon" data-summon-type="common" ${
+            state.resources.gold < commonCost.amount ? "disabled" : ""
+          }>Invocar com ouro</button>
+        </article>
+        <article class="panel summon-panel superior">
+          <p class="eyebrow">Cristais</p>
+          <h2>Invocacao superior</h2>
+          <p class="muted">Custo: ${superiorCost.amount} cristais.</p>
+          <p class="rates">${renderSummonRates("superior")}</p>
+          <button type="button" data-action="summon" data-summon-type="superior" ${
+            state.resources.crystals < superiorCost.amount ? "disabled" : ""
+          }>Invocar com cristais</button>
+        </article>
+        <article class="panel wide">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Historico</p>
+              <h2>Ultimas invocacoes</h2>
+            </div>
+            ${last ? `<strong>${last.rarity}★ ${escapeHtml(last.name)}</strong>` : ""}
+          </div>
+          ${
+            state.summonHistory.length === 0
+              ? `<p class="muted">O historico aparecera aqui apos a primeira invocacao.</p>`
+              : `<div class="history-list">${state.summonHistory
+                  .map(
+                    (entry) => `
+                    <div>
+                      <strong>${entry.rarity}★ ${escapeHtml(entry.name)}</strong>
+                      <span>${entry.className} | ${entry.type === "superior" ? "Superior" : "Comum"}</span>
+                    </div>
+                  `
+                  )
+                  .join("")}</div>`
+          }
+        </article>
+      </section>
+    `;
+  }
+
+  function getTowerBattleStatus(state) {
+    const formationHeroes = Echoes.getFormationHeroes(state).filter(Boolean);
+    const energyCost = Echoes.CONFIG.towerEnergyCost;
+    const currentEnergy = Echoes.getResourceAmount(state, "energy");
+
+    if (formationHeroes.length === 0) {
+      return { canBattle: false, message: "Monte uma formacao antes de entrar na torre." };
+    }
+
+    const busyHero = formationHeroes.find((hero) => Echoes.isHeroOnExpedition && Echoes.isHeroOnExpedition(state, hero.id));
+    if (busyHero) {
+      const expedition = Echoes.getHeroExpedition(state, busyHero.id);
+      return {
+        canBattle: false,
+        message: `${busyHero.name} esta em expedicao${expedition ? `: ${expedition.name}` : ""}.`,
+      };
+    }
+
+    if (currentEnergy < energyCost) {
+      return {
+        canBattle: false,
+        message: `Energia insuficiente: voce tem ${currentEnergy}/${energyCost}. Aguarde regenerar ou recupere energia em recompensas.`,
+      };
+    }
+
+    return { canBattle: true, message: `Pronto para lutar. Cada tentativa custa ${energyCost} energia.` };
+  }
+
+  function renderTowerBattleStatus(status) {
+    return `<p class="tower-status ${status.canBattle ? "ready" : "blocked"}">${escapeHtml(status.message)}</p>`;
+  }
+
+  function renderRepeatFloors(state) {
+    const completedFloors = Echoes.TOWER_FLOORS.filter((floor) => Echoes.canRepeatTowerFloor(state, floor.floor));
+    const battleStatus = getTowerBattleStatus(state);
+
+    if (completedFloors.length === 0) {
+      return "";
+    }
+
+    return `
+      <article class="panel wide">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Repeticao</p>
+            <h2>Andares vencidos</h2>
+          </div>
+          <strong>${completedFloors.length} liberado(s)</strong>
+        </div>
+        <p class="muted">Repita andares ja vencidos para buscar ouro, XP e chance de equipamentos. O progresso atual da torre nao muda.</p>
+        <div class="summary-grid tower-cost-grid">
+          <div><span>Custo por tentativa</span><strong>${Echoes.CONFIG.towerEnergyCost} energia</strong></div>
+          <div><span>Energia atual</span><strong>${state.resources.energy}/${state.resources.maxEnergy}</strong></div>
+          <div><span>Poder equipe</span><strong>${formatNumber(Echoes.getFormationPower(state))}</strong></div>
+        </div>
+        ${renderTowerBattleStatus(battleStatus)}
+        <div class="repeat-floor-grid">
+          ${completedFloors
+            .map(
+              (floor) => `
+                <button
+                  type="button"
+                  class="secondary repeat-floor-button"
+                  data-action="repeatBattle"
+                  data-repeat-floor="${floor.floor}"
+                  ${battleStatus.canBattle ? "" : "disabled"}
+                >
+                  <span>Andar ${floor.floor}</span>
+                  <small>${floor.title}</small>
+                </button>
+              `
+            )
+            .join("")}
+        </div>
+      </article>
+    `;
+  }
+
+  function renderTower(state) {
+    const floorData = Echoes.getFloorData(state.towerFloor);
+    const repeatFloors = renderRepeatFloors(state);
+
+    if (!floorData) {
+      return `
+        <section class="panel-grid">
+          <article class="panel focus-panel">
+            <p class="eyebrow">Torre inicial</p>
+            <h2>10 andares concluidos</h2>
+            <p class="muted">O MVP termina aqui. A Oficina foi desbloqueada e a proxima expansao pode adicionar novos andares.</p>
+          </article>
+          ${repeatFloors}
+        </section>
+      `;
+    }
+
+    const enemies = floorData.enemyKeys.map((key) => Echoes.ENEMY_ARCHETYPES[key].name);
+    const battleStatus = getTowerBattleStatus(state);
+
+    return `
+      <section class="panel-grid two-columns">
+        <article class="panel focus-panel">
+          <p class="eyebrow">Andar atual</p>
+          <h2>${floorData.floor}. ${floorData.title}</h2>
+          <p class="muted">Nivel recomendado ${floorData.recommendedLevel}. Dificuldade estimada ${Echoes.getFloorPower(floorData.floor)}.</p>
+          <div class="summary-grid">
+            <div><span>Mecanica</span><strong>${floorData.mechanic}</strong></div>
+            <div><span>Custo</span><strong>${Echoes.CONFIG.towerEnergyCost} energia</strong></div>
+            <div><span>Poder equipe</span><strong>${formatNumber(Echoes.getFormationPower(state))}</strong></div>
+          </div>
+          ${floorData.modifier ? `<p class="modifier">${floorData.modifier}</p>` : ""}
+          ${renderTowerBattleStatus(battleStatus)}
+          <button type="button" data-action="battle" ${battleStatus.canBattle ? "" : "disabled"}>Iniciar combate automatico</button>
+        </article>
+        <article class="panel">
+          <h2>Previa</h2>
+          <div class="enemy-list">
+            ${enemies.map((enemyName) => `<span>${enemyName}</span>`).join("")}
+          </div>
+          <h3 class="subheading">Recompensa</h3>
+          <p class="muted">${Echoes.describeReward(floorData.floor)}</p>
+          <p class="muted">Dica do andar: ${floorData.rewardHint}.</p>
+        </article>
+        ${repeatFloors}
+      </section>
+    `;
+  }
+
+  function canStartTowerBattle(state) {
+    return getTowerBattleStatus(state).canBattle;
+  }
+
+  function renderBattle(state) {
+    return Echoes.renderBattleView(state);
+  }
+
+  function renderCurrentTab(state) {
+    const views = {
+      base: renderBase,
+      heroes: renderHeroes,
+      formation: renderFormation,
+      inventory: renderInventory,
+      expeditions: renderExpeditions,
+      summon: renderSummon,
+      tower: renderTower,
+      battle: renderBattle,
+    };
+
+    return (views[UI.currentTab] || renderBase)(state);
+  }
+
+  function render(state) {
+    Echoes.stopBattlePlayback();
+    Echoes.regenerateEnergy(state);
+    renderResourceBar(state);
+    renderSaveStatus(state);
+
+    document.querySelectorAll(".tab-button").forEach((button) => {
+      button.classList.toggle("active", button.dataset.tab === UI.currentTab);
+    });
+
+    document.getElementById("app").innerHTML = `${renderMessage()}${renderCurrentTab(state)}`;
+    Echoes.scheduleBattlePlayback(state, render);
+  }
+
+  function setMessage(message) {
+    UI.message = message || "";
+  }
+
+  function setTab(tab) {
+    UI.currentTab = tab;
+  }
+
+  Echoes.UI = UI;
+  Echoes.render = render;
+  Echoes.setMessage = setMessage;
+  Echoes.setTab = setTab;
+})(window);
