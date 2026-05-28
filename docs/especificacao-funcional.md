@@ -1,59 +1,66 @@
 # Especificação Funcional do Jogo
 
 ## Visão geral
-O jogo é um RPG estratégico em navegador com progressão por torre, invocação, formação de heróis, equipamentos, eventos e combate automático.
+Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao por torre, invocacao, recrutamento alternativo, formacao de herois, equipamentos, expedicoes, eventos, narrativa curta, moral, ferimentos, especializacoes, missoes, conquistas, reliquias permanentes e save local.
 
 ## Módulos e responsabilidades
 
-### Estado e persistência
-- `state.js` define a configuração global, o estado inicial e a estrutura de save.
-- `storage.js` carrega, salva, valida e exporta o progresso local no navegador.
+### Estado, persistência e preferências
+- `state.js` define o estado inicial, recursos, energia, presets, `saveVersion` e a normalizacao do save.
+- `storage.js` carrega, salva, exporta, importa e reseta o progresso local, preservando relíquias permanentes e metadados da conta.
+- `preferences.js` guarda preferências visuais, de combate e de interface.
 
-### Heróis e progressão
-- `heroes.js` define classes, atributos, raridades, traços, XP, níveis e geração de heróis.
-- `recruitment.js` controla contratos, escolha entre tres herois e veteranos tematicos de capitulo.
-- `specializations.js` disponibiliza especializações por classe, requisitos de nível e bônus de combate.
-- `injuries.js` controla ferimentos, penalidades temporárias e tratamento.
-- `morale.js` gerencia moral, estados emocionais e bônus/penalidades de performance.
+### Heróis, recrutamento e progressão
+- `heroes.js` define classes, raridades, atributos, XP, níveis e geracao procedimental de herois.
+- `recruitment.js` controla contratos de heroi, selecao entre tres candidatos, veteranos tematicos e recrutamento alternativo.
+- `relics.js` gerencia relíquias permanentes da conta, custos em Fragmentos de Eco e bonus globais.
+- `specializations.js` disponibiliza especializacoes por classe, requisitos de nivel e bonus permanentes.
+- `injuries.js` controla ferimentos, tratamento na enfermaria, estados temporarios e efeitos de desempenho.
+- `morale.js` gerencia moral de 0 a 100, estados emocionais e bonus/penalidades em combate.
 
 ### Formação e equipamentos
-- `formation.js` organiza a equipe ativa, limites de slots e presets de time.
-- `equipment.js` gera, normaliza, equipa e calcula efeitos de equipamentos.
-- Itens obtidos por eventos ou ganhos especiais recalculem raridade, bônus derivado e nome ao serem normalizados, evitando inconsistências entre raridade visual e estatística efetiva.
+- `formation.js` organiza a equipe ativa, limites de slots, posicoes de frente/retaguarda e presets de time.
+- `equipment.js` gera, normaliza, equipa e calcula efeitos de equipamentos, recalculando bonus derivados de raridade e andar.
+- Itens obtidos por eventos, recompensas ou drops raros devem ser normalizados para evitar discrepancia entre raridade, nome e bonus efetivo.
 
 ### Progresso principal
-- `tower.js` define andares, capítulos, inimigos, modificadores e batalha da torre.
-- `tower-events.js` controla eventos aleatórios da torre e escolhas do jogador.
-- `weekly-events.js` aplica eventos semanais e seus modificadores.
-- `rewards.js` concede recompensas de vitória, marcos e capítulos.
+- `tower.js` define andares, capitulos, inimigos, modificadores regionais, chefes e progresso da torre.
+- `tower-events.js` controla eventos aleatorios antes e depois de combates, escolhas de risco/recompensa e efeitos aplicado na proxima luta.
+- `weekly-events.js` aplica eventos semanais locais conforme o calendario do navegador.
+- `rewards.js` concede recompensas de vitória, marcos de capitulo, drops especiais e itens permanentes.
 
 ### Combate
-- `battle.js` simula o combate automático com turnos, dano, cura, status e resultado.
-- `battle-view.js` renderiza o replay, barras e log do combate.
+- `battle.js` simula o combate automatico com turnos, energia, alvos, dano, cura, status e efeitos.
+- `battle-view.js` renderiza replay, log de combate, barra de energia e painel de resultado para explicar o desenrolar da batalha.
 
 ### Sistemas auxiliares
-- `summon.js` gerencia invocação e histórico de invocação.
-- Contratos de Heroi complementam o gacha: o jogador consome um contrato, compara tres candidatos e escolhe apenas um.
-- `expeditions.js` administra expedições, tempos e recompensas, escalonando ganhos proporcionalmente ao poder total da equipe.
-- `missions.js` valida missões diárias, conquistas e recompensas.
+- `summon.js` gerencia invocacao comum e superior, histórico, custos e probabilidades.
+- `expeditions.js` administra expedicoes temporizadas, ate 3 herois por expedicao e recompensas escaladas pelo poder enviado.
+- `missions.js` valida missoes diarias, conquistas permanentes e recompensas.
+- `narrative.js` gerencia cenas curtas por gatilho e marca narrativas ja vistas.
+- `view-utils.js` concentra utilitarios visuais e escape de conteudo dinamico.
+- `main.js` coordena handlers, renderizacao, fluxo de combate e integracao entre os módulos.
 
-### Interface e narrativa
-- `ui.js` renderiza interface, recursos, base e painéis do jogo.
-- `narrative.js` gerencia cenas, capítulos e gatilhos narrativos.
-- `preferences.js` guarda preferências do jogador.
-- `view-utils.js` concentra utilitários de UI.
-- `main.js` coordena ações do jogador, salvamento, renderização e fluxo de batalha.
+### Interface
+- `ui.js` renderiza as abas da base, herois, formacao, inventario, expedicoes, missoes, invocacao, torre, combate e configuracoes.
+- A interface deve destacar poder do time, risco do andar, ferimentos, moral e modificadores ativos.
 
 ## Fluxo principal do jogador
-1. O jogador inicia a partida e recebe um estado salvo localmente.
-2. Invoca ou recruta herois, organiza a formacao e equipa itens.
-3. Entra na torre, enfrentando andares com modificadores e eventos.
-4. Combate automático resolve turnos, aplica danos, ferimentos e moral.
-5. Recompensas de ouro, cristais, essência, fragmentos, energia e XP sustentam a progressão.
-6. A torre avança, capítulos são completados e novas mecânicas são desbloqueadas.
+1. O jogador abre a home e entra no jogo, carregando o save local.
+2. Decide entre invocar herois, usar contratos de recrutamento e avaliar relíquias atuais.
+3. Organiza a formacao, aplica presets e equipa personagens com base no capitulo ativo.
+4. Entra na torre, enfrenta eventos aleatorios, luta automaticamente e recebe recompensas.
+5. Gerencia ferimentos, moral, energia, expedicoes e missoes durante o loop.
+6. Avanca pelos capitulos, desbloqueia relíquias, progressao permanente e melhorias de conta.
 
 ## Regras de alto nível
-- O progresso é salvo localmente no navegador.
-- A torre é o eixo principal do jogo.
-- Eventos semanais e aleatórios alteram probabilidades, recompensas e dificuldade.
-- A equipe se desenvolve por XP, equipamento, especializacao, recrutamento alternativo e sobrevivencia em combate.
+- O progresso e salvo localmente no navegador com `localStorage`, `saveVersion` e normalizacao ao carregar.
+- A torre e o eixo principal do jogo, com capitulos marcados, chefes e modificadores por regiao.
+- Eventos semanais locais, eventos aleatorios da torre e narrativas curtas mantem o jogo vivo sem backend.
+- Recursos principais incluem ouro, cristais, essencia, fragmentos, Fragmentos de Eco e energia.
+- Energia regenera com o tempo e deve permitir teste rapido de composicoes sem bloquear o jogador.
+- A equipe evolui por XP, equipamento, especializacao, moral, ferimentos, recrutamento e relíquias.
+- Relíquias permanentes aumentam a conta de forma global e devem ser persistidas no save.
+- Contratos de heroi complementam a invocacao e oferecem recrutamento alternativo com escolhas curtas.
+- O sistema de UI deve comunicar risco, modificadores, recompensas e o estado da equipe de forma clara.
+- A especificacao deve ser sincronizada com o GDD atualizado em `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md`.

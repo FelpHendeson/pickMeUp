@@ -1,0 +1,14 @@
+---
+description: Regras de otimização do workspace e fluxo de codificação
+alwaysApply: true
+---
+
+## Padrão Cursor
+- Leia o arquivo atual antes de editar qualquer trecho.
+- Preserve o padrão de módulos, IIFE e `window.Echoes` como superfície pública.
+- Prefira pequenas correções, reutilizando padrões já existentes.
+- Use `agentsRules/` como referência de convenção quando houver dúvida.
+- Consulte `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md` como fonte atualizada de design e sincronize `docs/especificacao-funcional.md` com novas mecânicas.
+- Valide com testes existentes ou com uma reprodução mínima do problema.
+- Evite criar arquivos extras sem necessidade e mantenha o contexto enxuto.
+- Antes de finalizar, confirme `git status --short` e o diff relevante.
