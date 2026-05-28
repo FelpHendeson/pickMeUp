@@ -26,6 +26,9 @@
     const isFrontSlot = slotIndex < Echoes.CONFIG.frontSlots;
     const effectiveStats = state && Echoes.getHeroEffectiveStats ? Echoes.getHeroEffectiveStats(state, hero) : hero.stats;
 
+    const maxHp = effectiveStats.hp;
+    const currentHp = Number.isFinite(hero.currentHp) ? Math.max(0, Math.min(maxHp, Math.round(hero.currentHp))) : maxHp;
+
     return {
       id: hero.id,
       sourceId: hero.id,
@@ -38,8 +41,8 @@
       rarity: hero.rarity,
       level: hero.level,
       stats: Object.assign({}, effectiveStats),
-      maxHp: effectiveStats.hp,
-      hp: effectiveStats.hp,
+      maxHp,
+      hp: currentHp > 0 ? currentHp : 1,
       energy: isFrontSlot ? BATTLE_CONFIG.frontSlotStartingEnergy : 0,
       morale: Number.isFinite(hero.morale) ? hero.morale : 80,
       statuses: {},

@@ -31,9 +31,10 @@
       name: "Cacada aos Fragmentos",
       tone: "reward",
       summary: "A torre deixa mais equipamento para tras e os fragmentos circulam com mais forca.",
-      effects: ["+35% chance de drop de equipamentos", "Desmontar equipamentos rendera mais fragmentos quando a oficina existir"],
+      effects: ["+35% chance de drop de equipamentos", "+25% chance de suprimentos consumiveis", "Desmontar equipamentos rendera mais fragmentos quando a oficina existir"],
       modifiers: {
         equipmentDropMultiplier: 1.35,
+        consumableDropMultiplier: 1.25,
         dismantleFragmentMultiplier: 1.25,
       },
     },

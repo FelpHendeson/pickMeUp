@@ -22,6 +22,20 @@ function loadRecruitmentEngine() {
   return Echoes;
 }
 
+function loadConsumableEngine() {
+  let id = 0;
+  const Echoes = loadGameScript('./game/src/state.js', {
+    crypto: {
+      randomUUID: () => `test-uuid-${id++}`,
+    },
+  });
+  loadGameScript('./game/src/heroes.js');
+  loadGameScript('./game/src/injuries.js');
+  loadGameScript('./game/src/formation.js');
+  loadGameScript('./game/src/consumables.js');
+  return Echoes;
+}
+
 test('grantEquipment recalcula bonusValue quando a raridade e alterada', () => {
   const Echoes = loadEngine();
   const state = { inventory: [], heroes: [] };
@@ -64,4 +78,54 @@ test('contrato de heroi abre tres escolhas e recruta apenas uma', () => {
   assert.equal(state.heroes.length, 1);
   assert.equal(state.heroes[0].id, selected.id);
   assert.equal(state.pendingRecruitmentChoice, null);
+});
+
+test('consumiveis curam, recuperam moral e reduzem ferimentos sem quantidade negativa', () => {
+  const Echoes = loadConsumableEngine();
+  const state = Echoes.ensureStateShape(Echoes.createInitialState());
+  const hero = Echoes.generateHero({ rarity: 2, classKey: 'warrior' });
+  state.heroes.push(hero);
+
+  hero.currentHp = hero.stats.hp - 20;
+  hero.morale = 60;
+  Echoes.addHeroInjury(hero, 'injuredArm');
+  hero.injuries[0].remainingBattles = 1;
+  Echoes.addConsumable(state, 'small_healing_potion', 1);
+  Echoes.addConsumable(state, 'vigor_potion', 1);
+  Echoes.addConsumable(state, 'medical_kit', 1);
+
+  const healed = Echoes.useConsumable(state, 'small_healing_potion', hero.id);
+  assert.equal(healed.ok, true);
+  assert.equal(state.consumables.small_healing_potion, 0);
+  assert.ok(hero.currentHp > hero.stats.hp - 20);
+
+  const morale = Echoes.useConsumable(state, 'vigor_potion', hero.id);
+  assert.equal(morale.ok, true);
+  assert.equal(hero.morale, 78);
+
+  const kit = Echoes.useConsumable(state, 'medical_kit', hero.id);
+  assert.equal(kit.ok, true);
+  assert.equal(Echoes.getHeroActiveInjuries(hero).length, 0);
+
+  const missing = Echoes.useConsumable(state, 'medical_kit', hero.id);
+  assert.equal(missing.ok, false);
+  assert.equal(state.consumables.medical_kit, 0);
+});
+
+test('consumiveis de proxima batalha e pedra de retorno aplicam estado esperado', () => {
+  const Echoes = loadConsumableEngine();
+  const state = Echoes.ensureStateShape(Echoes.createInitialState());
+
+  Echoes.addConsumable(state, 'focus_scroll', 1);
+  Echoes.addConsumable(state, 'protection_amulet', 1);
+  Echoes.addConsumable(state, 'return_stone', 1);
+
+  assert.equal(Echoes.useConsumable(state, 'focus_scroll').ok, true);
+  assert.equal(Echoes.useConsumable(state, 'protection_amulet').ok, true);
+  assert.equal(state.towerBattleEffects.length, 2);
+
+  state.pendingTowerEvent = { id: 'event_1', typeKey: 'trap' };
+  const returned = Echoes.useConsumable(state, 'return_stone');
+  assert.equal(returned.ok, true);
+  assert.equal(state.pendingTowerEvent, null);
 });

@@ -284,6 +284,25 @@
     return select ? select.value : "";
   }
 
+  function getConsumableTargetHeroId(consumableId) {
+    const select = document.querySelector(`[data-consumable-target="${consumableId}"]`);
+    return select ? select.value : "";
+  }
+
+  function handleUseConsumableAction(target) {
+    const consumableId = target.dataset.consumableId;
+    const heroId = getConsumableTargetHeroId(consumableId);
+    const result = Echoes.useConsumable(state, consumableId, heroId);
+
+    if (!result.ok) {
+      renderTransientMessage(result.message);
+      return;
+    }
+
+    Echoes.setTab("inventory");
+    saveAndRender(result.message);
+  }
+
   function handleEquipItemAction(target) {
     const equipmentId = getEquipmentSelectValue(target.dataset.heroId, target.dataset.slot);
 
@@ -548,6 +567,7 @@
     if (action === "battle") return handleBattleAction();
     if (action === "repeatBattle") return handleBattleAction({ repeatFloor: Number(target.dataset.repeatFloor) });
     if (action === "towerEventChoice") return handleTowerEventChoiceAction(target);
+    if (action === "useConsumable") return handleUseConsumableAction(target);
     if (action === "equipItem") return handleEquipItemAction(target);
     if (action === "unequipItem") return handleUnequipItemAction(target);
     if (action === "chooseSpecialization") return handleChooseSpecializationAction(target);

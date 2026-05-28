@@ -757,6 +757,7 @@
       fragments: floorNumber === 7 ? 15 : floorNumber === 10 ? 20 : floorNumber >= 14 && floorNumber % 5 === 4 ? 18 + floorNumber : 0,
       echoFragmentChance: bossFloor ? 0.65 : Math.min(0.03 + floorNumber * 0.003, 0.16),
       echoFragmentAmount: bossFloor ? 2 + Math.floor(floorNumber / 10) * 2 : 1,
+      consumableChance: bossFloor ? 0.38 : Math.min(0.08 + floorNumber * 0.004, 0.24),
       equipmentChance: Math.min(8 + floorNumber * 0.9, 48) / 100,
       guaranteedEquipment: bossFloor || milestoneFloor,
     };
@@ -764,6 +765,7 @@
     if (Echoes.getWeeklyEventModifier) {
       reward.gold = Math.max(1, Math.round(reward.gold * Echoes.getWeeklyEventModifier("towerGoldMultiplier", 1)));
       reward.equipmentChance = Math.min(0.9, reward.equipmentChance * Echoes.getWeeklyEventModifier("equipmentDropMultiplier", 1));
+      reward.consumableChance = Math.min(0.9, reward.consumableChance * Echoes.getWeeklyEventModifier("consumableDropMultiplier", 1));
     }
 
     return reward;
@@ -780,6 +782,7 @@
     if (reward.essence > 0) parts.push(`${reward.essence} essencia`);
     if (reward.fragments > 0) parts.push(`${reward.fragments} fragmentos`);
     parts.push(`${Math.round(reward.echoFragmentChance * 100)}% de fragmentos de eco`);
+    parts.push(`${Math.round(reward.consumableChance * 100)}% de consumivel`);
     parts.push(`${Math.round(reward.crystalChance * 100)}% de cristais`);
     parts.push(reward.guaranteedEquipment ? "equipamento garantido" : `${Math.round(reward.equipmentChance * 100)}% de equipamento`);
 
@@ -854,6 +857,15 @@
 
     playerTeam.forEach((unit) => {
       unit.energy = Math.max(0, unit.energy - floorModifiers.playerInitialEnergyPenalty);
+    });
+  }
+
+  function persistPlayerHpAfterBattle(state, playerTeam) {
+    playerTeam.forEach((unit) => {
+      const hero = unit.sourceId ? Echoes.findHero(state, unit.sourceId) : null;
+      if (!hero) return;
+
+      hero.currentHp = Math.max(1, Math.min(unit.maxHp, Math.round(unit.hp)));
     });
   }
 
@@ -945,12 +957,14 @@
     }
 
     if (Echoes.resolveBattleInjuries) {
-      Echoes.resolveBattleInjuries(state, playerTeam, battle.result, battle);
+      Echoes.resolveBattleInjuries(state, playerTeam, battle.result, battle, floorModifiers);
     }
 
     if (Echoes.applyBattleMoraleChanges) {
       Echoes.applyBattleMoraleChanges(state, playerTeam, battle.result, battle);
     }
+
+    persistPlayerHpAfterBattle(state, playerTeam);
 
     state.lastBattle = Echoes.createBattleResult(
       battle.result,

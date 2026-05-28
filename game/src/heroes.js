@@ -188,6 +188,7 @@
       traitName: TRAITS[traitKey].name,
       traitDescription: TRAITS[traitKey].description,
       injuries: [],
+      currentHp: null,
       morale: Echoes.createStartingMorale ? Echoes.createStartingMorale() : 80,
       battlesSinceLastUsed: 0,
       lastUsedAt: null,
@@ -200,7 +201,9 @@
       },
     };
 
-    return recalculateHeroStats(hero);
+    recalculateHeroStats(hero);
+    hero.currentHp = hero.stats.hp;
+    return hero;
   }
 
   function normalizeHero(hero) {
@@ -213,6 +216,7 @@
         traitKey: "brave",
         statRolls: createStatRolls(),
         injuries: [],
+        currentHp: null,
         morale: Echoes.createStartingMorale ? Echoes.createStartingMorale() : 80,
         battlesSinceLastUsed: 0,
         lastUsedAt: null,
@@ -240,7 +244,12 @@
       Echoes.normalizeHeroSpecialization(normalized);
     }
 
-    return recalculateHeroStats(normalized);
+    recalculateHeroStats(normalized);
+    normalized.currentHp = Number.isFinite(normalized.currentHp)
+      ? Math.max(0, Math.min(normalized.stats.hp, Math.round(normalized.currentHp)))
+      : normalized.stats.hp;
+
+    return normalized;
   }
 
   function addHeroXp(hero, xpAmount) {

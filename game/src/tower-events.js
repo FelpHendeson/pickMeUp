@@ -276,6 +276,12 @@
     return `+${amount} contrato(s) de heroi`;
   }
 
+  function grantConsumable(state, consumableId, amount) {
+    if (!Echoes.addConsumable || !Echoes.getConsumableDefinition) return "";
+    Echoes.addConsumable(state, consumableId, amount);
+    return `+${amount} ${Echoes.getConsumableDefinition(consumableId).name}`;
+  }
+
   function grantEquipment(state, floorNumber, rarityOverride) {
     const item = Echoes.generateEquipment(Math.max(1, floorNumber));
     item.floorNumber = Math.max(1, floorNumber);
@@ -365,6 +371,10 @@
         return appendMoraleChange(state, `O bau guardava um juramento selado: ${grantHeroContract(state, 1)}.`, 2, "O achado animou a equipe.");
       }
 
+      if (roll < 0.97 && Echoes.getRandomConsumableId) {
+        return appendMoraleChange(state, `Suprimentos estavam escondidos no fundo: ${grantConsumable(state, Echoes.getRandomConsumableId(), 1)}.`, 1, "O achado animou a equipe.");
+      }
+
       addTowerBattleEffect(state, {
         label: "Dardos ocultos",
         description: "A equipe entra com 8% de dano na proxima luta.",
@@ -404,13 +414,14 @@
 
   function resolveLostMerchant(state, event, choice) {
     if (choice.id === "buyPotion") {
+      grantConsumable(state, "small_healing_potion", 1);
       clearInitialDamageEffects(state);
       addTowerBattleEffect(state, {
         label: "Pocao turva",
         description: "HP maximo +6% e curas +12% na proxima luta.",
         modifiers: { maxHpMultiplier: 1.06, healingDoneMultiplier: 1.12 },
       });
-      return appendMoraleChange(state, "A pocao tem gosto pessimo, mas estabiliza a equipe.", 2, "Os suprimentos trouxeram alivio.");
+      return appendMoraleChange(state, "A pocao tem gosto pessimo, mas estabiliza a equipe. Uma pocao pequena foi guardada.", 2, "Os suprimentos trouxeram alivio.");
     }
 
     if (choice.id === "buyEquipment") {
@@ -419,6 +430,7 @@
     }
 
     if (choice.id === "buyTonic") {
+      grantConsumable(state, "focus_scroll", 1);
       addTowerBattleEffect(state, {
         label: "Tonico de combate",
         description: "ATK +10% e SPD +8% na proxima luta.",
@@ -637,6 +649,10 @@
 
     if (modifiers.playerDamageTakenMultiplier) {
       floorModifiers.playerDamageTakenMultiplier *= modifiers.playerDamageTakenMultiplier;
+    }
+
+    if (modifiers.injuryChanceMultiplier) {
+      floorModifiers.injuryChanceMultiplier = (floorModifiers.injuryChanceMultiplier || 1) * modifiers.injuryChanceMultiplier;
     }
 
     playerTeam.forEach((unit) => {

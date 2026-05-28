@@ -10,7 +10,7 @@
       description: "Venca 3 combates na torre.",
       statKey: "towerVictories",
       target: 3,
-      reward: { gold: 180, crystals: 20 },
+      reward: { gold: 180, crystals: 20, consumables: { small_healing_potion: 1 } },
     },
     {
       id: "summon_1",
@@ -42,7 +42,7 @@
       description: "Colete recompensa de 1 expedicao.",
       statKey: "expeditionsCollected",
       target: 1,
-      reward: { crystals: 15, essence: 10 },
+      reward: { crystals: 15, essence: 10, consumables: { vigor_potion: 1 } },
     },
   ];
 
@@ -53,7 +53,7 @@
       description: "Chegue ao andar 10.",
       target: 10,
       getProgress: (state) => Math.min(Echoes.CONFIG.towerMaxFloor, Math.max(1, Number(state.towerFloor) || 1)),
-      reward: { gold: 500, crystals: 60, essence: 20, echoFragments: 6, heroContracts: 1 },
+      reward: { gold: 500, crystals: 60, essence: 20, echoFragments: 6, heroContracts: 1, consumables: { medical_kit: 1 } },
     },
     {
       id: "floor_20",
@@ -85,7 +85,7 @@
       description: "Venca um chefe sem perder herois.",
       target: 1,
       statKey: "bossNoCasualtyWins",
-      reward: { gold: 600, crystals: 90, essence: 25, echoFragments: 8, heroContracts: 1 },
+      reward: { gold: 600, crystals: 90, essence: 25, echoFragments: 8, heroContracts: 1, consumables: { protection_amulet: 1 } },
     },
     {
       id: "equip_5",
@@ -222,10 +222,12 @@
   }
 
   function formatMissionReward(reward) {
-    return Object.keys(reward)
-      .filter((resourceKey) => reward[resourceKey] > 0)
-      .map((resourceKey) => `${reward[resourceKey]} ${getRewardResourceName(resourceKey)}`)
-      .join(" | ");
+    const resources = Object.keys(reward)
+      .filter((resourceKey) => resourceKey !== "consumables" && reward[resourceKey] > 0)
+      .map((resourceKey) => `${reward[resourceKey]} ${getRewardResourceName(resourceKey)}`);
+    const consumables = Echoes.formatConsumableReward ? Echoes.formatConsumableReward(reward.consumables) : "";
+
+    return resources.concat(consumables ? [consumables] : []).join(" | ");
   }
 
   function getRewardResourceName(resourceKey) {
@@ -240,8 +242,15 @@
 
   function grantMissionReward(state, reward) {
     Object.keys(reward).forEach((resourceKey) => {
+      if (resourceKey === "consumables") return;
       if (reward[resourceKey] > 0) {
         Echoes.addResource(state, resourceKey, reward[resourceKey]);
+      }
+    });
+
+    Object.keys(reward.consumables || {}).forEach((consumableId) => {
+      if (reward.consumables[consumableId] > 0 && Echoes.addConsumable) {
+        Echoes.addConsumable(state, consumableId, reward.consumables[consumableId]);
       }
     });
   }

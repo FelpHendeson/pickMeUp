@@ -6,7 +6,7 @@
   const CONFIG = {
     saveKey: "ascensao-dos-ecos-save-v1",
     saveVersion: 1,
-    gameVersion: "0.6.0",
+    gameVersion: "0.7.0",
     commonSummonCost: 100,
     superiorSummonCost: 100,
     towerEnergyCost: 5,
@@ -90,6 +90,7 @@
       echoFragments: 0,
       relics: {},
       heroContracts: 0,
+      consumables: {},
       heroes: [],
       inventory: [],
       activeExpeditions: [],
@@ -254,6 +255,7 @@
     safe.echoFragments = Math.max(0, Math.floor(Number(safe.echoFragments) || 0));
     safe.relics = safe.relics && typeof safe.relics === "object" ? safe.relics : {};
     safe.heroContracts = Math.max(0, Math.floor(Number(safe.heroContracts) || 0));
+    safe.consumables = safe.consumables && typeof safe.consumables === "object" ? safe.consumables : {};
 
     while (safe.formation.length < CONFIG.maxFormationSize) {
       safe.formation.push(null);
@@ -287,6 +289,10 @@
 
     if (Echoes.normalizeRecruitmentState) {
       Echoes.normalizeRecruitmentState(safe);
+    }
+
+    if (Echoes.normalizeConsumablesState) {
+      Echoes.normalizeConsumablesState(safe);
     }
 
     return safe;

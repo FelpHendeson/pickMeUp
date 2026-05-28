@@ -18,6 +18,7 @@
 
   function getResourceItems(state) {
     const maxFloor = Echoes.CONFIG.towerMaxFloor;
+    const consumableTotal = Object.values(state.consumables || {}).reduce((total, amount) => total + (Number(amount) || 0), 0);
     return [
       ["Conta", `Nv. ${state.accountLevel}`],
       ["Andar", state.towerFloor > maxFloor ? `${maxFloor}/${maxFloor}` : state.towerFloor],
@@ -27,6 +28,7 @@
       ["Fragmentos", formatNumber(state.resources.fragments)],
       ["Frag. Eco", formatNumber(state.echoFragments || 0)],
       ["Contratos", formatNumber(state.heroContracts || 0)],
+      ["Consum.", formatNumber(consumableTotal)],
       ["Energia", `${state.resources.energy}/${state.resources.maxEnergy}`],
       ["Equip.", state.inventory.length],
       ["Feridos", Echoes.getInjuredHeroes ? Echoes.getInjuredHeroes(state).length : 0],
@@ -545,7 +547,7 @@
   function renderHeroes(state) {
     if (state.heroes.length === 0) {
       return `
-        <section class="panel">
+        <section class="panel-grid">
           <h2>Herois</h2>
           <p class="muted">Nenhum heroi recrutado ainda. Va ate Invocação para chamar a primeira equipe.</p>
         </section>
@@ -781,6 +783,64 @@
     `;
   }
 
+
+  function renderConsumableTargetOptions(state, definition) {
+    if (definition.target !== "hero") return "";
+
+    return (
+      '<select data-consumable-target="' + definition.id + '">' +
+        state.heroes.map((hero) => {
+          const hp = Echoes.getHeroHpSummary ? Echoes.getHeroHpSummary(state, hero) : { current: hero.stats.hp, max: hero.stats.hp };
+          const injuryCount = Echoes.getHeroActiveInjuries ? Echoes.getHeroActiveInjuries(hero).length : 0;
+          const morale = Number.isFinite(hero.morale) ? hero.morale : 80;
+          return '<option value="' + hero.id + '">' + escapeHtml(hero.name) + ' | HP ' + hp.current + '/' + hp.max + ' | Moral ' + morale + ' | Fer. ' + injuryCount + '</option>';
+        }).join('') +
+      '</select>'
+    );
+  }
+
+  function renderConsumableCard(state, definition) {
+    const quantity = Echoes.getConsumableQuantity ? Echoes.getConsumableQuantity(state, definition.id) : 0;
+    const needsTarget = definition.target === "hero";
+
+    return (
+      '<article class="card consumable-card">' +
+        '<div class="hero-topline">' +
+          '<div>' +
+            '<p class="eyebrow">' + escapeHtml(definition.moment) + '</p>' +
+            '<h3>' + escapeHtml(definition.name) + '</h3>' +
+          '</div>' +
+          '<span class="class-badge">x' + quantity + '</span>' +
+        '</div>' +
+        '<p class="muted">' + escapeHtml(definition.description) + '</p>' +
+        (needsTarget ? renderConsumableTargetOptions(state, definition) : '') +
+        '<button type="button" data-action="useConsumable" data-consumable-id="' + definition.id + '" ' + (quantity > 0 && (!needsTarget || state.heroes.length > 0) ? '' : 'disabled') + '>Usar</button>' +
+      '</article>'
+    );
+  }
+
+  function renderConsumablesSection(state) {
+    if (Echoes.normalizeConsumablesState) {
+      Echoes.normalizeConsumablesState(state);
+    }
+
+    const definitions = Object.values(Echoes.CONSUMABLE_DEFINITIONS || {});
+    const total = definitions.reduce((sum, definition) => sum + (Echoes.getConsumableQuantity ? Echoes.getConsumableQuantity(state, definition.id) : 0), 0);
+
+    return (
+      '<article class="panel wide consumables-panel">' +
+        '<div class="section-head">' +
+          '<div>' +
+            '<p class="eyebrow">Preparacao</p>' +
+            '<h2>Consumiveis</h2>' +
+          '</div>' +
+          '<strong>' + total + ' item(ns)</strong>' +
+        '</div>' +
+        '<div class="card-grid consumable-grid">' + definitions.map((definition) => renderConsumableCard(state, definition)).join('') + '</div>' +
+      '</article>'
+    );
+  }
+
   function renderInventoryItem(item, state) {
     const owner = Echoes.findEquipmentOwner(state, item.id);
 
@@ -805,19 +865,22 @@
       .sort((a, b) => b.rarity - a.rarity || a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
 
     return `
-      <section class="panel">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Inventario</p>
-            <h2>Equipamentos</h2>
+      <section class="panel-grid">
+        <article class="panel wide">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Inventario</p>
+              <h2>Equipamentos</h2>
+            </div>
+            <strong>${state.inventory.length} item(ns)</strong>
           </div>
-          <strong>${state.inventory.length} item(ns)</strong>
-        </div>
-        ${
-          sortedItems.length === 0
-            ? `<p class="muted">Nenhum equipamento encontrado ainda. VenÃ§a andares da torre para ter chance de obter itens.</p>`
-            : `<div class="card-grid">${sortedItems.map((item) => renderInventoryItem(item, state)).join("")}</div>`
-        }
+          ${
+            sortedItems.length === 0
+              ? `<p class="muted">Nenhum equipamento encontrado ainda. Ven??a andares da torre para ter chance de obter itens.</p>`
+              : `<div class="card-grid">${sortedItems.map((item) => renderInventoryItem(item, state)).join("")}</div>`
+          }
+        </article>
+        ${renderConsumablesSection(state)}
       </section>
     `;
   }

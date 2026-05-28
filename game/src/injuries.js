@@ -156,13 +156,15 @@
     return { injury, refreshed: false };
   }
 
-  function resolveBattleInjuries(state, playerTeam, battleResult, battle) {
+  function resolveBattleInjuries(state, playerTeam, battleResult, battle, battleModifiers) {
     decrementRosterInjuriesAfterBattle(state, battle);
 
     const fallenHeroIds = new Set(
       playerTeam.filter((unit) => unit.side === "player" && unit.sourceId && unit.hp <= 0).map((unit) => unit.sourceId)
     );
-    const injuryChance = battleResult === "defeat" ? INJURY_CONFIG.defeatChance : INJURY_CONFIG.victoryChance;
+    const injuryChanceMultiplier =
+      battleModifiers && Number.isFinite(battleModifiers.injuryChanceMultiplier) ? battleModifiers.injuryChanceMultiplier : 1;
+    const injuryChance = (battleResult === "defeat" ? INJURY_CONFIG.defeatChance : INJURY_CONFIG.victoryChance) * injuryChanceMultiplier;
 
     fallenHeroIds.forEach((heroId) => {
       const hero = state.heroes.find((item) => item.id === heroId);
@@ -231,6 +233,7 @@
   Echoes.hasHeroInjuries = hasHeroInjuries;
   Echoes.getHeroInjurySummary = getHeroInjurySummary;
   Echoes.applyHeroInjuryModifiers = applyHeroInjuryModifiers;
+  Echoes.addHeroInjury = addHeroInjury;
   Echoes.resolveBattleInjuries = resolveBattleInjuries;
   Echoes.getHeroInjuryTreatmentCost = getHeroInjuryTreatmentCost;
   Echoes.treatHeroInjuries = treatHeroInjuries;

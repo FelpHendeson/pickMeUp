@@ -18,6 +18,9 @@
     if (Echoes.normalizeRecruitmentState) {
       Echoes.normalizeRecruitmentState(safeState);
     }
+    if (Echoes.normalizeConsumablesState) {
+      Echoes.normalizeConsumablesState(safeState);
+    }
     return safeState;
   }
 

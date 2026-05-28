@@ -12,7 +12,7 @@
     log.push(message);
   }
 
-  function addRewardLogLines(reward, crystalDrop, echoFragmentDrop, equipmentDrop, log, battle, heroXpReward) {
+  function addRewardLogLines(reward, crystalDrop, echoFragmentDrop, consumableDropId, equipmentDrop, log, battle, heroXpReward) {
     const displayedHeroXp = heroXpReward || reward.xp;
 
     addRewardEvent(
@@ -26,6 +26,9 @@
     if (reward.essence > 0) addRewardEvent(log, battle, "reward", `Essencia recuperada: +${reward.essence}.`);
     if (reward.fragments > 0) addRewardEvent(log, battle, "reward", `Fragmentos recolhidos: +${reward.fragments}.`);
     if (echoFragmentDrop > 0) addRewardEvent(log, battle, "reward", `Fragmentos de Eco ressoaram: +${echoFragmentDrop}.`);
+    if (consumableDropId && Echoes.getConsumableDefinition) {
+      addRewardEvent(log, battle, "reward", `Consumivel encontrado: ${Echoes.getConsumableDefinition(consumableDropId).name}.`);
+    }
     if (equipmentDrop) {
       addRewardEvent(
         log,
@@ -135,6 +138,8 @@
     );
     const crystalDrop = Math.random() < reward.crystalChance ? reward.crystalAmount : 0;
     const echoFragmentDrop = Math.random() < reward.echoFragmentChance ? reward.echoFragmentAmount : 0;
+    const consumableDropId =
+      Echoes.getRandomConsumableId && Math.random() < reward.consumableChance ? Echoes.getRandomConsumableId() : null;
     const shouldDropEquipment = reward.guaranteedEquipment || Math.random() < reward.equipmentChance;
     const equipmentDrop = shouldDropEquipment ? Echoes.addEquipmentToInventory(state, Echoes.generateEquipment(floorNumber)) : null;
 
@@ -143,10 +148,11 @@
     Echoes.addResource(state, "essence", reward.essence);
     Echoes.addResource(state, "fragments", reward.fragments);
     Echoes.addResource(state, "echoFragments", echoFragmentDrop);
+    if (consumableDropId && Echoes.addConsumable) Echoes.addConsumable(state, consumableDropId, 1);
     Echoes.addResource(state, "energy", reward.energyRefund);
     Echoes.addAccountXp(state, Math.ceil(reward.xp / 2));
 
-    addRewardLogLines(reward, crystalDrop, echoFragmentDrop, equipmentDrop, log, battle, heroXpReward);
+    addRewardLogLines(reward, crystalDrop, echoFragmentDrop, consumableDropId, equipmentDrop, log, battle, heroXpReward);
     grantHeroXpRewards(state, participatingHeroIds, heroXpReward, log, battle);
 
     if (shouldAdvanceFloor) {

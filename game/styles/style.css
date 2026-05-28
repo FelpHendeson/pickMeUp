@@ -773,6 +773,31 @@ body.pref-compact .modifier {
   margin-top: auto;
 }
 
+.consumable-grid {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.consumable-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.9rem;
+}
+
+.consumable-card select {
+  background: rgba(17, 15, 14, 0.88);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  min-width: 0;
+  padding: 0.65rem;
+  width: 100%;
+}
+
+.consumable-card button {
+  margin-top: auto;
+}
+
 .mission-progress {
   appearance: none;
   background: #171514;
@@ -2330,6 +2355,7 @@ body.pref-compact .modifier {
   .mission-grid,
   .expedition-grid,
   .recruitment-grid,
+  .consumable-grid,
   .compact-grid {
     grid-template-columns: 1fr;
   }
