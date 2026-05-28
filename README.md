@@ -260,6 +260,18 @@ Arquivo principal:
 
 O combate e simulado em turnos rapidos. Unidades agem conforme seus atributos, escolhem alvos, causam dano, curam, aplicam efeitos e acumulam energia.
 
+Depois de cada batalha da torre, a tela de resultado 2.0 resume vitoria/derrota, andar, capitulo, dificuldade, inimigos, modificadores, recompensas, progressao, consequencias e desempenho individual dos herois. O replay completo e o log antigo continuam disponiveis pela aba Combate.
+
+Estatisticas por heroi registradas no combate:
+
+- dano causado;
+- cura realizada;
+- dano recebido;
+- inimigos abatidos;
+- habilidades usadas;
+- falhas por moral;
+- protecoes por afinidade.
+
 Arquivos principais:
 
 - `game/src/battle.js`
@@ -451,7 +463,7 @@ Responsabilidades principais:
 - `tower-events.js`: eventos aleatorios;
 - `library.js`: biblioteca, bestiario e registros de descoberta;
 - `difficulty.js`: modos de dificuldade da torre, risco hardcore e estatisticas por modo;
-- `battle.js`: simulacao de combate;
+- `battle.js`: simulacao de combate e estatisticas de desempenho;
 - `rewards.js`: recompensas;
 - `missions.js`: missoes diarias, conquistas e recompensas de objetivos;
 - `ui.js`: renderizacao das telas;

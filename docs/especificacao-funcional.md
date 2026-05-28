@@ -54,7 +54,8 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 2. Decide entre invocar herois, usar contratos de recrutamento e avaliar relíquias atuais.
 3. Organiza a formacao, aplica presets e equipa personagens com base no capitulo ativo.
 4. Escolhe a dificuldade da torre, enfrenta eventos aleatorios, luta automaticamente e recebe recompensas proporcionais ao risco.
-5. Gerencia ferimentos, moral, energia, expedicoes e missoes durante o loop.
+5. Analisa a tela de resultado 2.0 para entender recompensas, progresso, consequencias, desempenho individual e sistemas que afetaram a luta.
+6. Gerencia ferimentos, moral, energia, expedicoes e missoes durante o loop.
 6. Avanca pelos capitulos, desbloqueia relíquias, progressao permanente e melhorias de conta.
 
 ## Regras de alto nível
@@ -67,6 +68,6 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 - A equipe evolui por XP, equipamento, especializacao, moral, ferimentos, recrutamento e relíquias.
 - Relíquias permanentes aumentam a conta de forma global e devem ser persistidas no save.
 - Contratos de heroi complementam a invocacao e oferecem recrutamento alternativo com escolhas curtas.
-- O sistema de UI deve comunicar risco, modificadores, recompensas, dificuldade escolhida e o estado da equipe de forma clara.
+- O sistema de UI deve comunicar risco, modificadores, recompensas, dificuldade escolhida, resultado da batalha e o estado da equipe de forma clara.
 - Morte permanente nunca deve ocorrer fora do modo Hardcore.
 - A especificacao deve ser sincronizada com o GDD atualizado em `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md`.
