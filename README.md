@@ -156,6 +156,25 @@ Arquivo principal:
 
 - `game/src/equipment.js`
 
+### Consumiveis
+
+O Inventario possui uma secao de consumiveis para preparacao e recuperacao fora de combate.
+
+Consumiveis iniciais:
+
+- Pocao pequena de cura: recupera HP atual de um heroi;
+- Pocao de vigor: recupera moral;
+- Kit medico: reduz a duracao de um ferimento;
+- Pergaminho de foco: aumenta FOCUS da formacao na proxima batalha;
+- Amuleto de protecao: reduz chance de ferimento na proxima batalha;
+- Pedra de retorno: cancela com seguranca Armadilha ou Altar sombrio pendente.
+
+Consumiveis podem vir de baus, mercador perdido, missoes, conquistas, eventos semanais e recompensas raras da torre.
+
+Arquivo principal:
+
+- `game/src/consumables.js`
+
 ### Torre
 
 A torre e o modo principal de progressao. Cada andar define inimigos, recomendacao de nivel, mecanicas e recompensas.
@@ -310,6 +329,7 @@ Arquivo principal:
 |       +-- recruitment.js
 |       +-- formation.js
 |       +-- equipment.js
+|       +-- consumables.js
 |       +-- expeditions.js
 |       +-- battle.js
 |       +-- battle-view.js
@@ -375,6 +395,7 @@ Responsabilidades principais:
 - `recruitment.js`: contratos, escolha entre 3 herois e veteranos de capitulo;
 - `formation.js`: equipe ativa;
 - `equipment.js`: inventario e atributos efetivos;
+- `consumables.js`: consumiveis, validacao de uso, recuperacao e efeitos de proxima batalha;
 - `tower.js`: andares, inimigos e inicio de batalhas;
 - `tower-events.js`: eventos aleatorios;
 - `battle.js`: simulacao de combate;

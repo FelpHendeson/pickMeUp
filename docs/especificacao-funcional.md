@@ -21,6 +21,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 ### Formação e equipamentos
 - `formation.js` organiza a equipe ativa, limites de slots, posicoes de frente/retaguarda e presets de time.
 - `equipment.js` gera, normaliza, equipa e calcula efeitos de equipamentos, recalculando bonus derivados de raridade e andar.
+- `consumables.js` define consumiveis, quantidades, alvos permitidos, validacao de uso e efeitos de preparacao.
 - Itens obtidos por eventos, recompensas ou drops raros devem ser normalizados para evitar discrepancia entre raridade, nome e bonus efetivo.
 
 ### Progresso principal
