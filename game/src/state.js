@@ -6,7 +6,7 @@
   const CONFIG = {
     saveKey: "ascensao-dos-ecos-save-v1",
     saveVersion: 1,
-    gameVersion: "0.5.0",
+    gameVersion: "0.6.0",
     commonSummonCost: 100,
     superiorSummonCost: 100,
     towerEnergyCost: 5,
@@ -89,6 +89,7 @@
       },
       echoFragments: 0,
       relics: {},
+      heroContracts: 0,
       heroes: [],
       inventory: [],
       activeExpeditions: [],
@@ -109,6 +110,7 @@
       lastBattle: null,
       pendingTowerEvent: null,
       plannedTowerPostEvent: null,
+      pendingRecruitmentChoice: null,
       towerBattleEffects: [],
       towerEventHistory: [],
       completedTowerChapters: [],
@@ -143,6 +145,10 @@
       return Number(state.echoFragments || 0);
     }
 
+    if (resourceKey === "heroContracts") {
+      return Number(state.heroContracts || 0);
+    }
+
     return Number(state.resources[resourceKey] || 0);
   }
 
@@ -160,6 +166,11 @@
       return true;
     }
 
+    if (resourceKey === "heroContracts") {
+      state.heroContracts -= amount;
+      return true;
+    }
+
     state.resources[resourceKey] -= amount;
     return true;
   }
@@ -171,6 +182,11 @@
     if (resourceKey === "echoFragments") {
       state.echoFragments = Math.max(0, nextAmount);
       return state.echoFragments;
+    }
+
+    if (resourceKey === "heroContracts") {
+      state.heroContracts = Math.max(0, nextAmount);
+      return state.heroContracts;
     }
 
     if (resourceKey === "energy") {
@@ -225,6 +241,8 @@
       safe.pendingTowerEvent && typeof safe.pendingTowerEvent === "object" ? safe.pendingTowerEvent : null;
     safe.plannedTowerPostEvent =
       safe.plannedTowerPostEvent && typeof safe.plannedTowerPostEvent === "object" ? safe.plannedTowerPostEvent : null;
+    safe.pendingRecruitmentChoice =
+      safe.pendingRecruitmentChoice && typeof safe.pendingRecruitmentChoice === "object" ? safe.pendingRecruitmentChoice : null;
     safe.towerBattleEffects = Array.isArray(safe.towerBattleEffects) ? safe.towerBattleEffects : [];
     safe.towerEventHistory = Array.isArray(safe.towerEventHistory) ? safe.towerEventHistory.slice(0, 8) : [];
     safe.completedTowerChapters = Array.isArray(safe.completedTowerChapters) ? safe.completedTowerChapters : [];
@@ -235,6 +253,7 @@
     safe.achievements = safe.achievements && typeof safe.achievements === "object" ? safe.achievements : {};
     safe.echoFragments = Math.max(0, Math.floor(Number(safe.echoFragments) || 0));
     safe.relics = safe.relics && typeof safe.relics === "object" ? safe.relics : {};
+    safe.heroContracts = Math.max(0, Math.floor(Number(safe.heroContracts) || 0));
 
     while (safe.formation.length < CONFIG.maxFormationSize) {
       safe.formation.push(null);
@@ -264,6 +283,10 @@
 
     if (Echoes.normalizeRelicState) {
       Echoes.normalizeRelicState(safe);
+    }
+
+    if (Echoes.normalizeRecruitmentState) {
+      Echoes.normalizeRecruitmentState(safe);
     }
 
     return safe;

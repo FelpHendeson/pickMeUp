@@ -120,6 +120,30 @@
     reader.readAsText(file);
   }
 
+  function handleOpenHeroContractAction() {
+    const result = Echoes.startContractRecruitment(state);
+
+    if (!result.ok) {
+      renderTransientMessage(result.message);
+      return;
+    }
+
+    Echoes.setTab("summon");
+    saveAndRender(result.message);
+  }
+
+  function handleChooseRecruitmentHeroAction(target) {
+    const result = Echoes.chooseRecruitmentHero(state, target.dataset.heroId);
+
+    if (!result.ok) {
+      renderTransientMessage(result.message);
+      return;
+    }
+
+    Echoes.setTab("heroes");
+    saveAndRender(result.message);
+  }
+
   function handleSummonAction(target) {
     const result = Echoes.summonHero(state, target.dataset.summonType);
 
@@ -512,6 +536,8 @@
     if (action === "importSave") return handleImportSaveAction();
     if (action === "setPreference") return handleSetPreferenceAction(target);
     if (action === "resetPreferences") return handleResetPreferencesAction();
+    if (action === "openHeroContract") return handleOpenHeroContractAction();
+    if (action === "chooseRecruitmentHero") return handleChooseRecruitmentHeroAction(target);
     if (action === "summon") return handleSummonAction(target);
     if (action === "addFormation") return handleFormationAction(target, true);
     if (action === "removeFormation") return handleFormationAction(target, false);

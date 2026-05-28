@@ -171,7 +171,7 @@
     const rarity = options && options.rarity ? options.rarity : 1;
     const classKey = options && options.classKey ? options.classKey : pickRandom(Object.keys(HERO_CLASSES));
     const traitKey = options && options.traitKey ? options.traitKey : pickRandom(Object.keys(TRAITS));
-    const name = `${pickRandom(GIVEN_NAMES)} ${pickRandom(EPITHETS)}`;
+    const name = options && options.name ? options.name : `${pickRandom(GIVEN_NAMES)} ${pickRandom(EPITHETS)}`;
 
     const hero = {
       id: createHeroId(),
@@ -192,6 +192,7 @@
       battlesSinceLastUsed: 0,
       lastUsedAt: null,
       specializationKey: null,
+      recruitmentTag: options && options.recruitmentTag ? options.recruitmentTag : "",
       equipment: {
         weapon: null,
         armor: null,
@@ -216,6 +217,7 @@
         battlesSinceLastUsed: 0,
         lastUsedAt: null,
         specializationKey: null,
+        recruitmentTag: "",
         equipment: { weapon: null, armor: null, accessory: null },
       },
       hero || {}
@@ -224,6 +226,7 @@
     normalized.className = HERO_CLASSES[normalized.classKey]?.name || HERO_CLASSES.warrior.name;
     normalized.traitName = TRAITS[normalized.traitKey]?.name || TRAITS.brave.name;
     normalized.traitDescription = TRAITS[normalized.traitKey]?.description || TRAITS.brave.description;
+    normalized.recruitmentTag = typeof normalized.recruitmentTag === "string" ? normalized.recruitmentTag : "";
     if (Echoes.normalizeHeroEquipmentSlots) {
       Echoes.normalizeHeroEquipmentSlots(normalized);
     }

@@ -113,7 +113,7 @@
         description: "DEF inimiga +4%",
         enemyDefMultiplier: 1.04,
       },
-      completionReward: { gold: 420, crystals: 60, essence: 25, fragments: 25, echoFragments: 10 },
+      completionReward: { gold: 420, crystals: 60, essence: 25, fragments: 25, echoFragments: 10, heroContracts: 1 },
     },
     {
       id: "bestial_forest",
@@ -136,7 +136,7 @@
         description: "SPD inimiga +6%",
         enemySpeedMultiplier: 1.06,
       },
-      completionReward: { gold: 760, crystals: 90, essence: 45, fragments: 45, echoFragments: 16 },
+      completionReward: { gold: 760, crystals: 90, essence: 45, fragments: 45, echoFragments: 16, heroContracts: 1 },
     },
     {
       id: "spectral_crypt",
@@ -159,7 +159,7 @@
         description: "equipe recebe +7% dano",
         playerDamageTakenMultiplier: 1.07,
       },
-      completionReward: { gold: 1150, crystals: 130, essence: 70, fragments: 70, echoFragments: 24 },
+      completionReward: { gold: 1150, crystals: 130, essence: 70, fragments: 70, echoFragments: 24, heroContracts: 1 },
     },
     {
       id: "infernal_abyss",
@@ -183,7 +183,7 @@
         enemyAtkMultiplier: 1.08,
         healingDoneMultiplier: 0.92,
       },
-      completionReward: { gold: 1600, crystals: 180, essence: 100, fragments: 100, echoFragments: 34 },
+      completionReward: { gold: 1600, crystals: 180, essence: 100, fragments: 100, echoFragments: 34, heroContracts: 1 },
     },
   ];
 

@@ -728,6 +728,51 @@ body.pref-compact .modifier {
   margin-top: auto;
 }
 
+.recruitment-panel {
+  border-color: rgba(86, 199, 189, 0.34);
+}
+
+.recruitment-backdrop {
+  align-items: center;
+  background: rgba(8, 7, 7, 0.84);
+  backdrop-filter: blur(10px);
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  left: 0;
+  padding: 1rem;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 30;
+}
+
+.recruitment-modal {
+  background:
+    linear-gradient(135deg, rgba(86, 199, 189, 0.12), transparent 38%),
+    rgba(28, 25, 24, 0.98);
+  border: 1px solid rgba(214, 168, 78, 0.32);
+  border-radius: 8px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+  max-height: min(88vh, 900px);
+  max-width: 1120px;
+  overflow: auto;
+  padding: 1rem;
+  width: min(100%, 1120px);
+}
+
+.recruitment-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.recruitment-option {
+  min-height: 100%;
+}
+
+.recruitment-option button {
+  margin-top: auto;
+}
+
 .mission-progress {
   appearance: none;
   background: #171514;
@@ -2237,6 +2282,7 @@ body.pref-compact .modifier {
   .equipment-row,
   .helper-panel,
   .weekly-event-content,
+  .recruitment-grid,
   .setting-range {
     grid-template-columns: 1fr;
   }
@@ -2283,6 +2329,7 @@ body.pref-compact .modifier {
   .card-grid,
   .mission-grid,
   .expedition-grid,
+  .recruitment-grid,
   .compact-grid {
     grid-template-columns: 1fr;
   }

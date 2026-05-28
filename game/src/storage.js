@@ -15,6 +15,9 @@
     if (Echoes.normalizeRelicState) {
       Echoes.normalizeRelicState(safeState);
     }
+    if (Echoes.normalizeRecruitmentState) {
+      Echoes.normalizeRecruitmentState(safeState);
+    }
     return safeState;
   }
 

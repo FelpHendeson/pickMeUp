@@ -26,6 +26,7 @@
       ["Essencia", formatNumber(state.resources.essence)],
       ["Fragmentos", formatNumber(state.resources.fragments)],
       ["Frag. Eco", formatNumber(state.echoFragments || 0)],
+      ["Contratos", formatNumber(state.heroContracts || 0)],
       ["Energia", `${state.resources.energy}/${state.resources.maxEnergy}`],
       ["Equip.", state.inventory.length],
       ["Feridos", Echoes.getInjuredHeroes ? Echoes.getInjuredHeroes(state).length : 0],
@@ -997,6 +998,77 @@
     `;
   }
 
+
+  function renderRecruitmentHeroOption(hero) {
+    const stats = hero.stats || {};
+    const specializationHint = Echoes.getFutureSpecializationHint ? Echoes.getFutureSpecializationHint(hero) : "";
+
+    return (
+      '<article class="card hero-card recruitment-option rarity-' + hero.rarity + ' class-' + hero.classKey + '">' +
+        '<div class="hero-topline">' +
+          '<div>' +
+            '<p class="stars">' + Echoes.getRarityStars(hero.rarity) + '</p>' +
+            '<h3>' + escapeHtml(hero.name) + '</h3>' +
+          '</div>' +
+          '<span class="class-badge class-' + hero.classKey + '">' + escapeHtml(hero.className) + '</span>' +
+        '</div>' +
+        '<p class="trait">' + escapeHtml(hero.traitName) + ': ' + escapeHtml(hero.traitDescription) + '</p>' +
+        (hero.recruitmentTag ? '<p class="muted">Origem: ' + escapeHtml(hero.recruitmentTag) + '</p>' : '') +
+        '<div class="stat-line">' +
+          '<span>HP ' + (stats.hp || 0) + '</span>' +
+          '<span>ATK ' + (stats.atk || 0) + '</span>' +
+          '<span>DEF ' + (stats.def || 0) + '</span>' +
+          '<span>SPD ' + (stats.spd || 0) + '</span>' +
+          '<span>FOCUS ' + (stats.focus || 0) + '</span>' +
+          '<span>LUCK ' + (stats.luck || 0) + '</span>' +
+        '</div>' +
+        (specializationHint ? '<p class="muted">Especializacoes futuras: ' + escapeHtml(specializationHint) + '</p>' : '') +
+        '<button type="button" data-action="chooseRecruitmentHero" data-hero-id="' + hero.id + '">Recrutar</button>' +
+      '</article>'
+    );
+  }
+
+  function renderRecruitmentChoiceModal(state) {
+    if (Echoes.normalizeRecruitmentState) {
+      Echoes.normalizeRecruitmentState(state);
+    }
+
+    const choice = state.pendingRecruitmentChoice;
+    if (!choice) return "";
+
+    return (
+      '<section class="recruitment-backdrop" role="dialog" aria-modal="true" aria-labelledby="recruitmentTitle">' +
+        '<article class="recruitment-modal">' +
+          '<div class="section-head">' +
+            '<div>' +
+              '<p class="eyebrow">Recrutamento</p>' +
+              '<h2 id="recruitmentTitle">' + escapeHtml(choice.title) + '</h2>' +
+              '<p class="muted">' + escapeHtml(choice.description) + '</p>' +
+            '</div>' +
+            '<strong>Escolha 1 de ' + choice.options.length + '</strong>' +
+          '</div>' +
+          '<div class="card-grid recruitment-grid">' + choice.options.map(renderRecruitmentHeroOption).join('') + '</div>' +
+        '</article>' +
+      '</section>'
+    );
+  }
+
+  function renderRecruitmentPanel(state) {
+    const contracts = state.heroContracts || 0;
+    return (
+      '<article class="panel summon-panel recruitment-panel">' +
+        '<p class="eyebrow">Contratos</p>' +
+        '<h2>Recrutamento</h2>' +
+        '<p class="muted">Use um Contrato de Heroi para revelar tres candidatos e escolher apenas um.</p>' +
+        '<div class="summary-grid">' +
+          '<div><span>Disponiveis</span><strong>' + formatNumber(contracts) + '</strong></div>' +
+          '<div><span>Escolha</span><strong>1 de 3</strong></div>' +
+        '</div>' +
+        '<button type="button" data-action="openHeroContract" ' + (contracts > 0 && !state.pendingRecruitmentChoice ? '' : 'disabled') + '>Usar contrato</button>' +
+      '</article>'
+    );
+  }
+
   function renderSummonRates(type) {
     const table = Echoes.getAdjustedSummonRarityTable ? Echoes.getAdjustedSummonRarityTable(type) : Echoes.SUMMON_RARITY_TABLES[type];
     return table.map((entry) => `${entry.rarity}★ ${entry.chance}%`).join(" | ");
@@ -1027,6 +1099,7 @@
             state.resources.crystals < superiorCost.amount ? "disabled" : ""
           }>Invocar com cristais</button>
         </article>
+        ${renderRecruitmentPanel(state)}
         <article class="panel wide">
           <div class="section-head">
             <div>
@@ -1775,7 +1848,7 @@
       button.classList.toggle("active", button.dataset.tab === UI.currentTab);
     });
 
-    document.getElementById("app").innerHTML = `${renderMessage()}${renderCurrentTab(state)}${renderNarrativeScene(state)}`;
+    document.getElementById("app").innerHTML = `${renderMessage()}${renderCurrentTab(state)}${renderRecruitmentChoiceModal(state)}${renderNarrativeScene(state)}`;
     Echoes.scheduleBattlePlayback(state, render);
   }
 

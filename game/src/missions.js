@@ -53,7 +53,7 @@
       description: "Chegue ao andar 10.",
       target: 10,
       getProgress: (state) => Math.min(Echoes.CONFIG.towerMaxFloor, Math.max(1, Number(state.towerFloor) || 1)),
-      reward: { gold: 500, crystals: 60, essence: 20, echoFragments: 6 },
+      reward: { gold: 500, crystals: 60, essence: 20, echoFragments: 6, heroContracts: 1 },
     },
     {
       id: "floor_20",
@@ -61,7 +61,7 @@
       description: "Chegue ao andar 20.",
       target: 20,
       getProgress: (state) => Math.min(Echoes.CONFIG.towerMaxFloor, Math.max(1, Number(state.towerFloor) || 1)),
-      reward: { gold: 900, crystals: 110, fragments: 35, echoFragments: 10 },
+      reward: { gold: 900, crystals: 110, fragments: 35, echoFragments: 10, heroContracts: 1 },
     },
     {
       id: "summon_10",
@@ -85,7 +85,7 @@
       description: "Venca um chefe sem perder herois.",
       target: 1,
       statKey: "bossNoCasualtyWins",
-      reward: { gold: 600, crystals: 90, essence: 25, echoFragments: 8 },
+      reward: { gold: 600, crystals: 90, essence: 25, echoFragments: 8, heroContracts: 1 },
     },
     {
       id: "equip_5",
@@ -234,6 +234,7 @@
     if (resourceKey === "essence") return "essencia";
     if (resourceKey === "fragments") return "fragmentos";
     if (resourceKey === "echoFragments") return "fragmentos de eco";
+    if (resourceKey === "heroContracts") return "contrato(s) de heroi";
     return resourceKey;
   }
 

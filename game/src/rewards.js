@@ -78,6 +78,7 @@
         if (resourceKey === "crystals") return `+${reward[resourceKey]} cristais`;
         if (resourceKey === "essence") return `+${reward[resourceKey]} essencia`;
         if (resourceKey === "echoFragments") return `+${reward[resourceKey]} fragmentos de eco`;
+        if (resourceKey === "heroContracts") return `+${reward[resourceKey]} contrato(s) de heroi`;
         return `+${reward[resourceKey]} fragmentos`;
       })
       .join(", ");
@@ -98,6 +99,10 @@
     });
 
     state.completedTowerChapters.push(chapter.id);
+
+    const veteranRoll = Echoes.startVeteranRecruitment && Math.random() < 0.35
+      ? Echoes.startVeteranRecruitment(state, chapter)
+      : null;
     state.lastChapterCompletion = {
       chapterId: chapter.id,
       chapterNumber: chapter.number,
@@ -113,6 +118,12 @@
       "reward",
       `Capitulo concluido: ${chapter.name}. Recompensa especial: ${getResourceRewardText(reward)}.`
     );
+
+    if (veteranRoll && veteranRoll.ok) {
+      addRewardEvent(log, battle, "reward", veteranRoll.message);
+    } else if (veteranRoll && veteranRoll.message) {
+      addRewardEvent(log, battle, "reward", veteranRoll.message);
+    }
   }
 
   function grantTowerVictoryRewards(state, floorNumber, participatingHeroIds, log, battle, options) {

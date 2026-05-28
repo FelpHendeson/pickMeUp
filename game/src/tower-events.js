@@ -11,6 +11,7 @@
     essence: "essencia",
     fragments: "fragmentos",
     echoFragments: "fragmentos de eco",
+    heroContracts: "contrato(s) de heroi",
     energy: "energia",
   };
 
@@ -270,6 +271,11 @@
     return `+${amount} fragmentos de eco`;
   }
 
+  function grantHeroContract(state, amount) {
+    Echoes.addResource(state, "heroContracts", amount);
+    return `+${amount} contrato(s) de heroi`;
+  }
+
   function grantEquipment(state, floorNumber, rarityOverride) {
     const item = Echoes.generateEquipment(Math.max(1, floorNumber));
     item.floorNumber = Math.max(1, floorNumber);
@@ -355,6 +361,10 @@
         return appendMoraleChange(state, `Um eco raro vibrou no fundo do bau: ${grantEchoFragments(state, 1)}.`, 2, "O achado animou a equipe.");
       }
 
+      if (roll < 0.94) {
+        return appendMoraleChange(state, `O bau guardava um juramento selado: ${grantHeroContract(state, 1)}.`, 2, "O achado animou a equipe.");
+      }
+
       addTowerBattleEffect(state, {
         label: "Dardos ocultos",
         description: "A equipe entra com 8% de dano na proxima luta.",
@@ -378,6 +388,10 @@
 
     if (roll < 0.72) {
       return appendMoraleChange(state, `O selo revelou um nucleo de eco intacto: ${grantEchoFragments(state, 1)}.`, 2, "A recompensa fortaleceu a confianca.");
+    }
+
+    if (roll < 0.77) {
+      return appendMoraleChange(state, `O selo revelou um contrato antigo: ${grantHeroContract(state, 1)}.`, 2, "A recompensa fortaleceu a confianca.");
     }
 
     addTowerBattleEffect(state, {
@@ -411,6 +425,10 @@
         modifiers: { atkMultiplier: 1.1, spdMultiplier: 1.08 },
       });
       return appendMoraleChange(state, "O tonico aquece o sangue da equipe. A proxima luta sera mais agressiva.", 1, "A preparacao trouxe foco.");
+    }
+
+    if (Math.random() < 0.12) {
+      return `O mercador respeitou a prudencia da equipe e entregou um contato antigo: ${grantHeroContract(state, 1)}.`;
     }
 
     return "A equipe recusou a oferta e guardou o ouro.";
