@@ -83,7 +83,12 @@
     const type = EQUIPMENT_TYPES[rawItem.type] ? rawItem.type : "weapon";
     const rarity = Number.isFinite(rawItem.rarity) ? Math.min(5, Math.max(1, rawItem.rarity)) : 1;
     const bonusStat = EQUIPMENT_BONUS_STATS.includes(rawItem.bonusStat) ? rawItem.bonusStat : "atk";
-    const bonusValue = Number.isFinite(rawItem.bonusValue) ? Math.max(1, Math.round(rawItem.bonusValue)) : 1;
+    const floorNumber = Number.isFinite(rawItem.floorNumber) ? rawItem.floorNumber : 1;
+    const bonusValue = Number.isFinite(rawItem.floorNumber)
+      ? getEquipmentBonusValue(bonusStat, rarity, floorNumber)
+      : Number.isFinite(rawItem.bonusValue)
+        ? Math.max(1, Math.round(rawItem.bonusValue))
+        : getEquipmentBonusValue(bonusStat, rarity, floorNumber);
 
     return Object.assign(
       {
@@ -96,7 +101,7 @@
         obtainedAt: new Date().toISOString(),
       },
       rawItem,
-      { type, rarity, bonusStat, bonusValue }
+      { type, rarity, bonusStat, bonusValue, floorNumber }
     );
   }
 
@@ -228,7 +233,9 @@
 
   Echoes.EQUIPMENT_TYPES = EQUIPMENT_TYPES;
   Echoes.EQUIPMENT_SLOTS = EQUIPMENT_SLOTS;
+  Echoes.getEquipmentBonusValue = getEquipmentBonusValue;
   Echoes.generateEquipment = generateEquipment;
+  Echoes.normalizeEquipmentItem = normalizeEquipmentItem;
   Echoes.normalizeHeroEquipmentSlots = normalizeHeroEquipmentSlots;
   Echoes.normalizeInventory = normalizeInventory;
   Echoes.findEquipment = findEquipment;

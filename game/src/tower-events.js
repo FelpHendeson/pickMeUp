@@ -266,12 +266,14 @@
 
   function grantEquipment(state, floorNumber, rarityOverride) {
     const item = Echoes.generateEquipment(Math.max(1, floorNumber));
+    item.floorNumber = Math.max(1, floorNumber);
     if (rarityOverride) {
       item.rarity = rarityOverride;
     }
 
-    Echoes.addEquipmentToInventory(state, item);
-    return item;
+    const normalizedItem = Echoes.normalizeEquipmentItem ? Echoes.normalizeEquipmentItem(item) : item;
+    Echoes.addEquipmentToInventory(state, normalizedItem);
+    return normalizedItem;
   }
 
   function grantHero(state, rarity) {
@@ -650,5 +652,6 @@
   Echoes.planTowerEventForAttempt = planTowerEventForAttempt;
   Echoes.activatePlannedTowerPostEvent = activatePlannedTowerPostEvent;
   Echoes.clearPlannedTowerPostEvent = clearPlannedTowerPostEvent;
+  Echoes.grantEquipment = grantEquipment;
   Echoes.applyAndConsumeTowerBattleEffects = applyAndConsumeTowerBattleEffects;
 })(window);

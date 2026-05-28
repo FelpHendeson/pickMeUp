@@ -100,7 +100,7 @@
 
   function getExpeditionRewardMultiplier(power, recommendedPower) {
     if (recommendedPower <= 0) return 1;
-    return Math.max(0.5, Math.min(1, power / recommendedPower));
+    return Math.max(0.5, power / recommendedPower);
   }
 
   function getExpeditionRewardPreview(state, definition, heroIds) {
@@ -228,6 +228,7 @@
   Echoes.isHeroOnExpedition = isHeroOnExpedition;
   Echoes.getHeroExpedition = getHeroExpedition;
   Echoes.getExpeditionPower = getExpeditionPower;
+  Echoes.getExpeditionRewardMultiplier = getExpeditionRewardMultiplier;
   Echoes.getExpeditionRewardPreview = getExpeditionRewardPreview;
   Echoes.getActiveExpeditionReward = getActiveExpeditionReward;
   Echoes.getExpeditionRemainingMs = getExpeditionRemainingMs;

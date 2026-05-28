@@ -38,11 +38,11 @@
 
   function handleResetAction() {
     const firstConfirmation = global.confirm(
-      "Resetar todo o progresso local? Essa acao apaga o save deste navegador e nao pode ser desfeita sem um backup exportado."
+      "Resetar todo o progresso local? Essa ação apaga o save deste navegador e nao pode ser desfeita sem um backup exportado."
     );
     if (!firstConfirmation) return;
 
-    const secondConfirmation = global.confirm("Confirmar reset definitivo do save? Esta acao e irreversivel.");
+    const secondConfirmation = global.confirm("Confirmar reset definitivo do save? Esta ação e irreversível.");
     if (!secondConfirmation) return;
 
     state = Echoes.resetGameState();
@@ -74,7 +74,7 @@
   function handleImportSaveAction() {
     const input = document.querySelector("[data-save-import]");
     if (!input) {
-      renderTransientMessage("Campo de importacao nao encontrado.");
+      renderTransientMessage("Campo de importação nao encontrado.");
       return;
     }
 
@@ -287,7 +287,7 @@
       : null;
 
     if (!hero || !specialization) {
-      renderTransientMessage("Especializacao invalida.");
+      renderTransientMessage("Especialização invalida.");
       return;
     }
 

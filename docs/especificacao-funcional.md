@@ -18,6 +18,7 @@ O jogo é um RPG estratégico em navegador com progressão por torre, invocaçã
 ### Formação e equipamentos
 - `formation.js` organiza a equipe ativa, limites de slots e presets de time.
 - `equipment.js` gera, normaliza, equipa e calcula efeitos de equipamentos.
+- Itens obtidos por eventos ou ganhos especiais recalculem raridade, bônus derivado e nome ao serem normalizados, evitando inconsistências entre raridade visual e estatística efetiva.
 
 ### Progresso principal
 - `tower.js` define andares, capítulos, inimigos, modificadores e batalha da torre.
@@ -31,7 +32,7 @@ O jogo é um RPG estratégico em navegador com progressão por torre, invocaçã
 
 ### Sistemas auxiliares
 - `summon.js` gerencia invocação e histórico de invocação.
-- `expeditions.js` administra expedições, tempos e recompensas.
+- `expeditions.js` administra expedições, tempos e recompensas, escalonando ganhos proporcionalmente ao poder total da equipe.
 - `missions.js` valida missões diárias, conquistas e recompensas.
 
 ### Interface e narrativa

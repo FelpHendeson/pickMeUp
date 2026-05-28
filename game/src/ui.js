@@ -29,7 +29,7 @@
       ["Equip.", state.inventory.length],
       ["Feridos", Echoes.getInjuredHeroes ? Echoes.getInjuredHeroes(state).length : 0],
       ["Exped.", state.activeExpeditions.length],
-      ["Missoes", Echoes.getClaimableMissionCount ? Echoes.getClaimableMissionCount(state) : 0],
+      ["Missões", Echoes.getClaimableMissionCount ? Echoes.getClaimableMissionCount(state) : 0],
     ];
   }
 
@@ -144,10 +144,10 @@
     }
 
     if (hero.level >= Echoes.SPECIALIZATION_LEVEL) {
-      return `<span class="specialization-badge pending">Especializacao disponivel</span>`;
+      return `<span class="specialization-badge pending">Especialização disponivel</span>`;
     }
 
-    return `<span class="specialization-badge locked">Especializacao no nivel ${Echoes.SPECIALIZATION_LEVEL}</span>`;
+    return `<span class="specialization-badge locked">Especialização no nivel ${Echoes.SPECIALIZATION_LEVEL}</span>`;
   }
 
   function renderInfirmaryPatient(hero, state) {
@@ -251,12 +251,12 @@
           </div>
         </article>
         <section class="room-grid">
-          ${renderRoomCard("Portal de Invocacao", state.baseRooms.summonPortal, "Recruta novos herois com ouro ou cristais.")}
+          ${renderRoomCard("Portal de Invocação", state.baseRooms.summonPortal, "Recruta novos herois com ouro ou cristais.")}
           ${renderRoomCard("Quartel", state.baseRooms.barracks, "Organiza a lista de herois e a equipe ativa.")}
           ${renderRoomCard("Campo de Treino", state.baseRooms.trainingGround, "Base para progressao futura de XP passivo.")}
           ${renderRoomCard("Enfermaria", state.baseRooms.infirmary, "Trata ferimentos de herois derrotados na torre.")}
           ${renderRoomCard("Oficina", state.baseRooms.workshop, "Desbloqueia ao vencer o andar 10.")}
-          ${renderRoomCard("Conselho de Missoes", state.baseRooms.missionBoard, "Preparado para expedicoes em versoes futuras.")}
+          ${renderRoomCard("Conselho de Missões", state.baseRooms.missionBoard, "Preparado para expedicoes em versoes futuras.")}
         </section>
         ${renderInfirmary(state)}
       </section>
@@ -266,14 +266,14 @@
   function renderHeroActionButton(hero, inFormation, state) {
     const expedition = state && Echoes.getHeroExpedition ? Echoes.getHeroExpedition(state, hero.id) : null;
     if (inFormation) {
-      return `<button type="button" class="secondary" data-action="removeFormation" data-hero-id="${hero.id}">Remover da formacao</button>`;
+      return `<button type="button" class="secondary" data-action="removeFormation" data-hero-id="${hero.id}">Remover da formação</button>`;
     }
 
     if (expedition) {
       return `<button type="button" class="secondary" disabled>Em expedicao</button>`;
     }
 
-    return `<button type="button" data-action="addFormation" data-hero-id="${hero.id}">Adicionar a formacao</button>`;
+    return `<button type="button" data-action="addFormation" data-hero-id="${hero.id}">Adicionar a formação</button>`;
   }
 
   function renderHeroStatGrid(hero, state) {
@@ -361,7 +361,7 @@
   function renderHeroStateBadges(hero, inFormation, expedition) {
     const badges = [];
 
-    if (inFormation) badges.push(`<span class="state-badge formation">Na formacao</span>`);
+    if (inFormation) badges.push(`<span class="state-badge formation">Na formação</span>`);
     if (expedition) badges.push(`<span class="state-badge expedition">Em expedicao</span>`);
     if (Echoes.hasHeroInjuries && Echoes.hasHeroInjuries(hero)) badges.push(`<span class="state-badge injured">Ferido</span>`);
 
@@ -375,7 +375,7 @@
     if (chosen) {
       return `
         <div class="specialization-panel chosen">
-          <h4>Especializacao</h4>
+          <h4>Especialização</h4>
           <strong>${escapeHtml(chosen.name)} - ${escapeHtml(chosen.passiveName)}</strong>
           <p>${escapeHtml(chosen.description)}</p>
         </div>
@@ -386,7 +386,7 @@
 
     return `
       <div class="specialization-panel">
-        <h4>Escolher especializacao</h4>
+        <h4>Escolher especialização</h4>
         <p>Escolha permanente para definir a progressao deste heroi.</p>
         <div class="specialization-options">
           ${Echoes.getClassSpecializations(hero.classKey)
@@ -503,7 +503,7 @@
           <select data-hero-list-control="status">
             ${renderSelectOption("all", "Todos", UI.heroList.status)}
             ${renderSelectOption("available", "Disponiveis", UI.heroList.status)}
-            ${renderSelectOption("formation", "Na formacao", UI.heroList.status)}
+            ${renderSelectOption("formation", "Na formação", UI.heroList.status)}
             ${renderSelectOption("expedition", "Em expedicao", UI.heroList.status)}
             ${renderSelectOption("injured", "Feridos", UI.heroList.status)}
           </select>
@@ -545,7 +545,7 @@
       return `
         <section class="panel">
           <h2>Herois</h2>
-          <p class="muted">Nenhum heroi recrutado ainda. Va ate Invocacao para chamar a primeira equipe.</p>
+          <p class="muted">Nenhum heroi recrutado ainda. Va ate Invocação para chamar a primeira equipe.</p>
         </section>
       `;
     }
@@ -689,7 +689,7 @@
           }).join("")}
         </div>
         <div class="team-preset-actions">
-          <button type="button" class="secondary" data-action="saveExpeditionPresetFromFormation" data-preset-index="${index}">Usar 3 da formacao</button>
+          <button type="button" class="secondary" data-action="saveExpeditionPresetFromFormation" data-preset-index="${index}">Usar 3 da formação</button>
           <button type="button" class="secondary" data-action="clearTeamPreset" data-preset-type="expedition" data-preset-index="${index}" ${heroCount === 0 ? "disabled" : ""}>Limpar</button>
         </div>
       </article>
@@ -709,7 +709,7 @@
           </div>
           <strong>${Echoes.CONFIG.maxTowerTeamPresets}+${Echoes.CONFIG.maxExpeditionTeamPresets} slots</strong>
         </div>
-        <p class="muted">Salve ate 3 times para torre e configure ate 3 times rapidos de expedicao. Os times salvos nao substituem automaticamente sua formacao ate voce escolher usar.</p>
+        <p class="muted">Salve ate 3 times para torre e configure ate 3 times rapidos de expedicao. Os times salvos nao substituem automaticamente sua formação ate voce escolher usar.</p>
         <h3 class="subheading">Torre</h3>
         <div class="team-preset-grid">
           ${towerPresets.map((preset, index) => renderTowerPresetCard(state, preset, index)).join("")}
@@ -754,7 +754,7 @@
           <div class="section-head">
             <div>
               <p class="eyebrow">Equipe ativa</p>
-              <h2>Formacao</h2>
+              <h2>Formação</h2>
             </div>
             <strong>Poder ${formatNumber(Echoes.getFormationPower(state))}</strong>
           </div>
@@ -771,7 +771,7 @@
           </div>
           ${
             availableHeroes.length === 0
-              ? `<p class="muted">Nao ha herois fora da formacao.</p>`
+              ? `<p class="muted">Nao ha herois fora da formação.</p>`
               : `<div class="card-grid compact-grid">${availableHeroes.map((hero) => renderHeroCard(hero, { compact: true, state })).join("")}</div>`
           }
         </article>
@@ -943,7 +943,7 @@
     return `
       <div class="expedition-setup">
         <div class="summary-grid">
-          <div><span>Duracao</span><strong>${Echoes.formatDuration(definition.durationMs)}</strong></div>
+          <div><span>Duração</span><strong>${Echoes.formatDuration(definition.durationMs)}</strong></div>
           <div><span>Poder recomendado</span><strong>${definition.recommendedPower}</strong></div>
           <div><span>Recompensa base</span><strong>${baseReward}</strong></div>
         </div>
@@ -968,7 +968,7 @@
       <section class="panel">
         <div class="section-head">
           <div>
-            <p class="eyebrow">Missoes idle</p>
+            <p class="eyebrow">Missões idle</p>
             <h2>Expedicoes</h2>
           </div>
           <strong>${state.activeExpeditions.length}/3 em andamento</strong>
@@ -1009,7 +1009,7 @@
       <section class="panel-grid two-columns">
         <article class="panel summon-panel">
           <p class="eyebrow">Portal</p>
-          <h2>Invocacao comum</h2>
+          <h2>Invocação comum</h2>
           <p class="muted">Custo: ${commonCost.amount} ouro.</p>
           <p class="rates">${renderSummonRates("common")}</p>
           <button type="button" data-action="summon" data-summon-type="common" ${
@@ -1018,7 +1018,7 @@
         </article>
         <article class="panel summon-panel superior">
           <p class="eyebrow">Cristais</p>
-          <h2>Invocacao superior</h2>
+          <h2>Invocação superior</h2>
           <p class="muted">Custo: ${superiorCost.amount} cristais.</p>
           <p class="rates">${renderSummonRates("superior")}</p>
           <button type="button" data-action="summon" data-summon-type="superior" ${
@@ -1035,7 +1035,7 @@
           </div>
           ${
             state.summonHistory.length === 0
-              ? `<p class="muted">O historico aparecera aqui apos a primeira invocacao.</p>`
+              ? `<p class="muted">O historico aparecera aqui apos a primeira invocação.</p>`
               : `<div class="history-list">${state.summonHistory
                   .map(
                     (entry) => `
@@ -1132,8 +1132,8 @@
       <section class="panel-grid">
         <article class="panel focus-panel mission-hero-panel">
           <p class="eyebrow">Objetivos</p>
-          <h2>Missoes e conquistas</h2>
-          <p class="muted">Complete objetivos jogando normalmente e colete recompensas uma unica vez. Missoes diarias reiniciam pela data local do navegador.</p>
+          <h2>Missões e conquistas</h2>
+          <p class="muted">Complete objetivos jogando normalmente e colete recompensas uma unica vez. Missões diarias reiniciam pela data local do navegador.</p>
           <div class="summary-grid">
             <div><span>Data diaria</span><strong>${escapeHtml(dailyDate)}</strong></div>
             <div><span>Recompensas prontas</span><strong>${claimable}</strong></div>
@@ -1144,7 +1144,7 @@
           <div class="section-head">
             <div>
               <p class="eyebrow">Reset diario</p>
-              <h2>Missoes diarias</h2>
+              <h2>Missões diarias</h2>
             </div>
             <strong>${dailyDate}</strong>
           </div>
@@ -1178,7 +1178,7 @@
     }
 
     if (formationHeroes.length === 0) {
-      return { canBattle: false, message: "Monte uma formacao antes de entrar na torre." };
+      return { canBattle: false, message: "Monte uma formação antes de entrar na torre." };
     }
 
     const busyHero = formationHeroes.find((hero) => Echoes.isHeroOnExpedition && Echoes.isHeroOnExpedition(state, hero.id));
@@ -1645,7 +1645,7 @@
         <article class="panel settings-panel">
           <p class="eyebrow">Restaurar progresso</p>
           <h2>Importar save</h2>
-          <p class="muted">Selecione um arquivo JSON exportado pelo jogo. O progresso atual sera sobrescrito apos confirmacao.</p>
+          <p class="muted">Selecione um arquivo JSON exportado pelo jogo. O progresso atual sera sobrescrito apos confirmação.</p>
           <input class="hidden-file-input" id="saveImportInput" type="file" accept="application/json,.json" data-save-import />
           <button type="button" class="secondary" data-action="importSave">Selecionar arquivo</button>
         </article>
@@ -1658,7 +1658,7 @@
         <article class="panel wide settings-danger-panel">
           <p class="eyebrow">Zona de risco</p>
           <h2>Resetar save</h2>
-          <p class="muted">Remove todo o progresso local deste navegador. A acao e irreversivel sem um backup exportado.</p>
+          <p class="muted">Remove todo o progresso local deste navegador. A ação e irreversível sem um backup exportado.</p>
           <button type="button" class="danger" data-action="reset">Resetar save</button>
         </article>
         <article class="panel wide settings-panel credits-panel">
