@@ -6,7 +6,7 @@
   const CONFIG = {
     saveKey: "ascensao-dos-ecos-save-v1",
     saveVersion: 1,
-    gameVersion: "0.9.0",
+    gameVersion: "0.10.0",
     commonSummonCost: 100,
     superiorSummonCost: 100,
     towerEnergyCost: 5,
@@ -93,6 +93,9 @@
       consumables: {},
       affinities: {},
       library: null,
+      towerDifficultyStats: null,
+      pendingTowerDifficultyMode: null,
+      deadHeroes: [],
       heroes: [],
       inventory: [],
       activeExpeditions: [],
@@ -260,6 +263,11 @@
     safe.consumables = safe.consumables && typeof safe.consumables === "object" ? safe.consumables : {};
     safe.affinities = safe.affinities && typeof safe.affinities === "object" ? safe.affinities : {};
     safe.library = safe.library && typeof safe.library === "object" ? safe.library : null;
+    safe.towerDifficultyStats =
+      safe.towerDifficultyStats && typeof safe.towerDifficultyStats === "object" ? safe.towerDifficultyStats : null;
+    safe.pendingTowerDifficultyMode =
+      typeof safe.pendingTowerDifficultyMode === "string" ? safe.pendingTowerDifficultyMode : null;
+    safe.deadHeroes = Array.isArray(safe.deadHeroes) ? safe.deadHeroes : [];
 
     while (safe.formation.length < CONFIG.maxFormationSize) {
       safe.formation.push(null);
@@ -305,6 +313,10 @@
 
     if (Echoes.normalizeLibraryState) {
       Echoes.normalizeLibraryState(safe);
+    }
+
+    if (Echoes.normalizeTowerDifficultyState) {
+      Echoes.normalizeTowerDifficultyState(safe);
     }
 
     return safe;

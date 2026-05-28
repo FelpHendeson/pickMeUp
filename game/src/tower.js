@@ -691,7 +691,7 @@
     return floorNumber >= 21 ? 30 : floorNumber >= 9 ? 25 : 0;
   }
 
-  function createEnemyUnit(enemyKey, floorNumber, index, floorData) {
+  function createEnemyUnit(enemyKey, floorNumber, index, floorData, difficultyMode) {
     const archetype = ENEMY_ARCHETYPES[enemyKey] || ENEMY_ARCHETYPES.stoneSlime;
     const isBoss = archetype.role === "chefe";
     const modifiers = getFloorModifierValues(floorData);
@@ -708,6 +708,10 @@
 
     if (Echoes.getWeeklyEventModifier) {
       stats.atk = Math.max(1, Math.round(stats.atk * Echoes.getWeeklyEventModifier("enemyAtkMultiplier", 1)));
+    }
+
+    if (Echoes.applyDifficultyToEnemyStats) {
+      Echoes.applyDifficultyToEnemyStats(stats, difficultyMode);
     }
 
     return {
@@ -727,14 +731,14 @@
     };
   }
 
-  function createEnemiesForFloor(floorNumber) {
+  function createEnemiesForFloor(floorNumber, difficultyMode) {
     const floorData = getFloorData(floorNumber);
     if (!floorData) return [];
 
-    return floorData.enemyKeys.map((enemyKey, index) => createEnemyUnit(enemyKey, floorNumber, index, floorData));
+    return floorData.enemyKeys.map((enemyKey, index) => createEnemyUnit(enemyKey, floorNumber, index, floorData, difficultyMode));
   }
 
-  function getFloorReward(floorNumber) {
+  function getFloorReward(floorNumber, difficultyMode) {
     const chapter = getTowerChapterByFloor(floorNumber);
     const bossFloor = chapter && floorNumber === chapter.endFloor;
     const milestoneFloor =
@@ -768,11 +772,15 @@
       reward.consumableChance = Math.min(0.9, reward.consumableChance * Echoes.getWeeklyEventModifier("consumableDropMultiplier", 1));
     }
 
+    if (Echoes.applyDifficultyToFloorReward) {
+      Echoes.applyDifficultyToFloorReward(reward, difficultyMode);
+    }
+
     return reward;
   }
 
-  function describeReward(floorNumber) {
-    const reward = getFloorReward(floorNumber);
+  function describeReward(floorNumber, difficultyMode) {
+    const reward = getFloorReward(floorNumber, difficultyMode);
     const displayedXp = Math.max(
       1,
       Math.round(reward.xp * (Echoes.getWeeklyEventModifier ? Echoes.getWeeklyEventModifier("heroXpMultiplier", 1) : 1))
@@ -834,7 +842,8 @@
     return Boolean(chapter && chapter.endFloor === floorNumber);
   }
 
-  function buildTowerBattleIntro(floorNumber, floorData, playerTeam, enemyTeam, isRepeat) {
+  function buildTowerBattleIntro(floorNumber, floorData, playerTeam, enemyTeam, isRepeat, difficultyMode) {
+    const difficulty = Echoes.getTowerDifficultyMode ? Echoes.getTowerDifficultyMode(difficultyMode) : null;
     const intro = [
       `${isRepeat ? "Repeticao do andar" : "Andar"} ${floorNumber}: ${floorData.title}.`,
       `Equipe entrou com ${playerTeam.length} heroi(s). Inimigos: ${enemyTeam.map((enemy) => enemy.name).join(", ")}.`,
@@ -843,6 +852,14 @@
 
     if (modifierSummary) {
       intro.push(`Modificadores: ${modifierSummary}.`);
+    }
+
+    if (difficulty && difficulty.id !== "normal") {
+      intro.push(
+        `Modo ${difficulty.name}: inimigos ${Math.round(difficulty.enemyPowerMultiplier * 100)}%, recompensas ${Math.round(
+          difficulty.rewardMultiplier * 100
+        )}%.`
+      );
     }
 
     if (Echoes.getActiveWeeklyEventSummary) {
@@ -876,6 +893,12 @@
     const floorData = getFloorData(floorNumber);
     const formationHeroes = Echoes.getFormationHeroes(state);
     const selectedHeroes = formationHeroes.filter(Boolean);
+    const difficultyMode =
+      Echoes.normalizeTowerDifficultyMode && options && options.difficultyMode
+        ? Echoes.normalizeTowerDifficultyMode(options.difficultyMode)
+        : Echoes.normalizeTowerDifficultyMode
+          ? Echoes.normalizeTowerDifficultyMode(state.pendingTowerDifficultyMode)
+          : "normal";
 
     if (isRepeat && !canRepeatTowerFloor(state, floorNumber)) {
       return { ok: false, message: "Esse andar ainda nao foi vencido e nao pode ser repetido." };
@@ -888,7 +911,13 @@
     }
 
     if (!isRepeat && !(options && options.skipEventRoll) && Echoes.planTowerEventForAttempt) {
-      const plannedEvent = Echoes.planTowerEventForAttempt(state, { floorNumber, floorData, isBoss: isBossFloor(floorData) });
+      state.pendingTowerDifficultyMode = difficultyMode;
+      const plannedEvent = Echoes.planTowerEventForAttempt(state, {
+        floorNumber,
+        floorData,
+        isBoss: isBossFloor(floorData),
+        difficultyMode,
+      });
 
       if (plannedEvent && plannedEvent.phase === "pre") {
         return {
@@ -902,11 +931,15 @@
 
     Echoes.spendResource(state, "energy", Echoes.CONFIG.towerEnergyCost);
     state.lastEnergyAt = Date.now();
+    state.pendingTowerDifficultyMode = null;
 
     const floorModifiers = getFloorModifierValues(floorData);
+    if (Echoes.applyDifficultyToBattleModifiers) {
+      Echoes.applyDifficultyToBattleModifiers(floorModifiers, difficultyMode);
+    }
     const playerTeam = Echoes.createPlayerTeam(formationHeroes, state);
-    const enemyTeam = createEnemiesForFloor(floorNumber);
-    const introLines = buildTowerBattleIntro(floorNumber, floorData, playerTeam, enemyTeam, isRepeat);
+    const enemyTeam = createEnemiesForFloor(floorNumber, difficultyMode);
+    const introLines = buildTowerBattleIntro(floorNumber, floorData, playerTeam, enemyTeam, isRepeat, difficultyMode);
 
     if (Echoes.recordEnemyEncounter) {
       Echoes.recordEnemyEncounter(state, enemyTeam, floorNumber, floorData);
@@ -934,6 +967,9 @@
       if (Echoes.recordMissionProgress) {
         Echoes.recordMissionProgress(state, "towerVictories", 1);
       }
+      if (Echoes.recordTowerDifficultyVictory) {
+        Echoes.recordTowerDifficultyVictory(state, difficultyMode);
+      }
 
       if (isBossFloor(floorData) && playerTeam.every((unit) => unit.hp > 0) && Echoes.recordMissionProgress) {
         Echoes.recordMissionProgress(state, "bossNoCasualtyWins", 1);
@@ -946,7 +982,7 @@
         playerTeam.map((unit) => unit.sourceId),
         battle.log,
         battle,
-        { advanceFloor: !isRepeat }
+        { advanceFloor: !isRepeat, difficultyMode }
       );
 
       if (!isRepeat && Echoes.activatePlannedTowerPostEvent && Echoes.activatePlannedTowerPostEvent(state, floorNumber)) {
@@ -962,6 +998,10 @@
       if (Echoes.clearPlannedTowerPostEvent) {
         Echoes.clearPlannedTowerPostEvent(state);
       }
+    }
+
+    if (Echoes.resolveHardcoreDeaths) {
+      Echoes.resolveHardcoreDeaths(state, playerTeam, battle, floorModifiers);
     }
 
     if (Echoes.resolveBattleInjuries) {

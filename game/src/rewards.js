@@ -133,7 +133,8 @@
 
   function grantTowerVictoryRewards(state, floorNumber, participatingHeroIds, log, battle, options) {
     const shouldAdvanceFloor = !options || options.advanceFloor !== false;
-    const reward = Echoes.getFloorReward(floorNumber);
+    const difficultyMode = options && options.difficultyMode ? options.difficultyMode : "normal";
+    const reward = Echoes.getFloorReward(floorNumber, difficultyMode);
     const heroXpReward = Math.max(
       1,
       Math.round(reward.xp * (Echoes.getWeeklyEventModifier ? Echoes.getWeeklyEventModifier("heroXpMultiplier", 1) : 1))
@@ -143,7 +144,8 @@
     const consumableDropId =
       Echoes.getRandomConsumableId && Math.random() < reward.consumableChance ? Echoes.getRandomConsumableId() : null;
     const shouldDropEquipment = reward.guaranteedEquipment || Math.random() < reward.equipmentChance;
-    const equipmentDrop = shouldDropEquipment ? Echoes.addEquipmentToInventory(state, Echoes.generateEquipment(floorNumber)) : null;
+    const equipmentFloor = Math.max(1, floorNumber + (reward.equipmentRarityBonusFloors || 0));
+    const equipmentDrop = shouldDropEquipment ? Echoes.addEquipmentToInventory(state, Echoes.generateEquipment(equipmentFloor)) : null;
 
     Echoes.addResource(state, "gold", reward.gold);
     Echoes.addResource(state, "crystals", crystalDrop);

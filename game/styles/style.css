@@ -1633,12 +1633,97 @@ body.pref-compact .modifier {
 .repeat-floor-grid {
   display: grid;
   gap: 0.55rem;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: 1fr;
   margin-top: 0.85rem;
 }
 
 .tower-cost-grid {
   margin-bottom: 0.75rem;
+}
+
+.tower-difficulty-stats {
+  margin-top: 0.75rem;
+}
+
+.tower-difficulty-panel {
+  margin-top: 0.85rem;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 8px;
+}
+
+.section-head.compact {
+  margin-bottom: 0.6rem;
+}
+
+.tower-difficulty-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.tower-difficulty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 132px;
+  padding: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.72);
+  color: var(--text);
+  text-align: left;
+  border-radius: 8px;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.tower-difficulty-card:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(248, 250, 252, 0.42);
+  background: rgba(30, 41, 59, 0.84);
+}
+
+.tower-difficulty-card strong {
+  font-size: 1rem;
+}
+
+.tower-difficulty-card span,
+.tower-difficulty-card em {
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.tower-difficulty-card em {
+  color: #fecaca;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.tower-difficulty-card.tone-challenge {
+  border-color: rgba(250, 204, 21, 0.36);
+}
+
+.tower-difficulty-card.tone-hardcore {
+  border-color: rgba(248, 113, 113, 0.5);
+  background: linear-gradient(135deg, rgba(127, 29, 29, 0.5), rgba(15, 23, 42, 0.88));
+}
+
+.repeat-floor-card {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.repeat-floor-card > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.65rem;
+  color: var(--muted);
 }
 
 .tower-preset-panel {
@@ -2358,6 +2443,7 @@ body.pref-compact .modifier {
   .helper-panel,
   .weekly-event-content,
   .recruitment-grid,
+  .tower-difficulty-grid,
   .setting-range {
     grid-template-columns: 1fr;
   }

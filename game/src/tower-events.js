@@ -601,7 +601,12 @@
     ensureTowerEventState(state);
 
     if (state.pendingTowerEvent || state.plannedTowerPostEvent) return null;
-    if (Math.random() >= TOWER_EVENT_CHANCE) return null;
+
+    const difficultyMultiplier = Echoes.getDifficultyEventChanceMultiplier
+      ? Echoes.getDifficultyEventChanceMultiplier(context.difficultyMode)
+      : 1;
+    const eventChance = Math.min(0.85, TOWER_EVENT_CHANCE * difficultyMultiplier);
+    if (Math.random() >= eventChance) return null;
 
     const phase = context.isBoss || Math.random() < 0.42 ? "post" : "pre";
     const fallbackEventKeys = phase === "post" ? POST_EVENT_KEYS : PRE_EVENT_KEYS;

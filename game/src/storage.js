@@ -27,6 +27,9 @@
     if (Echoes.normalizeLibraryState) {
       Echoes.normalizeLibraryState(safeState);
     }
+    if (Echoes.normalizeTowerDifficultyState) {
+      Echoes.normalizeTowerDifficultyState(safeState);
+    }
     return safeState;
   }
 

@@ -67,6 +67,20 @@ function loadLibraryEngine() {
   return Echoes;
 }
 
+function loadDifficultyEngine() {
+  let id = 0;
+  const Echoes = loadGameScript('./game/src/state.js', {
+    crypto: {
+      randomUUID: () => `test-difficulty-${id++}`,
+    },
+  });
+  loadGameScript('./game/src/heroes.js');
+  loadGameScript('./game/src/formation.js');
+  loadGameScript('./game/src/difficulty.js');
+  loadGameScript('./game/src/tower.js');
+  return Echoes;
+}
+
 test('grantEquipment recalcula bonusValue quando a raridade e alterada', () => {
   const Echoes = loadEngine();
   const state = { inventory: [], heroes: [] };
@@ -218,4 +232,51 @@ test('biblioteca registra inimigos, eventos e herois descobertos', () => {
   Echoes.recordHeroDiscovery(state, hero);
   assert.equal(state.library.heroes.classes.mage.discovered, true);
   assert.equal(state.library.heroes.rarities['3'].discovered, true);
+});
+
+test('dificuldades da torre modificam risco, recompensa e estatisticas', () => {
+  const Echoes = loadDifficultyEngine();
+  const state = Echoes.ensureStateShape(Echoes.createInitialState());
+  const hero = Echoes.generateHero({ rarity: 2, classKey: 'warrior' });
+  state.heroes.push(hero);
+  state.formation[0] = hero.id;
+
+  const normalReward = Echoes.getFloorReward(5, 'normal');
+  const challengeReward = Echoes.getFloorReward(5, 'challenge');
+  assert.ok(challengeReward.gold > normalReward.gold);
+  assert.ok(challengeReward.equipmentChance > normalReward.equipmentChance);
+
+  const normalEnemy = Echoes.createEnemiesForFloor(5, 'normal')[0];
+  const hardcoreEnemy = Echoes.createEnemiesForFloor(5, 'hardcore')[0];
+  assert.ok(hardcoreEnemy.stats.hp > normalEnemy.stats.hp);
+  assert.ok(hardcoreEnemy.stats.atk > normalEnemy.stats.atk);
+
+  Echoes.recordTowerDifficultyVictory(state, 'challenge');
+  assert.equal(state.towerDifficultyStats.victories.challenge, 1);
+
+  Echoes.resolveHardcoreDeaths(
+    state,
+    [{ side: 'player', sourceId: hero.id, hp: 0 }],
+    null,
+    { permanentDeathChance: 0 }
+  );
+  assert.equal(state.heroes.length, 1);
+
+  const originalRandom = Math.random;
+  Math.random = () => 0;
+  try {
+    Echoes.resolveHardcoreDeaths(
+      state,
+      [{ side: 'player', sourceId: hero.id, hp: 0 }],
+      null,
+      { permanentDeathChance: 1 }
+    );
+  } finally {
+    Math.random = originalRandom;
+  }
+
+  assert.equal(state.heroes.length, 0);
+  assert.equal(state.formation[0], null);
+  assert.equal(state.deadHeroes.length, 1);
+  assert.equal(state.towerDifficultyStats.hardcoreDeaths, 1);
 });

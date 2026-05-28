@@ -216,6 +216,16 @@
   function handleBattleAction(options) {
     const repeatFloor = options && options.repeatFloor;
     const floorNumber = repeatFloor ? Number(repeatFloor) : state.towerFloor;
+    const difficultyMode = Echoes.normalizeTowerDifficultyMode
+      ? Echoes.normalizeTowerDifficultyMode(options && options.difficultyMode)
+      : "normal";
+
+    if (difficultyMode === "hardcore") {
+      const confirmed = global.confirm(
+        "Iniciar este combate no modo Hardcore?\n\nInimigos ficam muito mais fortes e herois que cairem podem morrer permanentemente. Essa perda nao acontece nos modos Normal ou Desafio."
+      );
+      if (!confirmed) return;
+    }
 
     if (!repeatFloor && Echoes.queueBossBeforeNarrative && Echoes.queueBossBeforeNarrative(state, floorNumber)) {
       Echoes.setTab("tower");
@@ -223,7 +233,7 @@
       return;
     }
 
-    const result = Echoes.runTowerBattle(state, options);
+    const result = Echoes.runTowerBattle(state, Object.assign({}, options || {}, { difficultyMode }));
 
     if (!result.ok) {
       renderTransientMessage(result.message);
@@ -260,7 +270,21 @@
       return;
     }
 
-    const battleResult = Echoes.runTowerBattle(state, { skipEventRoll: true });
+    if (state.pendingTowerDifficultyMode === "hardcore") {
+      const confirmed = global.confirm(
+        "Confirmar inicio do combate Hardcore apos o evento? Herois que cairem ainda podem morrer permanentemente."
+      );
+      if (!confirmed) {
+        Echoes.setTab("tower");
+        saveAndRender(eventResult.message);
+        return;
+      }
+    }
+
+    const battleResult = Echoes.runTowerBattle(state, {
+      skipEventRoll: true,
+      difficultyMode: state.pendingTowerDifficultyMode || "normal",
+    });
 
     if (!battleResult.ok) {
       Echoes.setTab("tower");
@@ -564,8 +588,10 @@
     if (action === "applyTowerPreset") return handleApplyTowerPresetAction(target);
     if (action === "clearTeamPreset") return handleClearTeamPresetAction(target);
     if (action === "saveExpeditionPresetFromFormation") return handleSaveExpeditionPresetFromFormationAction(target);
-    if (action === "battle") return handleBattleAction();
-    if (action === "repeatBattle") return handleBattleAction({ repeatFloor: Number(target.dataset.repeatFloor) });
+    if (action === "battle") return handleBattleAction({ difficultyMode: target.dataset.difficultyMode });
+    if (action === "repeatBattle") {
+      return handleBattleAction({ repeatFloor: Number(target.dataset.repeatFloor), difficultyMode: target.dataset.difficultyMode });
+    }
     if (action === "towerEventChoice") return handleTowerEventChoiceAction(target);
     if (action === "useConsumable") return handleUseConsumableAction(target);
     if (action === "equipItem") return handleEquipItemAction(target);

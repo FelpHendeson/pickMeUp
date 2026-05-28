@@ -1563,6 +1563,68 @@
     `;
   }
 
+  function renderDifficultyRisk(mode) {
+    if (!mode || mode.id !== "hardcore") return "Sem morte permanente";
+    return Math.round(mode.permanentDeathChance * 100) + "% de morte ao cair";
+  }
+
+  function renderTowerDifficultyStats(state) {
+    const stats = state.towerDifficultyStats || {};
+    const victories = stats.victories || {};
+
+    return `
+      <div class="summary-grid tower-difficulty-stats">
+        <div><span>Vitorias Normal</span><strong>${victories.normal || 0}</strong></div>
+        <div><span>Vitorias Desafio</span><strong>${victories.challenge || 0}</strong></div>
+        <div><span>Vitorias Hardcore</span><strong>${victories.hardcore || 0}</strong></div>
+        <div><span>Perdas Hardcore</span><strong>${stats.hardcoreDeaths || 0}</strong></div>
+      </div>
+    `;
+  }
+
+  function renderTowerDifficultyPicker(state, battleStatus, repeatFloor) {
+    const modes = Echoes.TOWER_DIFFICULTY_MODES ? Object.values(Echoes.TOWER_DIFFICULTY_MODES) : [];
+    if (modes.length === 0) return `<button type="button" data-action="battle" ${battleStatus.canBattle ? "" : "disabled"}>Iniciar combate automatico</button>`;
+
+    return `
+      <div class="tower-difficulty-panel">
+        <div class="section-head compact">
+          <div>
+            <p class="eyebrow">Risco e recompensa</p>
+            <h3>Escolha a dificuldade</h3>
+          </div>
+          <strong>Antes da luta</strong>
+        </div>
+        <div class="tower-difficulty-grid">
+          ${modes
+            .map((mode) => {
+              const action = repeatFloor ? "repeatBattle" : "battle";
+              const repeatData = repeatFloor ? 'data-repeat-floor="' + repeatFloor + '"' : "";
+              const deathWarning = mode.id === "hardcore" ? '<em>Morte permanente possivel</em>' : "";
+
+              return `
+                <button
+                  type="button"
+                  class="tower-difficulty-card tone-${mode.tone}"
+                  data-action="${action}"
+                  data-difficulty-mode="${mode.id}"
+                  ${repeatData}
+                  ${battleStatus.canBattle ? "" : "disabled"}
+                >
+                  <strong>${escapeHtml(mode.name)}</strong>
+                  <span>Inimigos ${Math.round(mode.enemyPowerMultiplier * 100)}% | Recompensas ${Math.round(mode.rewardMultiplier * 100)}%</span>
+                  <span>Ferimentos ${mode.injuryChanceMultiplier === 1 ? "padrao" : "+" + Math.round((mode.injuryChanceMultiplier - 1) * 100) + "%"}</span>
+                  <span>${renderDifficultyRisk(mode)}</span>
+                  ${deathWarning}
+                </button>
+              `;
+            })
+            .join("")}
+        </div>
+      </div>
+    `;
+  }
+
   function renderTowerEventChoice(state, event, choice) {
     const availability = Echoes.canChooseTowerEventOption
       ? Echoes.canChooseTowerEventOption(state, event, choice.id)
@@ -1752,21 +1814,19 @@
           <div><span>Energia atual</span><strong>${state.resources.energy}/${state.resources.maxEnergy}</strong></div>
           <div><span>Poder equipe</span><strong>${formatNumber(Echoes.getFormationPower(state))}</strong></div>
         </div>
+        ${renderTowerDifficultyStats(state)}
         ${renderTowerBattleStatus(battleStatus)}
         <div class="repeat-floor-grid">
           ${completedFloors
             .map(
               (floor) => `
-                <button
-                  type="button"
-                  class="secondary repeat-floor-button"
-                  data-action="repeatBattle"
-                  data-repeat-floor="${floor.floor}"
-                  ${battleStatus.canBattle ? "" : "disabled"}
-                >
-                  <span>Andar ${floor.floor}</span>
-                  <small>${floor.title}</small>
-                </button>
+                <div class="repeat-floor-card">
+                  <div>
+                    <strong>Andar ${floor.floor}</strong>
+                    <span>${escapeHtml(floor.title)}</span>
+                  </div>
+                  ${renderTowerDifficultyPicker(state, battleStatus, floor.floor)}
+                </div>
               `
             )
             .join("")}
@@ -1822,11 +1882,12 @@
             <div><span>Custo</span><strong>${Echoes.CONFIG.towerEnergyCost} energia</strong></div>
             <div><span>Poder equipe</span><strong>${formatNumber(Echoes.getFormationPower(state))}</strong></div>
           </div>
+          ${renderTowerDifficultyStats(state)}
           ${floorData.modifier ? `<p class="modifier">${floorData.modifier}</p>` : ""}
           ${modifierSummary ? `<p class="modifier">Modificadores: ${escapeHtml(modifierSummary)}.</p>` : ""}
           ${renderTowerBattleEffects(state)}
           ${renderTowerBattleStatus(battleStatus)}
-          <button type="button" data-action="battle" ${battleStatus.canBattle ? "" : "disabled"}>Iniciar combate automatico</button>
+          ${renderTowerDifficultyPicker(state, battleStatus)}
         </article>
         <article class="panel">
           <h2>Previa</h2>
