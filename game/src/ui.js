@@ -340,6 +340,7 @@
   function renderHeroEquipmentModal(hero, state) {
     Echoes.normalizeHeroEquipmentSlots(hero);
     const isOpen = UI.activeEquipmentModalHeroId === hero.id;
+    if (!isOpen) return "";
 
     const freeItems = (state.inventory || [])
       .filter((item) => !Echoes.findEquipmentOwner(state, item.id))
@@ -374,12 +375,8 @@
       `;
     }).join("");
 
-    const modalAttributes = isOpen
-      ? 'role="dialog" aria-modal="true" aria-hidden="false"'
-      : 'role="dialog" aria-modal="true" aria-hidden="true" hidden';
-
     return `
-      <section class="equipment-backdrop" ${modalAttributes} data-hero-equipment-modal="${hero.id}">
+      <section class="equipment-backdrop" role="dialog" aria-modal="true" aria-hidden="false" data-hero-equipment-modal="${hero.id}">
         <article class="equipment-modal">
           <div class="section-head">
             <div>

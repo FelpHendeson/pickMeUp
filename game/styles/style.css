@@ -1500,6 +1500,10 @@ body.pref-compact .modifier {
   z-index: 30;
 }
 
+.equipment-backdrop[hidden] {
+  display: none !important;
+}
+
 .equipment-modal {
   background:
     linear-gradient(135deg, rgba(214, 168, 78, 0.12), transparent 38%),
