@@ -914,6 +914,10 @@
       introLines.push(...Echoes.applyAndConsumeTowerBattleEffects(state, playerTeam, floorModifiers));
     }
 
+    if (Echoes.applyAffinityBattleStartBonuses) {
+      introLines.push(...Echoes.applyAffinityBattleStartBonuses(state, playerTeam));
+    }
+
     const battle = Echoes.runAutoBattle(
       playerTeam,
       enemyTeam,
@@ -962,6 +966,10 @@
 
     if (Echoes.applyBattleMoraleChanges) {
       Echoes.applyBattleMoraleChanges(state, playerTeam, battle.result, battle);
+    }
+
+    if (Echoes.recordBattleAffinity) {
+      Echoes.recordBattleAffinity(state, playerTeam, battle.result, isBossFloor(floorData));
     }
 
     persistPlayerHpAfterBattle(state, playerTeam);

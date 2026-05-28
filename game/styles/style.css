@@ -1178,6 +1178,37 @@ body.pref-compact .modifier {
   line-height: 1.35;
 }
 
+.affinity-list {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.75rem 0 0;
+}
+
+.affinity-list h4 {
+  color: var(--gold);
+  font-size: 0.8rem;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.affinity-pill {
+  background: rgba(86, 199, 189, 0.1);
+  border: 1px solid rgba(86, 199, 189, 0.28);
+  border-radius: 8px;
+  color: #d7fffb;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  padding: 0.45rem 0.55rem;
+}
+
+.affinity-pill em {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-style: normal;
+  line-height: 1.35;
+}
+
 .specialization-panel {
   background: #171514;
   border: 1px solid rgba(155, 127, 232, 0.34);

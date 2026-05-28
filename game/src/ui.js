@@ -417,6 +417,26 @@
     `;
   }
 
+
+  function renderHeroAffinityList(hero, state, compact) {
+    if (compact || !state || !Echoes.getHeroAffinitySummaries) return "";
+
+    const affinities = Echoes.getHeroAffinitySummaries(state, hero.id).slice(0, 3);
+    if (affinities.length === 0) {
+      return '<div class="affinity-list"><h4>Afinidades</h4><p class="muted">Ainda sem vinculos relevantes.</p></div>';
+    }
+
+    return (
+      '<div class="affinity-list">' +
+        '<h4>Afinidades</h4>' +
+        affinities.map((affinity) => {
+          const progress = affinity.nextXp ? affinity.xp + '/' + affinity.nextXp : 'Max';
+          return '<span class="affinity-pill"><strong>' + escapeHtml(affinity.ally.name) + ' | ' + escapeHtml(affinity.label) + '</strong><em>' + escapeHtml(affinity.bonusText) + ' | ' + progress + '</em></span>';
+        }).join('') +
+      '</div>'
+    );
+  }
+
   function renderHeroCard(hero, options) {
     const inFormation = options && options.inFormation;
     const compact = options && options.compact;
@@ -449,6 +469,7 @@
           ${expedition ? `<span>Expedicao: ${expedition.name}</span>` : ""}
         </div>
         ${renderInjuryList(hero, compact)}
+        ${renderHeroAffinityList(hero, state, compact)}
         ${
           compact
             ? ""

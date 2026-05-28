@@ -36,6 +36,20 @@ function loadConsumableEngine() {
   return Echoes;
 }
 
+function loadAffinityEngine() {
+  let id = 0;
+  const Echoes = loadGameScript('./game/src/state.js', {
+    crypto: {
+      randomUUID: () => `test-affinity-${id++}`,
+    },
+  });
+  loadGameScript('./game/src/heroes.js');
+  loadGameScript('./game/src/formation.js');
+  loadGameScript('./game/src/affinity.js');
+  loadGameScript('./game/src/battle.js');
+  return Echoes;
+}
+
 test('grantEquipment recalcula bonusValue quando a raridade e alterada', () => {
   const Echoes = loadEngine();
   const state = { inventory: [], heroes: [] };
@@ -128,4 +142,34 @@ test('consumiveis de proxima batalha e pedra de retorno aplicam estado esperado'
   const returned = Echoes.useConsumable(state, 'return_stone');
   assert.equal(returned.ok, true);
   assert.equal(state.pendingTowerEvent, null);
+});
+
+test('afinidade acumula por atividades em dupla e aplica bonus leves', () => {
+  const Echoes = loadAffinityEngine();
+  const state = Echoes.ensureStateShape(Echoes.createInitialState());
+  const heroA = Echoes.generateHero({ rarity: 2, classKey: 'warrior' });
+  const heroB = Echoes.generateHero({ rarity: 2, classKey: 'priest' });
+  state.heroes.push(heroA, heroB);
+
+  Echoes.recordExpeditionAffinity(state, [heroA.id, heroB.id]);
+  Echoes.recordBattleAffinity(
+    state,
+    [
+      { sourceId: heroA.id, hp: 10 },
+      { sourceId: heroB.id, hp: 10 },
+    ],
+    'victory',
+    true
+  );
+
+  const summary = Echoes.getAffinitySummary(state, heroA.id, heroB.id);
+  assert.equal(summary.xp, 5);
+  assert.equal(summary.level, 1);
+
+  const team = Echoes.createPlayerTeam([heroA, heroB], state);
+  const beforeEnergy = team[0].energy;
+  const lines = Echoes.applyAffinityBattleStartBonuses(state, team);
+  assert.ok(lines.length > 0);
+  assert.ok(team[0].energy > beforeEnergy);
+  assert.ok(Echoes.getAffinityXpMultiplier(state, heroA.id, [heroA.id, heroB.id]) > 1);
 });

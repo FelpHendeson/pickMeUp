@@ -45,6 +45,7 @@
       hp: currentHp > 0 ? currentHp : 1,
       energy: isFrontSlot ? BATTLE_CONFIG.frontSlotStartingEnergy : 0,
       morale: Number.isFinite(hero.morale) ? hero.morale : 80,
+      affinityLevels: {},
       statuses: {},
       position: isFrontSlot ? "front" : "back",
     };
@@ -88,13 +89,29 @@
     const targetPool = frontLine.length > 0 && Math.random() < BATTLE_CONFIG.frontTargetChance ? frontLine : living;
     const target = targetPool[Math.floor(Math.random() * targetPool.length)];
 
-    return Echoes.getSpecializationProtectionTarget ? Echoes.getSpecializationProtectionTarget(target, living) : target;
+    const specializedTarget = Echoes.getSpecializationProtectionTarget
+      ? Echoes.getSpecializationProtectionTarget(target, living)
+      : target;
+
+    if (specializedTarget !== target) return specializedTarget;
+    return Echoes.getAffinityProtectionTarget ? Echoes.getAffinityProtectionTarget(target, living, attacker) : target;
   }
 
   function createPlayerTeam(formationHeroes, state) {
-    return formationHeroes
+    const playerTeam = formationHeroes
       .map((hero, slotIndex) => (hero ? createPlayerBattleUnit(hero, slotIndex, state) : null))
       .filter(Boolean);
+
+    if (state && Echoes.getAffinitySummary) {
+      playerTeam.forEach((unit) => {
+        playerTeam.forEach((ally) => {
+          if (unit.sourceId === ally.sourceId) return;
+          unit.affinityLevels[ally.sourceId] = Echoes.getAffinitySummary(state, unit.sourceId, ally.sourceId).level;
+        });
+      });
+    }
+
+    return playerTeam;
   }
 
   function formatUnitHp(unit) {

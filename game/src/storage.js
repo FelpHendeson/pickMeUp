@@ -21,6 +21,9 @@
     if (Echoes.normalizeConsumablesState) {
       Echoes.normalizeConsumablesState(safeState);
     }
+    if (Echoes.normalizeAffinitiesState) {
+      Echoes.normalizeAffinitiesState(safeState);
+    }
     return safeState;
   }
 

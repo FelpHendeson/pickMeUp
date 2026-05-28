@@ -579,8 +579,12 @@
 
     const message = resolveEventEffect(state, event, choice);
     const shouldStartBattle = event.phase === "pre";
+    const dangerousEvent = event.typeKey === "trap" || event.typeKey === "darkAltar";
 
     recordTowerEventHistory(state, event, choice, message);
+    if (dangerousEvent && Echoes.recordDangerousEventAffinity) {
+      Echoes.recordDangerousEventAffinity(state);
+    }
     state.pendingTowerEvent = null;
 
     return {

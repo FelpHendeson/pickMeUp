@@ -44,7 +44,9 @@
       const hero = Echoes.findHero(state, heroId);
       if (!hero) return;
 
-      const xpResult = Echoes.addHeroXp(hero, xpAmount);
+      const affinityMultiplier = Echoes.getAffinityXpMultiplier ? Echoes.getAffinityXpMultiplier(state, heroId, heroIds) : 1;
+      const adjustedXp = Math.max(1, Math.round(xpAmount * affinityMultiplier));
+      const xpResult = Echoes.addHeroXp(hero, adjustedXp);
       if (xpResult.levelUps.length > 0) {
         addRewardEvent(log, battle, "reward", `${hero.name} subiu para o nivel ${hero.level}.`);
       }

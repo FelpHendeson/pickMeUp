@@ -174,6 +174,10 @@
     state.activeExpeditions = Array.isArray(state.activeExpeditions) ? state.activeExpeditions : [];
     state.activeExpeditions.push(activeExpedition);
 
+    if (Echoes.recordExpeditionAffinity) {
+      Echoes.recordExpeditionAffinity(state, uniqueHeroIds);
+    }
+
     return {
       ok: true,
       expedition: activeExpedition,
