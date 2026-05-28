@@ -210,6 +210,17 @@ Arquivos principais:
 
 - `game/src/tower.js`
 - `game/src/rewards.js`
+- `game/src/difficulty.js`
+
+### Modos de dificuldade da torre
+
+Antes de iniciar um andar, o jogador escolhe o risco da tentativa:
+
+- Normal: regras atuais, recompensas padrao e sem morte permanente;
+- Desafio: inimigos 125%, recompensas 150%, mais ferimentos e maior chance de eventos;
+- Hardcore: inimigos 150%, recompensas 220%, risco real de morte permanente para herois que caem.
+
+O modo escolhido afeta forca inimiga, recompensas, chance de consumiveis/equipamentos, ferimentos e estatisticas por modo. Morte permanente so existe quando o modificador Hardcore esta ativo.
 
 ### Eventos aleatorios da torre
 
@@ -373,6 +384,7 @@ Arquivo principal:
 |       +-- tower.js
 |       +-- tower-events.js
 |       +-- library.js
+|       +-- difficulty.js
 |       +-- summon.js
 |       +-- rewards.js
 |       +-- injuries.js
@@ -438,6 +450,7 @@ Responsabilidades principais:
 - `tower.js`: andares, inimigos e inicio de batalhas;
 - `tower-events.js`: eventos aleatorios;
 - `library.js`: biblioteca, bestiario e registros de descoberta;
+- `difficulty.js`: modos de dificuldade da torre, risco hardcore e estatisticas por modo;
 - `battle.js`: simulacao de combate;
 - `rewards.js`: recompensas;
 - `missions.js`: missoes diarias, conquistas e recompensas de objetivos;
