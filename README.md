@@ -60,9 +60,29 @@ O estado inicial inclui recursos como:
 - cristais;
 - essencia;
 - fragmentos;
+- fragmentos de eco;
 - energia.
 
 A energia regenera com o tempo, e a torre consome energia para iniciar batalhas.
+
+### Reliquias permanentes
+
+Reliquias sao aprimoramentos globais da conta comprados com Fragmentos de Eco. Elas ficam salvas no progresso local, entram no export/import de save e funcionam como progressao permanente sem depender de um heroi especifico.
+
+Reliquias iniciais:
+
+- Nucleo da Torre: aumenta HP maximo global;
+- Chama do Comandante: aumenta ATK global;
+- Escudo dos Sobreviventes: aumenta DEF global;
+- Olho do Destino: aumenta LUCK global;
+- Selo do Portal: reduz custo de invocacoes;
+- Ampulheta Arcana: reduz duracao de expedicoes.
+
+Fragmentos de Eco podem vir de chefes de capitulo, conquistas importantes, eventos especiais e drops raros da torre.
+
+Arquivo principal:
+
+- `game/src/relics.js`
 
 ### Herois
 
@@ -267,6 +287,7 @@ Arquivo principal:
 |   +-- src/
 |       +-- state.js
 |       +-- weekly-events.js
+|       +-- relics.js
 |       +-- storage.js
 |       +-- heroes.js
 |       +-- formation.js
@@ -330,6 +351,7 @@ Responsabilidades principais:
 
 - `state.js`: estado inicial, recursos e normalizacao de save;
 - `weekly-events.js`: eventos semanais locais e modificadores temporarios;
+- `relics.js`: reliquias permanentes, Fragmentos de Eco e bonus globais;
 - `storage.js`: carregar, salvar e resetar progresso;
 - `heroes.js`: criacao, atributos e progressao de herois;
 - `formation.js`: equipe ativa;
@@ -384,4 +406,5 @@ O foco atual e consolidar o loop principal:
 4. enfrentar andares da torre;
 5. lidar com eventos, moral e ferimentos;
 6. cumprir missoes e conquistas;
-7. evoluir herois e desbloquear especializacoes.
+7. evoluir herois e desbloquear especializacoes;
+8. aprimorar reliquias permanentes da conta.
