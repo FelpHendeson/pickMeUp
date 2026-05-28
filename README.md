@@ -84,6 +84,24 @@ Arquivo principal:
 
 - `game/src/relics.js`
 
+### Biblioteca e bestiario
+
+A Biblioteca registra descobertas do jogador e funciona como colecao de mundo.
+
+Secoes atuais:
+
+- Bestiario: inimigos encontrados, derrotas, regioes, detalhes liberados por vitorias;
+- Chefes: tentativas, melhor resultado, capitulo e recompensa especial;
+- Eventos da Torre: eventos encontrados e resultados ja vistos;
+- Reliquias: reliquias bloqueadas e desbloqueadas;
+- Herois Encontrados: classes, raridades e tracos ja obtidos.
+
+Inimigos aparecem como desconhecidos ate serem enfrentados. Depois de algumas derrotas, a entrada libera atributos aproximados, habilidades e drops.
+
+Arquivo principal:
+
+- `game/src/library.js`
+
 ### Herois
 
 Herois possuem:
@@ -354,6 +372,7 @@ Arquivo principal:
 |       +-- battle-view.js
 |       +-- tower.js
 |       +-- tower-events.js
+|       +-- library.js
 |       +-- summon.js
 |       +-- rewards.js
 |       +-- injuries.js
@@ -418,6 +437,7 @@ Responsabilidades principais:
 - `consumables.js`: consumiveis, validacao de uso, recuperacao e efeitos de proxima batalha;
 - `tower.js`: andares, inimigos e inicio de batalhas;
 - `tower-events.js`: eventos aleatorios;
+- `library.js`: biblioteca, bestiario e registros de descoberta;
 - `battle.js`: simulacao de combate;
 - `rewards.js`: recompensas;
 - `missions.js`: missoes diarias, conquistas e recompensas de objetivos;

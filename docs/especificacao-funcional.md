@@ -30,6 +30,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 - `tower-events.js` controla eventos aleatorios antes e depois de combates, escolhas de risco/recompensa e efeitos aplicado na proxima luta.
 - `weekly-events.js` aplica eventos semanais locais conforme o calendario do navegador.
 - `rewards.js` concede recompensas de vitória, marcos de capitulo, drops especiais e itens permanentes.
+- `library.js` registra bestiario, chefes, eventos, reliquias e herois encontrados.
 
 ### Combate
 - `battle.js` simula o combate automatico com turnos, energia, alvos, dano, cura, status e efeitos.
@@ -58,6 +59,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 ## Regras de alto nível
 - O progresso e salvo localmente no navegador com `localStorage`, `saveVersion` e normalizacao ao carregar.
 - A torre e o eixo principal do jogo, com capitulos marcados, chefes e modificadores por regiao.
+- Descobertas do jogador devem ser persistidas na Biblioteca e evoluir conforme uso real dos sistemas.
 - Eventos semanais locais, eventos aleatorios da torre e narrativas curtas mantem o jogo vivo sem backend.
 - Recursos principais incluem ouro, cristais, essencia, fragmentos, Fragmentos de Eco e energia.
 - Energia regenera com o tempo e deve permitir teste rapido de composicoes sem bloquear o jogador.
