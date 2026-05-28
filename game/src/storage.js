@@ -12,6 +12,9 @@
     if (Echoes.normalizeMissionState) {
       Echoes.normalizeMissionState(safeState);
     }
+    if (Echoes.normalizeRelicState) {
+      Echoes.normalizeRelicState(safeState);
+    }
     return safeState;
   }
 

@@ -331,6 +331,18 @@
     saveAndRender(result.message);
   }
 
+  function handleUpgradeRelicAction(target) {
+    const result = Echoes.upgradeRelic(state, target.dataset.relicId);
+
+    if (!result.ok) {
+      renderTransientMessage(result.message);
+      return;
+    }
+
+    Echoes.setTab("relics");
+    saveAndRender(result.message);
+  }
+
   function handleTreatInjuriesAction(target) {
     const result = Echoes.treatHeroInjuries(state, target.dataset.heroId, target.dataset.treatmentResource);
 
@@ -515,6 +527,7 @@
     if (action === "chooseSpecialization") return handleChooseSpecializationAction(target);
     if (action === "claimDailyMission") return handleClaimDailyMissionAction(target);
     if (action === "claimAchievement") return handleClaimAchievementAction(target);
+    if (action === "upgradeRelic") return handleUpgradeRelicAction(target);
     if (action === "clearChapterCompletion") return handleClearChapterCompletionAction();
     if (action === "treatInjuries") return handleTreatInjuriesAction(target);
     if (action === "selectExpeditionPreset") return handleSelectExpeditionPresetAction(target);

@@ -12,7 +12,7 @@
     log.push(message);
   }
 
-  function addRewardLogLines(reward, crystalDrop, equipmentDrop, log, battle, heroXpReward) {
+  function addRewardLogLines(reward, crystalDrop, echoFragmentDrop, equipmentDrop, log, battle, heroXpReward) {
     const displayedHeroXp = heroXpReward || reward.xp;
 
     addRewardEvent(
@@ -25,6 +25,7 @@
     if (crystalDrop > 0) addRewardEvent(log, battle, "reward", `Cristais encontrados: +${crystalDrop}.`);
     if (reward.essence > 0) addRewardEvent(log, battle, "reward", `Essencia recuperada: +${reward.essence}.`);
     if (reward.fragments > 0) addRewardEvent(log, battle, "reward", `Fragmentos recolhidos: +${reward.fragments}.`);
+    if (echoFragmentDrop > 0) addRewardEvent(log, battle, "reward", `Fragmentos de Eco ressoaram: +${echoFragmentDrop}.`);
     if (equipmentDrop) {
       addRewardEvent(
         log,
@@ -72,7 +73,13 @@
   function getResourceRewardText(reward) {
     return Object.keys(reward)
       .filter((resourceKey) => reward[resourceKey] > 0)
-      .map((resourceKey) => `+${reward[resourceKey]} ${resourceKey === "gold" ? "ouro" : resourceKey === "crystals" ? "cristais" : resourceKey === "essence" ? "essencia" : "fragmentos"}`)
+      .map((resourceKey) => {
+        if (resourceKey === "gold") return `+${reward[resourceKey]} ouro`;
+        if (resourceKey === "crystals") return `+${reward[resourceKey]} cristais`;
+        if (resourceKey === "essence") return `+${reward[resourceKey]} essencia`;
+        if (resourceKey === "echoFragments") return `+${reward[resourceKey]} fragmentos de eco`;
+        return `+${reward[resourceKey]} fragmentos`;
+      })
       .join(", ");
   }
 
@@ -116,6 +123,7 @@
       Math.round(reward.xp * (Echoes.getWeeklyEventModifier ? Echoes.getWeeklyEventModifier("heroXpMultiplier", 1) : 1))
     );
     const crystalDrop = Math.random() < reward.crystalChance ? reward.crystalAmount : 0;
+    const echoFragmentDrop = Math.random() < reward.echoFragmentChance ? reward.echoFragmentAmount : 0;
     const shouldDropEquipment = reward.guaranteedEquipment || Math.random() < reward.equipmentChance;
     const equipmentDrop = shouldDropEquipment ? Echoes.addEquipmentToInventory(state, Echoes.generateEquipment(floorNumber)) : null;
 
@@ -123,10 +131,11 @@
     Echoes.addResource(state, "crystals", crystalDrop);
     Echoes.addResource(state, "essence", reward.essence);
     Echoes.addResource(state, "fragments", reward.fragments);
+    Echoes.addResource(state, "echoFragments", echoFragmentDrop);
     Echoes.addResource(state, "energy", reward.energyRefund);
     Echoes.addAccountXp(state, Math.ceil(reward.xp / 2));
 
-    addRewardLogLines(reward, crystalDrop, equipmentDrop, log, battle, heroXpReward);
+    addRewardLogLines(reward, crystalDrop, echoFragmentDrop, equipmentDrop, log, battle, heroXpReward);
     grantHeroXpRewards(state, participatingHeroIds, heroXpReward, log, battle);
 
     if (shouldAdvanceFloor) {

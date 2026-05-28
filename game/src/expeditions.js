@@ -127,6 +127,12 @@
     return getExpeditionRewardPreview(state, definition, activeExpedition.heroIds);
   }
 
+  function getExpeditionDurationMs(state, definition) {
+    if (!definition) return 0;
+    if (!Echoes.getRelicAdjustedExpeditionDuration) return definition.durationMs;
+    return Echoes.getRelicAdjustedExpeditionDuration(state, definition.durationMs);
+  }
+
   function getExpeditionRemainingMs(activeExpedition, now) {
     return Math.max(0, activeExpedition.endsAt - (now || Date.now()));
   }
@@ -154,13 +160,14 @@
     if (busyHero) return { ok: false, message: "Um dos herois selecionados ja esta em expedicao." };
 
     const now = Date.now();
+    const durationMs = getExpeditionDurationMs(state, definition);
     const reward = getExpeditionRewardPreview(state, definition, uniqueHeroIds);
     const activeExpedition = {
       id: createExpeditionId(expeditionId),
       expeditionId,
       heroIds: uniqueHeroIds,
       startedAt: now,
-      endsAt: now + definition.durationMs,
+      endsAt: now + durationMs,
       reward,
     };
 
@@ -231,6 +238,7 @@
   Echoes.getExpeditionRewardMultiplier = getExpeditionRewardMultiplier;
   Echoes.getExpeditionRewardPreview = getExpeditionRewardPreview;
   Echoes.getActiveExpeditionReward = getActiveExpeditionReward;
+  Echoes.getExpeditionDurationMs = getExpeditionDurationMs;
   Echoes.getExpeditionRemainingMs = getExpeditionRemainingMs;
   Echoes.isExpeditionComplete = isExpeditionComplete;
   Echoes.startExpedition = startExpedition;

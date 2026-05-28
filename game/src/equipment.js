@@ -163,6 +163,10 @@
       Echoes.applySpecializationStatModifiers(stats, hero);
     }
 
+    if (Echoes.applyRelicStatModifiers) {
+      Echoes.applyRelicStatModifiers(stats, state);
+    }
+
     if (Echoes.applyHeroInjuryModifiers) {
       Echoes.applyHeroInjuryModifiers(stats, hero);
     }

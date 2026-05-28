@@ -59,13 +59,17 @@
     return table[table.length - 1].rarity;
   }
 
-  function getSummonCost(type) {
+  function getSummonCost(type, state) {
+    const relicMultiplier = state && Echoes.getRelicSummonCostMultiplier ? Echoes.getRelicSummonCostMultiplier(state) : 1;
+
     if (normalizeSummonType(type) === "superior") {
-      const multiplier = Echoes.getWeeklyEventModifier ? Echoes.getWeeklyEventModifier("superiorSummonCostMultiplier", 1) : 1;
+      const multiplier =
+        (Echoes.getWeeklyEventModifier ? Echoes.getWeeklyEventModifier("superiorSummonCostMultiplier", 1) : 1) *
+        relicMultiplier;
       return { resource: "crystals", amount: Math.max(1, Math.round(Echoes.CONFIG.superiorSummonCost * multiplier)) };
     }
 
-    return { resource: "gold", amount: Echoes.CONFIG.commonSummonCost };
+    return { resource: "gold", amount: Math.max(1, Math.round(Echoes.CONFIG.commonSummonCost * relicMultiplier)) };
   }
 
   function createSummonHistoryEntry(hero, summonType) {
@@ -86,7 +90,7 @@
 
   function summonHero(state, type) {
     const summonType = normalizeSummonType(type);
-    const cost = getSummonCost(summonType);
+    const cost = getSummonCost(summonType, state);
 
     if (!Echoes.spendResource(state, cost.resource, cost.amount)) {
       return {

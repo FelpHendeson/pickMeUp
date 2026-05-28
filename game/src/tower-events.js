@@ -10,6 +10,7 @@
     crystals: "cristais",
     essence: "essencia",
     fragments: "fragmentos",
+    echoFragments: "fragmentos de eco",
     energy: "energia",
   };
 
@@ -264,6 +265,11 @@
     return `+${amount} fragmentos`;
   }
 
+  function grantEchoFragments(state, amount) {
+    Echoes.addResource(state, "echoFragments", amount);
+    return `+${amount} fragmentos de eco`;
+  }
+
   function grantEquipment(state, floorNumber, rarityOverride) {
     const item = Echoes.generateEquipment(Math.max(1, floorNumber));
     item.floorNumber = Math.max(1, floorNumber);
@@ -340,9 +346,13 @@
         );
       }
 
-      if (roll < 0.88) {
+      if (roll < 0.84) {
         const item = grantEquipment(state, event.floor);
         return appendMoraleChange(state, `Equipamento encontrado: ${item.name}.`, 1, "O achado animou a equipe.");
+      }
+
+      if (roll < 0.9) {
+        return appendMoraleChange(state, `Um eco raro vibrou no fundo do bau: ${grantEchoFragments(state, 1)}.`, 2, "O achado animou a equipe.");
       }
 
       addTowerBattleEffect(state, {
@@ -364,6 +374,10 @@
       Echoes.addResource(state, "gold", gold);
       Echoes.addResource(state, "crystals", crystals);
       return appendMoraleChange(state, `O bau despejou riqueza instavel: +${gold} ouro e +${crystals} cristais.`, 2, "A recompensa fortaleceu a confianca.");
+    }
+
+    if (roll < 0.72) {
+      return appendMoraleChange(state, `O selo revelou um nucleo de eco intacto: ${grantEchoFragments(state, 1)}.`, 2, "A recompensa fortaleceu a confianca.");
     }
 
     addTowerBattleEffect(state, {
@@ -422,7 +436,8 @@
     }
 
     const fragments = 8 + Math.floor(getFloorEventScale(event.floor) * 1.5);
-    return appendMoraleChange(state, `O circulo foi quebrado sem pacto. ${grantFragments(state, fragments)}.`, 2, "Recusar o altar firmou a vontade.");
+    const echoBonus = Math.random() < 0.25 ? ` ${grantEchoFragments(state, 1)}.` : "";
+    return appendMoraleChange(state, `O circulo foi quebrado sem pacto. ${grantFragments(state, fragments)}.${echoBonus}`, 2, "Recusar o altar firmou a vontade.");
   }
 
   function resolvePrisoner(state, event, choiceId) {

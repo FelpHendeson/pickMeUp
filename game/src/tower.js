@@ -113,7 +113,7 @@
         description: "DEF inimiga +4%",
         enemyDefMultiplier: 1.04,
       },
-      completionReward: { gold: 420, crystals: 60, essence: 25, fragments: 25 },
+      completionReward: { gold: 420, crystals: 60, essence: 25, fragments: 25, echoFragments: 10 },
     },
     {
       id: "bestial_forest",
@@ -136,7 +136,7 @@
         description: "SPD inimiga +6%",
         enemySpeedMultiplier: 1.06,
       },
-      completionReward: { gold: 760, crystals: 90, essence: 45, fragments: 45 },
+      completionReward: { gold: 760, crystals: 90, essence: 45, fragments: 45, echoFragments: 16 },
     },
     {
       id: "spectral_crypt",
@@ -159,7 +159,7 @@
         description: "equipe recebe +7% dano",
         playerDamageTakenMultiplier: 1.07,
       },
-      completionReward: { gold: 1150, crystals: 130, essence: 70, fragments: 70 },
+      completionReward: { gold: 1150, crystals: 130, essence: 70, fragments: 70, echoFragments: 24 },
     },
     {
       id: "infernal_abyss",
@@ -183,7 +183,7 @@
         enemyAtkMultiplier: 1.08,
         healingDoneMultiplier: 0.92,
       },
-      completionReward: { gold: 1600, crystals: 180, essence: 100, fragments: 100 },
+      completionReward: { gold: 1600, crystals: 180, essence: 100, fragments: 100, echoFragments: 34 },
     },
   ];
 
@@ -755,6 +755,8 @@
       crystalAmount: 8 + floorNumber * 2 + Math.floor(floorNumber / 10) * 8,
       essence: floorNumber === 6 ? 15 : floorNumber === 10 ? 20 : floorNumber >= 13 && floorNumber % 5 === 3 ? 18 + floorNumber : 0,
       fragments: floorNumber === 7 ? 15 : floorNumber === 10 ? 20 : floorNumber >= 14 && floorNumber % 5 === 4 ? 18 + floorNumber : 0,
+      echoFragmentChance: bossFloor ? 0.65 : Math.min(0.03 + floorNumber * 0.003, 0.16),
+      echoFragmentAmount: bossFloor ? 2 + Math.floor(floorNumber / 10) * 2 : 1,
       equipmentChance: Math.min(8 + floorNumber * 0.9, 48) / 100,
       guaranteedEquipment: bossFloor || milestoneFloor,
     };
@@ -777,6 +779,7 @@
 
     if (reward.essence > 0) parts.push(`${reward.essence} essencia`);
     if (reward.fragments > 0) parts.push(`${reward.fragments} fragmentos`);
+    parts.push(`${Math.round(reward.echoFragmentChance * 100)}% de fragmentos de eco`);
     parts.push(`${Math.round(reward.crystalChance * 100)}% de cristais`);
     parts.push(reward.guaranteedEquipment ? "equipamento garantido" : `${Math.round(reward.equipmentChance * 100)}% de equipamento`);
 

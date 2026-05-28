@@ -6,7 +6,7 @@
   const CONFIG = {
     saveKey: "ascensao-dos-ecos-save-v1",
     saveVersion: 1,
-    gameVersion: "0.4.0",
+    gameVersion: "0.5.0",
     commonSummonCost: 100,
     superiorSummonCost: 100,
     towerEnergyCost: 5,
@@ -87,6 +87,8 @@
         energy: CONFIG.maxEnergy,
         maxEnergy: CONFIG.maxEnergy,
       },
+      echoFragments: 0,
+      relics: {},
       heroes: [],
       inventory: [],
       activeExpeditions: [],
@@ -137,6 +139,10 @@
   }
 
   function getResourceAmount(state, resourceKey) {
+    if (resourceKey === "echoFragments") {
+      return Number(state.echoFragments || 0);
+    }
+
     return Number(state.resources[resourceKey] || 0);
   }
 
@@ -149,6 +155,11 @@
       return false;
     }
 
+    if (resourceKey === "echoFragments") {
+      state.echoFragments -= amount;
+      return true;
+    }
+
     state.resources[resourceKey] -= amount;
     return true;
   }
@@ -156,6 +167,11 @@
   function addResource(state, resourceKey, amount) {
     const currentAmount = getResourceAmount(state, resourceKey);
     const nextAmount = currentAmount + amount;
+
+    if (resourceKey === "echoFragments") {
+      state.echoFragments = Math.max(0, nextAmount);
+      return state.echoFragments;
+    }
 
     if (resourceKey === "energy") {
       state.resources.energy = Math.min(state.resources.maxEnergy || CONFIG.maxEnergy, nextAmount);
@@ -217,6 +233,8 @@
     safe.narrative = safe.narrative && typeof safe.narrative === "object" ? safe.narrative : fresh.narrative;
     safe.missionStats = safe.missionStats && typeof safe.missionStats === "object" ? safe.missionStats : {};
     safe.achievements = safe.achievements && typeof safe.achievements === "object" ? safe.achievements : {};
+    safe.echoFragments = Math.max(0, Math.floor(Number(safe.echoFragments) || 0));
+    safe.relics = safe.relics && typeof safe.relics === "object" ? safe.relics : {};
 
     while (safe.formation.length < CONFIG.maxFormationSize) {
       safe.formation.push(null);
@@ -242,6 +260,10 @@
 
     if (Echoes.normalizeNarrativeState) {
       Echoes.normalizeNarrativeState(safe);
+    }
+
+    if (Echoes.normalizeRelicState) {
+      Echoes.normalizeRelicState(safe);
     }
 
     return safe;

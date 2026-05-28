@@ -25,6 +25,7 @@
       ["Cristais", formatNumber(state.resources.crystals)],
       ["Essencia", formatNumber(state.resources.essence)],
       ["Fragmentos", formatNumber(state.resources.fragments)],
+      ["Frag. Eco", formatNumber(state.echoFragments || 0)],
       ["Energia", `${state.resources.energy}/${state.resources.maxEnergy}`],
       ["Equip.", state.inventory.length],
       ["Feridos", Echoes.getInjuredHeroes ? Echoes.getInjuredHeroes(state).length : 0],
@@ -939,6 +940,7 @@
     const availableHeroes = state.heroes.slice().sort((a, b) => Echoes.getHeroPower(b, state) - Echoes.getHeroPower(a, state));
     const selectableHeroes = availableHeroes.filter((hero) => !Echoes.getHeroExpedition(state, hero.id));
     const baseReward = `${definition.reward.amount} ${Echoes.getExpeditionRewardName(definition.reward.type)}`;
+    const durationMs = Echoes.getExpeditionDurationMs ? Echoes.getExpeditionDurationMs(state, definition) : definition.durationMs;
 
     return `
       <div class="expedition-setup">
@@ -1001,8 +1003,8 @@
   }
 
   function renderSummon(state) {
-    const commonCost = Echoes.getSummonCost("common");
-    const superiorCost = Echoes.getSummonCost("superior");
+    const commonCost = Echoes.getSummonCost("common", state);
+    const superiorCost = Echoes.getSummonCost("superior", state);
     const last = state.summonHistory[0];
 
     return `
@@ -1118,6 +1120,77 @@
         </button>
       </article>
     `;
+  }
+
+
+  function renderRelicCard(state, relic) {
+    const relicState = Echoes.getRelicState(state, relic.id);
+    const unlocked = Echoes.isRelicUnlocked(state, relic);
+    const maxed = relicState.level >= relic.maxLevel;
+    const cost = Echoes.getRelicUpgradeCost(relic, relicState.level);
+    const canUpgrade = unlocked && !maxed && Echoes.getResourceAmount(state, "echoFragments") >= cost;
+
+    return (
+      '<article class="card relic-card ' + (unlocked ? 'unlocked' : 'locked') + ' ' + (maxed ? 'maxed' : '') + '">' +
+        '<div class="relic-card-head">' +
+          '<div>' +
+            '<p class="eyebrow">' + (unlocked ? 'Reliquia permanente' : 'Bloqueada') + '</p>' +
+            '<h3>' + escapeHtml(relic.name) + '</h3>' +
+          '</div>' +
+          '<span class="class-badge">Nv. ' + relicState.level + '/' + relic.maxLevel + '</span>' +
+        '</div>' +
+        '<p class="muted">' + escapeHtml(relic.description) + '</p>' +
+        '<div class="relic-effect-box">' +
+          '<span>Atual</span>' +
+          '<strong>' + escapeHtml(Echoes.getRelicCurrentEffectText(state, relic)) + '</strong>' +
+        '</div>' +
+        '<div class="relic-effect-box next">' +
+          '<span>Proximo</span>' +
+          '<strong>' + escapeHtml(Echoes.getRelicNextEffectText(state, relic)) + '</strong>' +
+        '</div>' +
+        '<p class="relic-unlock-text">' + escapeHtml(Echoes.getRelicUnlockText(state, relic)) + '</p>' +
+        '<button type="button" data-action="upgradeRelic" data-relic-id="' + relic.id + '" ' + (canUpgrade ? '' : 'disabled') + '>' +
+          (maxed ? 'Nivel maximo' : unlocked ? 'Melhorar (' + cost + ' Fragmentos de Eco)' : 'Bloqueada') +
+        '</button>' +
+      '</article>'
+    );
+  }
+
+  function renderRelics(state) {
+    if (Echoes.normalizeRelicState) {
+      Echoes.normalizeRelicState(state);
+    }
+
+    const relics = Echoes.RELIC_DEFINITIONS || [];
+    const unlockedCount = relics.filter((relic) => Echoes.isRelicUnlocked(state, relic)).length;
+    const totalLevels = relics.reduce((total, relic) => total + Echoes.getRelicState(state, relic.id).level, 0);
+
+    return (
+      '<section class="panel-grid">' +
+        '<article class="panel focus-panel relic-hero-panel">' +
+          '<p class="eyebrow">Conta permanente</p>' +
+          '<h2>Reliquias</h2>' +
+          '<p class="muted">Fragmentos de Eco aprimoram bonus globais da conta. Esses efeitos permanecem no save e afetam todos os herois e sistemas relacionados.</p>' +
+          '<div class="summary-grid">' +
+            '<div><span>Fragmentos de Eco</span><strong>' + formatNumber(state.echoFragments || 0) + '</strong></div>' +
+            '<div><span>Reliquias disponiveis</span><strong>' + unlockedCount + '/' + relics.length + '</strong></div>' +
+            '<div><span>Niveis ativos</span><strong>' + totalLevels + '</strong></div>' +
+          '</div>' +
+        '</article>' +
+        '<article class="panel wide">' +
+          '<div class="section-head">' +
+            '<div>' +
+              '<p class="eyebrow">Aprimoramentos</p>' +
+              '<h2>Acervo de ecos</h2>' +
+            '</div>' +
+            '<strong>' + formatNumber(state.echoFragments || 0) + ' eco</strong>' +
+          '</div>' +
+          '<div class="card-grid relic-grid">' +
+            relics.map((relic) => renderRelicCard(state, relic)).join('') +
+          '</div>' +
+        '</article>' +
+      '</section>'
+    );
   }
 
   function renderMissions(state) {
@@ -1682,6 +1755,7 @@
       inventory: renderInventory,
       expeditions: renderExpeditions,
       missions: renderMissions,
+      relics: renderRelics,
       summon: renderSummon,
       tower: renderTower,
       battle: renderBattle,
