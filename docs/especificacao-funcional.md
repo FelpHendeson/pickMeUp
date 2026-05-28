@@ -11,6 +11,7 @@ O jogo é um RPG estratégico em navegador com progressão por torre, invocaçã
 
 ### Heróis e progressão
 - `heroes.js` define classes, atributos, raridades, traços, XP, níveis e geração de heróis.
+- `recruitment.js` controla contratos, escolha entre tres herois e veteranos tematicos de capitulo.
 - `specializations.js` disponibiliza especializações por classe, requisitos de nível e bônus de combate.
 - `injuries.js` controla ferimentos, penalidades temporárias e tratamento.
 - `morale.js` gerencia moral, estados emocionais e bônus/penalidades de performance.
@@ -32,6 +33,7 @@ O jogo é um RPG estratégico em navegador com progressão por torre, invocaçã
 
 ### Sistemas auxiliares
 - `summon.js` gerencia invocação e histórico de invocação.
+- Contratos de Heroi complementam o gacha: o jogador consome um contrato, compara tres candidatos e escolhe apenas um.
 - `expeditions.js` administra expedições, tempos e recompensas, escalonando ganhos proporcionalmente ao poder total da equipe.
 - `missions.js` valida missões diárias, conquistas e recompensas.
 
@@ -44,7 +46,7 @@ O jogo é um RPG estratégico em navegador com progressão por torre, invocaçã
 
 ## Fluxo principal do jogador
 1. O jogador inicia a partida e recebe um estado salvo localmente.
-2. Invoca heróis, organiza a formação e equipa itens.
+2. Invoca ou recruta herois, organiza a formacao e equipa itens.
 3. Entra na torre, enfrentando andares com modificadores e eventos.
 4. Combate automático resolve turnos, aplica danos, ferimentos e moral.
 5. Recompensas de ouro, cristais, essência, fragmentos, energia e XP sustentam a progressão.
@@ -54,4 +56,4 @@ O jogo é um RPG estratégico em navegador com progressão por torre, invocaçã
 - O progresso é salvo localmente no navegador.
 - A torre é o eixo principal do jogo.
 - Eventos semanais e aleatórios alteram probabilidades, recompensas e dificuldade.
-- A equipe se desenvolve por XP, equipamento, especialização e sobrevivência em combate.
+- A equipe se desenvolve por XP, equipamento, especializacao, recrutamento alternativo e sobrevivencia em combate.

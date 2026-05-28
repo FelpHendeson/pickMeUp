@@ -123,6 +123,23 @@ Arquivo principal:
 
 - `game/src/summon.js`
 
+### Recrutamento fora do gacha
+
+O jogador tambem pode obter herois por Contratos de Heroi, eventos da torre e marcos de progresso. Um contrato abre uma escolha entre 3 herois gerados, mostrando classe, raridade, traco, atributos e possiveis especializacoes futuras. Apenas um candidato e recrutado; os outros sao descartados.
+
+Contratos podem ser obtidos por:
+
+- chefes de capitulo;
+- conquistas importantes;
+- eventos raros da torre;
+- recompensas especiais.
+
+Chefes de capitulo tambem podem revelar um veterano tematico, com raridade minima 3 estrelas e ligacao com a regiao vencida.
+
+Arquivo principal:
+
+- `game/src/recruitment.js`
+
 ### Formacao
 
 A equipe ativa usa ate 5 herois, com linhas de frente e retaguarda. A posicao influencia a escolha de alvos durante o combate.
@@ -290,6 +307,7 @@ Arquivo principal:
 |       +-- relics.js
 |       +-- storage.js
 |       +-- heroes.js
+|       +-- recruitment.js
 |       +-- formation.js
 |       +-- equipment.js
 |       +-- expeditions.js
@@ -354,6 +372,7 @@ Responsabilidades principais:
 - `relics.js`: reliquias permanentes, Fragmentos de Eco e bonus globais;
 - `storage.js`: carregar, salvar e resetar progresso;
 - `heroes.js`: criacao, atributos e progressao de herois;
+- `recruitment.js`: contratos, escolha entre 3 herois e veteranos de capitulo;
 - `formation.js`: equipe ativa;
 - `equipment.js`: inventario e atributos efetivos;
 - `tower.js`: andares, inimigos e inicio de batalhas;
@@ -401,10 +420,11 @@ MVP em desenvolvimento ativo.
 O foco atual e consolidar o loop principal:
 
 1. invocar herois;
-2. montar formacao;
-3. equipar personagens;
-4. enfrentar andares da torre;
-5. lidar com eventos, moral e ferimentos;
-6. cumprir missoes e conquistas;
-7. evoluir herois e desbloquear especializacoes;
-8. aprimorar reliquias permanentes da conta.
+2. recrutar herois por contratos e eventos;
+3. montar formacao;
+4. equipar personagens;
+5. enfrentar andares da torre;
+6. lidar com eventos, moral e ferimentos;
+7. cumprir missoes e conquistas;
+8. evoluir herois e desbloquear especializacoes;
+9. aprimorar reliquias permanentes da conta.
