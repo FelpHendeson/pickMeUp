@@ -38,11 +38,11 @@
 
   function handleResetAction() {
     const firstConfirmation = global.confirm(
-      "Resetar todo o progresso local? Essa a��o apaga o save deste navegador e nao pode ser desfeita sem um backup exportado."
+      "Resetar todo o progresso local? Essa ação apaga o save deste navegador e não pode ser desfeita sem um backup exportado."
     );
     if (!firstConfirmation) return;
 
-    const secondConfirmation = global.confirm("Confirmar reset definitivo do save? Esta a��o e irrevers�vel.");
+    const secondConfirmation = global.confirm("Confirmar reset definitivo do save? Esta ação e irreversível.");
     if (!secondConfirmation) return;
 
     state = Echoes.resetGameState();
@@ -74,7 +74,7 @@
   function handleImportSaveAction() {
     const input = document.querySelector("[data-save-import]");
     if (!input) {
-      renderTransientMessage("Campo de importa��o nao encontrado.");
+      renderTransientMessage("Campo de importação não encontrado.");
       return;
     }
 
@@ -222,7 +222,7 @@
 
     if (difficultyMode === "hardcore") {
       const confirmed = global.confirm(
-        "Iniciar este combate no modo Hardcore?\n\nInimigos ficam muito mais fortes e herois que cairem podem morrer permanentemente. Essa perda nao acontece nos modos Normal ou Desafio."
+        "Iniciar este combate no modo Hardcore?\n\nInimigos ficam muito mais fortes e herois que cairem podem morrer permanentemente. Essa perda não acontece nos modos Normal ou Desafio."
       );
       if (!confirmed) return;
     }
@@ -371,7 +371,7 @@
       : null;
 
     if (!hero || !specialization) {
-      renderTransientMessage("Especializa��o invalida.");
+      renderTransientMessage("Especialização invalida.");
       return;
     }
 
