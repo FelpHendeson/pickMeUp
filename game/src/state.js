@@ -6,7 +6,7 @@
   const CONFIG = {
     saveKey: "ascensao-dos-ecos-save-v1",
     saveVersion: 1,
-    gameVersion: "0.8.0",
+    gameVersion: "0.9.0",
     commonSummonCost: 100,
     superiorSummonCost: 100,
     towerEnergyCost: 5,
@@ -92,6 +92,7 @@
       heroContracts: 0,
       consumables: {},
       affinities: {},
+      library: null,
       heroes: [],
       inventory: [],
       activeExpeditions: [],
@@ -258,6 +259,7 @@
     safe.heroContracts = Math.max(0, Math.floor(Number(safe.heroContracts) || 0));
     safe.consumables = safe.consumables && typeof safe.consumables === "object" ? safe.consumables : {};
     safe.affinities = safe.affinities && typeof safe.affinities === "object" ? safe.affinities : {};
+    safe.library = safe.library && typeof safe.library === "object" ? safe.library : null;
 
     while (safe.formation.length < CONFIG.maxFormationSize) {
       safe.formation.push(null);
@@ -299,6 +301,10 @@
 
     if (Echoes.normalizeAffinitiesState) {
       Echoes.normalizeAffinitiesState(safe);
+    }
+
+    if (Echoes.normalizeLibraryState) {
+      Echoes.normalizeLibraryState(safe);
     }
 
     return safe;

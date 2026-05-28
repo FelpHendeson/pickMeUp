@@ -102,6 +102,7 @@
     const rarity = rollSummonRarity(summonType);
     const hero = Echoes.generateHero({ rarity });
     state.heroes.push(hero);
+    if (Echoes.recordHeroDiscovery) Echoes.recordHeroDiscovery(state, hero);
     addSummonHistory(state, hero, summonType);
 
     return {

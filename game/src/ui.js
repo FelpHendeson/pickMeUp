@@ -1350,6 +1350,92 @@
     );
   }
 
+
+  function renderLibraryEnemyCard(state, enemyKey) {
+    const view = Echoes.getLibraryEnemyView(state, enemyKey);
+    const stats = view.stats || {};
+    return (
+      '<article class="card library-card ' + (view.discovered ? '' : 'locked') + '">' +
+        '<div class="hero-topline"><div><p class="eyebrow">' + escapeHtml(view.role) + '</p><h3>' + escapeHtml(view.name) + '</h3></div>' +
+        '<span class="class-badge">' + view.encountered + ' visto(s)</span></div>' +
+        '<p class="muted">' + escapeHtml(view.description) + '</p>' +
+        '<div class="summary-grid">' +
+          '<div><span>Regiao</span><strong>' + escapeHtml(view.region) + '</strong></div>' +
+          '<div><span>Derrotas</span><strong>' + view.defeated + '</strong></div>' +
+          '<div><span>Andar</span><strong>' + (view.lastFloor || '???') + '</strong></div>' +
+        '</div>' +
+        (view.detailsUnlocked ? '<p class="trait">HP ' + stats.hp + ' | ATK ' + stats.atk + ' | DEF ' + stats.def + ' | SPD ' + stats.spd + ' | FOCUS ' + stats.focus + '</p>' : '<p class="muted">Derrote ' + Echoes.ENEMY_DETAILS_UNLOCK_DEFEATS + ' vez(es) para liberar atributos, habilidades e drops.</p>') +
+        (view.detailsUnlocked ? '<p class="muted">Habilidades: ' + view.abilities.map(escapeHtml).join(' | ') + '</p><p class="muted">Drops: ' + view.drops.map(escapeHtml).join(' | ') + '</p>' : '') +
+      '</article>'
+    );
+  }
+
+  function renderLibraryBossCard(state, bossKey) {
+    const boss = state.library.bosses[bossKey] || {};
+    const enemy = Echoes.ENEMY_ARCHETYPES[bossKey] || {};
+    return (
+      '<article class="card library-card ' + (boss.defeated ? '' : 'locked') + '">' +
+        '<div class="hero-topline"><div><p class="eyebrow">Chefe</p><h3>' + escapeHtml(enemy.name || 'Chefe desconhecido') + '</h3></div>' +
+        '<span class="class-badge">' + (boss.bestResult === 'victory' ? 'Vencido' : 'Encontrado') + '</span></div>' +
+        '<p class="muted">Capitulo: ' + escapeHtml(boss.chapterName || '???') + '</p>' +
+        '<div class="summary-grid">' +
+          '<div><span>Tentativas</span><strong>' + (boss.attempts || 0) + '</strong></div>' +
+          '<div><span>Melhor</span><strong>' + escapeHtml(boss.bestResult || '???') + '</strong></div>' +
+          '<div><span>Recompensa</span><strong>' + escapeHtml(boss.specialReward || '???') + '</strong></div>' +
+        '</div>' +
+      '</article>'
+    );
+  }
+
+  function renderLibraryEventCard(state, eventKey) {
+    const eventRecord = state.library.events[eventKey] || { encountered: 0, results: [] };
+    const definition = Echoes.TOWER_EVENT_DEFINITIONS[eventKey];
+    const discovered = eventRecord.encountered > 0;
+    return (
+      '<article class="card library-card ' + (discovered ? '' : 'locked') + '">' +
+        '<div class="hero-topline"><div><p class="eyebrow">Evento</p><h3>' + escapeHtml(discovered ? definition.title : 'Evento desconhecido') + '</h3></div>' +
+        '<span class="class-badge">' + eventRecord.encountered + 'x</span></div>' +
+        '<p class="muted">' + escapeHtml(discovered ? definition.description : 'Ainda nao encontrado na torre.') + '</p>' +
+        '<p class="trait">Resultados vistos: ' + (eventRecord.results.length ? eventRecord.results.map(escapeHtml).join(' | ') : '???') + '</p>' +
+      '</article>'
+    );
+  }
+
+  function renderLibraryRelicCard(state, relic) {
+    const unlocked = Echoes.isRelicUnlocked(state, relic);
+    return '<article class="card library-card ' + (unlocked ? '' : 'locked') + '"><div class="hero-topline"><div><p class="eyebrow">Reliquia</p><h3>' + escapeHtml(unlocked ? relic.name : 'Reliquia bloqueada') + '</h3></div><span class="class-badge">' + (unlocked ? 'Visivel' : 'Bloqueada') + '</span></div><p class="muted">' + escapeHtml(unlocked ? relic.description : Echoes.getRelicUnlockText(state, relic)) + '</p></article>';
+  }
+
+  function renderLibraryHeroes(state) {
+    const classes = Object.values(state.library.heroes.classes || {});
+    const rarities = Object.values(state.library.heroes.rarities || {});
+    const traits = Object.values(state.library.heroes.traits || {});
+    return (
+      '<article class="panel wide"><div class="section-head"><div><p class="eyebrow">Colecao</p><h2>Herois Encontrados</h2></div><strong>' + classes.length + ' classe(s)</strong></div>' +
+      '<div class="summary-grid"><div><span>Classes</span><strong>' + (classes.map((item) => escapeHtml(item.name)).join(' | ') || 'Nenhuma') + '</strong></div>' +
+      '<div><span>Raridades</span><strong>' + (rarities.map((item) => escapeHtml(item.name)).join(' | ') || 'Nenhuma') + '</strong></div>' +
+      '<div><span>Tracos</span><strong>' + (traits.map((item) => escapeHtml(item.name)).join(' | ') || 'Nenhum') + '</strong></div></div></article>'
+    );
+  }
+
+  function renderLibrary(state) {
+    if (Echoes.normalizeLibraryState) Echoes.normalizeLibraryState(state);
+    const enemyKeys = Object.keys(Echoes.ENEMY_ARCHETYPES || {}).filter((key) => Echoes.ENEMY_ARCHETYPES[key].role !== 'chefe');
+    const bossKeys = Object.keys(Echoes.ENEMY_ARCHETYPES || {}).filter((key) => Echoes.ENEMY_ARCHETYPES[key].role === 'chefe');
+    const eventKeys = Object.keys(Echoes.TOWER_EVENT_DEFINITIONS || {});
+    const discoveredEnemies = Object.values(state.library.enemies || {}).filter((record) => record.encountered > 0).length;
+    return (
+      '<section class="panel-grid">' +
+        '<article class="panel focus-panel"><p class="eyebrow">Descobertas</p><h2>Biblioteca</h2><p class="muted">Registros sao preenchidos conforme voce enfrenta inimigos, vence chefes, resolve eventos e encontra herois.</p><div class="summary-grid"><div><span>Inimigos</span><strong>' + discoveredEnemies + '</strong></div><div><span>Chefes</span><strong>' + Object.keys(state.library.bosses || {}).length + '</strong></div><div><span>Eventos</span><strong>' + Object.keys(state.library.events || {}).length + '</strong></div></div></article>' +
+        '<article class="panel wide"><div class="section-head"><div><p class="eyebrow">Bestiario</p><h2>Inimigos</h2></div><strong>' + enemyKeys.length + ' entrada(s)</strong></div><div class="card-grid library-grid">' + enemyKeys.map((key) => renderLibraryEnemyCard(state, key)).join('') + '</div></article>' +
+        '<article class="panel wide"><div class="section-head"><div><p class="eyebrow">Chefes</p><h2>Marcos de capitulo</h2></div></div><div class="card-grid library-grid">' + bossKeys.map((key) => renderLibraryBossCard(state, key)).join('') + '</div></article>' +
+        '<article class="panel wide"><div class="section-head"><div><p class="eyebrow">Eventos da Torre</p><h2>Ocorrencias</h2></div></div><div class="card-grid library-grid">' + eventKeys.map((key) => renderLibraryEventCard(state, key)).join('') + '</div></article>' +
+        '<article class="panel wide"><div class="section-head"><div><p class="eyebrow">Reliquias</p><h2>Arquivo permanente</h2></div></div><div class="card-grid library-grid">' + (Echoes.RELIC_DEFINITIONS || []).map((relic) => renderLibraryRelicCard(state, relic)).join('') + '</div></article>' +
+        renderLibraryHeroes(state) +
+      '</section>'
+    );
+  }
+
   function renderMissions(state) {
     if (Echoes.normalizeMissionState) {
       Echoes.normalizeMissionState(state);
@@ -1913,6 +1999,7 @@
       expeditions: renderExpeditions,
       missions: renderMissions,
       relics: renderRelics,
+      library: renderLibrary,
       summon: renderSummon,
       tower: renderTower,
       battle: renderBattle,

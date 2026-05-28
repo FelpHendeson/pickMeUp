@@ -908,6 +908,10 @@
     const enemyTeam = createEnemiesForFloor(floorNumber);
     const introLines = buildTowerBattleIntro(floorNumber, floorData, playerTeam, enemyTeam, isRepeat);
 
+    if (Echoes.recordEnemyEncounter) {
+      Echoes.recordEnemyEncounter(state, enemyTeam, floorNumber, floorData);
+    }
+
     applyPreBattleFloorModifiers(playerTeam, floorModifiers);
 
     if (Echoes.applyAndConsumeTowerBattleEffects) {
@@ -970,6 +974,10 @@
 
     if (Echoes.recordBattleAffinity) {
       Echoes.recordBattleAffinity(state, playerTeam, battle.result, isBossFloor(floorData));
+    }
+
+    if (Echoes.recordEnemyBattleResult) {
+      Echoes.recordEnemyBattleResult(state, enemyTeam, battle.result, floorNumber);
     }
 
     persistPlayerHpAfterBattle(state, playerTeam);

@@ -148,6 +148,7 @@
     if (!selected) return { ok: false, message: "Heroi invalido para este recrutamento." };
 
     state.heroes.push(Echoes.normalizeHero(selected));
+    if (Echoes.recordHeroDiscovery) Echoes.recordHeroDiscovery(state, selected);
     state.pendingRecruitmentChoice = null;
 
     return {

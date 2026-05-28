@@ -582,6 +582,9 @@
     const dangerousEvent = event.typeKey === "trap" || event.typeKey === "darkAltar";
 
     recordTowerEventHistory(state, event, choice, message);
+    if (Echoes.recordTowerEventDiscovery) {
+      Echoes.recordTowerEventDiscovery(state, event, choice, message);
+    }
     if (dangerousEvent && Echoes.recordDangerousEventAffinity) {
       Echoes.recordDangerousEventAffinity(state);
     }

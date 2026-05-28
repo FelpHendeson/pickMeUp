@@ -24,6 +24,9 @@
     if (Echoes.normalizeAffinitiesState) {
       Echoes.normalizeAffinitiesState(safeState);
     }
+    if (Echoes.normalizeLibraryState) {
+      Echoes.normalizeLibraryState(safeState);
+    }
     return safeState;
   }
 

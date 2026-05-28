@@ -798,6 +798,25 @@ body.pref-compact .modifier {
   margin-top: auto;
 }
 
+.library-grid {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.library-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.9rem;
+}
+
+.library-card.locked {
+  opacity: 0.62;
+}
+
+.library-card.locked h3 {
+  color: var(--muted);
+}
+
 .mission-progress {
   appearance: none;
   background: #171514;

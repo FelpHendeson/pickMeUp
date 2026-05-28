@@ -50,6 +50,23 @@ function loadAffinityEngine() {
   return Echoes;
 }
 
+function loadLibraryEngine() {
+  let id = 0;
+  const Echoes = loadGameScript('./game/src/state.js', {
+    crypto: {
+      randomUUID: () => `test-library-${id++}`,
+    },
+  });
+  loadGameScript('./game/src/heroes.js');
+  loadGameScript('./game/src/formation.js');
+  loadGameScript('./game/src/equipment.js');
+  loadGameScript('./game/src/expeditions.js');
+  loadGameScript('./game/src/tower.js');
+  loadGameScript('./game/src/tower-events.js');
+  loadGameScript('./game/src/library.js');
+  return Echoes;
+}
+
 test('grantEquipment recalcula bonusValue quando a raridade e alterada', () => {
   const Echoes = loadEngine();
   const state = { inventory: [], heroes: [] };
@@ -172,4 +189,33 @@ test('afinidade acumula por atividades em dupla e aplica bonus leves', () => {
   assert.ok(lines.length > 0);
   assert.ok(team[0].energy > beforeEnergy);
   assert.ok(Echoes.getAffinityXpMultiplier(state, heroA.id, [heroA.id, heroB.id]) > 1);
+});
+
+test('biblioteca registra inimigos, eventos e herois descobertos', () => {
+  const Echoes = loadLibraryEngine();
+  const state = Echoes.ensureStateShape(Echoes.createInitialState());
+  const floor = Echoes.getFloorData(1);
+  const enemies = Echoes.createEnemiesForFloor(1);
+
+  Echoes.recordEnemyEncounter(state, enemies, 1, floor);
+  enemies.forEach((enemy) => {
+    enemy.hp = 0;
+  });
+  Echoes.recordEnemyBattleResult(state, enemies, 'victory', 1);
+  Echoes.recordEnemyBattleResult(state, enemies, 'victory', 1);
+  Echoes.recordEnemyBattleResult(state, enemies, 'victory', 1);
+
+  const enemyView = Echoes.getLibraryEnemyView(state, enemies[0].enemyKey);
+  assert.equal(enemyView.discovered, true);
+  assert.equal(enemyView.detailsUnlocked, true);
+  assert.ok(enemyView.defeated >= 3);
+
+  Echoes.recordTowerEventDiscovery(state, { typeKey: 'trap' }, { label: 'Tentar desarmar' }, '');
+  assert.equal(state.library.events.trap.encountered, 1);
+
+  const hero = Echoes.generateHero({ rarity: 3, classKey: 'mage' });
+  state.heroes.push(hero);
+  Echoes.recordHeroDiscovery(state, hero);
+  assert.equal(state.library.heroes.classes.mage.discovered, true);
+  assert.equal(state.library.heroes.rarities['3'].discovered, true);
 });
