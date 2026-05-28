@@ -38,11 +38,11 @@
 
   function handleResetAction() {
     const firstConfirmation = global.confirm(
-      "Resetar todo o progresso local? Essa ação apaga o save deste navegador e nao pode ser desfeita sem um backup exportado."
+      "Resetar todo o progresso local? Essa aï¿½ï¿½o apaga o save deste navegador e nao pode ser desfeita sem um backup exportado."
     );
     if (!firstConfirmation) return;
 
-    const secondConfirmation = global.confirm("Confirmar reset definitivo do save? Esta ação e irreversível.");
+    const secondConfirmation = global.confirm("Confirmar reset definitivo do save? Esta aï¿½ï¿½o e irreversï¿½vel.");
     if (!secondConfirmation) return;
 
     state = Echoes.resetGameState();
@@ -74,7 +74,7 @@
   function handleImportSaveAction() {
     const input = document.querySelector("[data-save-import]");
     if (!input) {
-      renderTransientMessage("Campo de importação nao encontrado.");
+      renderTransientMessage("Campo de importaï¿½ï¿½o nao encontrado.");
       return;
     }
 
@@ -309,6 +309,22 @@
     return select ? select.value : "";
   }
 
+  function handleOpenEquipmentModalAction(target) {
+    const modal = document.querySelector(`[data-hero-equipment-modal="${target.dataset.heroId}"]`);
+    if (!modal) return;
+
+    modal.hidden = false;
+    modal.setAttribute("aria-hidden", "false");
+  }
+
+  function handleCloseEquipmentModalAction(target) {
+    const modal = target.closest("[data-hero-equipment-modal]");
+    if (!modal) return;
+
+    modal.hidden = true;
+    modal.setAttribute("aria-hidden", "true");
+  }
+
   function getConsumableTargetHeroId(consumableId) {
     const select = document.querySelector(`[data-consumable-target="${consumableId}"]`);
     return select ? select.value : "";
@@ -329,10 +345,10 @@
   }
 
   function handleEquipItemAction(target) {
-    const equipmentId = getEquipmentSelectValue(target.dataset.heroId, target.dataset.slot);
+    const equipmentId = target.dataset.equipmentId || getEquipmentSelectValue(target.dataset.heroId, target.dataset.slot);
 
     if (!equipmentId) {
-      renderTransientMessage("Escolha um equipamento para esse slot.");
+      renderTransientMessage("Escolha um equipamento para esse heroi.");
       return;
     }
 
@@ -355,7 +371,7 @@
       : null;
 
     if (!hero || !specialization) {
-      renderTransientMessage("Especialização invalida.");
+      renderTransientMessage("Especializaï¿½ï¿½o invalida.");
       return;
     }
 
@@ -607,6 +623,8 @@
     }
     if (action === "towerEventChoice") return handleTowerEventChoiceAction(target);
     if (action === "useConsumable") return handleUseConsumableAction(target);
+    if (action === "openEquipmentModal") return handleOpenEquipmentModalAction(target);
+    if (action === "closeEquipmentModal") return handleCloseEquipmentModalAction(target);
     if (action === "equipItem") return handleEquipItemAction(target);
     if (action === "unequipItem") return handleUnequipItemAction(target);
     if (action === "chooseSpecialization") return handleChooseSpecializationAction(target);

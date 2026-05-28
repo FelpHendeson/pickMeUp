@@ -33,7 +33,7 @@
       ["Equip.", state.inventory.length],
       ["Feridos", Echoes.getInjuredHeroes ? Echoes.getInjuredHeroes(state).length : 0],
       ["Exped.", state.activeExpeditions.length],
-      ["Missões", Echoes.getClaimableMissionCount ? Echoes.getClaimableMissionCount(state) : 0],
+      ["Missï¿½es", Echoes.getClaimableMissionCount ? Echoes.getClaimableMissionCount(state) : 0],
     ];
   }
 
@@ -148,10 +148,10 @@
     }
 
     if (hero.level >= Echoes.SPECIALIZATION_LEVEL) {
-      return `<span class="specialization-badge pending">Especialização disponivel</span>`;
+      return `<span class="specialization-badge pending">Especializaï¿½ï¿½o disponivel</span>`;
     }
 
-    return `<span class="specialization-badge locked">Especialização no nivel ${Echoes.SPECIALIZATION_LEVEL}</span>`;
+    return `<span class="specialization-badge locked">Especializaï¿½ï¿½o no nivel ${Echoes.SPECIALIZATION_LEVEL}</span>`;
   }
 
   function renderInfirmaryPatient(hero, state) {
@@ -255,12 +255,12 @@
           </div>
         </article>
         <section class="room-grid">
-          ${renderRoomCard("Portal de Invocação", state.baseRooms.summonPortal, "Recruta novos herois com ouro ou cristais.")}
+          ${renderRoomCard("Portal de Invocaï¿½ï¿½o", state.baseRooms.summonPortal, "Recruta novos herois com ouro ou cristais.")}
           ${renderRoomCard("Quartel", state.baseRooms.barracks, "Organiza a lista de herois e a equipe ativa.")}
           ${renderRoomCard("Campo de Treino", state.baseRooms.trainingGround, "Base para progressao futura de XP passivo.")}
           ${renderRoomCard("Enfermaria", state.baseRooms.infirmary, "Trata ferimentos de herois derrotados na torre.")}
           ${renderRoomCard("Oficina", state.baseRooms.workshop, "Desbloqueia ao vencer o andar 10.")}
-          ${renderRoomCard("Conselho de Missões", state.baseRooms.missionBoard, "Preparado para expedicoes em versoes futuras.")}
+          ${renderRoomCard("Conselho de Missï¿½es", state.baseRooms.missionBoard, "Preparado para expedicoes em versoes futuras.")}
         </section>
         ${renderInfirmary(state)}
       </section>
@@ -270,14 +270,14 @@
   function renderHeroActionButton(hero, inFormation, state) {
     const expedition = state && Echoes.getHeroExpedition ? Echoes.getHeroExpedition(state, hero.id) : null;
     if (inFormation) {
-      return `<button type="button" class="secondary" data-action="removeFormation" data-hero-id="${hero.id}">Remover da formação</button>`;
+      return `<button type="button" class="secondary" data-action="removeFormation" data-hero-id="${hero.id}">Remover da formaï¿½ï¿½o</button>`;
     }
 
     if (expedition) {
       return `<button type="button" class="secondary" disabled>Em expedicao</button>`;
     }
 
-    return `<button type="button" data-action="addFormation" data-hero-id="${hero.id}">Adicionar a formação</button>`;
+    return `<button type="button" data-action="addFormation" data-hero-id="${hero.id}">Adicionar a formaï¿½ï¿½o</button>`;
   }
 
   function renderHeroStatGrid(hero, state) {
@@ -308,53 +308,104 @@
     `;
   }
 
-  function renderEquipmentOptions(state, slot, currentItemId) {
-    const items = state.inventory.filter((item) => item.type === slot);
-
-    if (items.length === 0) {
-      return `<option value="">Sem itens disponiveis</option>`;
-    }
-
-    return [`<option value="">Escolher ${Echoes.getEquipmentTypeName(slot).toLowerCase()}</option>`]
-      .concat(
-        items.map((item) => {
-          const owner = Echoes.findEquipmentOwner(state, item.id);
-          const ownerText = owner ? ` - equipado: ${owner.name}` : "";
-          const selected = item.id === currentItemId ? "selected" : "";
-
-          return `<option value="${item.id}" ${selected}>${item.rarity}â˜… ${escapeHtml(item.name)} (${Echoes.getEquipmentBonusLabel(item)}${escapeHtml(ownerText)})</option>`;
-        })
-      )
-      .join("");
-  }
-
   function renderHeroEquipmentControls(hero, state) {
     Echoes.normalizeHeroEquipmentSlots(hero);
 
+    const equippedSummary = Echoes.EQUIPMENT_SLOTS.map((slot) => {
+      const equippedItem = hero.equipment[slot] ? Echoes.findEquipment(state, hero.equipment[slot]) : null;
+
+      return `
+        <div class="equipment-summary-item">
+          <strong>${Echoes.getEquipmentTypeName(slot)}</strong>
+          <span>${equippedItem ? `${escapeHtml(equippedItem.name)} Â· ${Echoes.getEquipmentBonusLabel(equippedItem)}` : "Vazio"}</span>
+        </div>
+      `;
+    }).join("");
+
     return `
       <div class="equipment-controls">
-        <h4>Equipamentos</h4>
-        ${Echoes.EQUIPMENT_SLOTS.map((slot) => {
-          const equippedItem = hero.equipment[slot] ? Echoes.findEquipment(state, hero.equipment[slot]) : null;
-          return `
-            <div class="equipment-row">
-              <div>
-                <strong>${Echoes.getEquipmentTypeName(slot)}</strong>
-                <span>${equippedItem ? `${escapeHtml(equippedItem.name)} | ${Echoes.getEquipmentBonusLabel(equippedItem)}` : "Vazio"}</span>
-              </div>
-              <select data-equipment-select="${slot}" data-hero-id="${hero.id}">
-                ${renderEquipmentOptions(state, slot, equippedItem && equippedItem.id)}
-              </select>
-              <button type="button" class="secondary" data-action="equipItem" data-hero-id="${hero.id}" data-slot="${slot}">Equipar</button>
-              ${
-                equippedItem
-                  ? `<button type="button" class="secondary" data-action="unequipItem" data-hero-id="${hero.id}" data-slot="${slot}">Remover</button>`
-                  : ""
-              }
-            </div>
-          `;
-        }).join("")}
+        <div class="equipment-controls-header">
+          <div>
+            <h4>Equipamentos</h4>
+            <p class="muted">Acesse slots e itens livres para reorganizar o carregamento do heroi.</p>
+          </div>
+          <button type="button" class="secondary" data-action="openEquipmentModal" data-hero-id="${hero.id}">Gerenciar equipamentos</button>
+        </div>
+        <div class="equipment-summary-grid">${equippedSummary}</div>
       </div>
+      ${renderHeroEquipmentModal(hero, state)}
+    `;
+  }
+
+  function renderHeroEquipmentModal(hero, state) {
+    Echoes.normalizeHeroEquipmentSlots(hero);
+
+    const freeItems = (state.inventory || [])
+      .filter((item) => !Echoes.findEquipmentOwner(state, item.id))
+      .map((item) => `
+        <article class="equipment-item-card inventory-card rarity-${item.rarity}">
+          <div class="equipment-item-header">
+            <div>
+              <p class="stars">${Echoes.getRarityStars(item.rarity)}</p>
+              <h5>${escapeHtml(item.name)}</h5>
+            </div>
+            <span class="equipment-item-type">${escapeHtml(Echoes.getEquipmentTypeName(item.type))}</span>
+          </div>
+          <p class="muted">${Echoes.getEquipmentBonusLabel(item)} Â· ${escapeHtml(item.bonusStat.toUpperCase())}</p>
+          <button type="button" class="secondary" data-action="equipItem" data-hero-id="${hero.id}" data-equipment-id="${item.id}">Equipar em ${escapeHtml(Echoes.getEquipmentTypeName(item.type))}</button>
+        </article>
+      `)
+      .join("");
+
+    const slotItems = Echoes.EQUIPMENT_SLOTS.map((slot) => {
+      const equippedItem = hero.equipment[slot] ? Echoes.findEquipment(state, hero.equipment[slot]) : null;
+
+      return `
+        <article class="equipment-slot-card">
+          <div class="equipment-slot-head">
+            <div>
+              <strong>${Echoes.getEquipmentTypeName(slot)}</strong>
+              <span>${equippedItem ? `${escapeHtml(equippedItem.name)} Â· ${Echoes.getEquipmentBonusLabel(equippedItem)}` : "Vazio"}</span>
+            </div>
+            ${equippedItem ? `<button type="button" class="secondary" data-action="unequipItem" data-hero-id="${hero.id}" data-slot="${slot}">Remover</button>` : ""}
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    return `
+      <section class="equipment-backdrop" role="dialog" aria-modal="true" aria-hidden="true" hidden data-hero-equipment-modal="${hero.id}">
+        <article class="equipment-modal">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Equipamentos</p>
+              <h2>${escapeHtml(hero.name)}</h2>
+              <p class="muted">Organize os slots deste heroi e mova itens livres para o seu carregamento.</p>
+            </div>
+            <button type="button" class="secondary" data-action="closeEquipmentModal" data-hero-id="${hero.id}">Fechar</button>
+          </div>
+          <div class="equipment-modal-grid">
+            <section class="panel">
+              <div class="section-head">
+                <div>
+                  <p class="eyebrow">Slots</p>
+                  <h3>Equipamento</h3>
+                </div>
+              </div>
+              <div class="equipment-slot-list">${slotItems || '<p class="muted">Nenhum slot disponivel.</p>'}</div>
+            </section>
+            <section class="panel">
+              <div class="section-head">
+                <div>
+                  <p class="eyebrow">Inventario</p>
+                  <h3>Itens livres</h3>
+                </div>
+              </div>
+              <div class="equipment-inventory-list">${freeItems || '<p class="muted">Nenhum item livre no inventario.</p>'}</div>
+            </section>
+          </div>
+        </article>
+      </section>
     `;
   }
 
@@ -365,7 +416,7 @@
   function renderHeroStateBadges(hero, inFormation, expedition) {
     const badges = [];
 
-    if (inFormation) badges.push(`<span class="state-badge formation">Na formação</span>`);
+    if (inFormation) badges.push(`<span class="state-badge formation">Na formaï¿½ï¿½o</span>`);
     if (expedition) badges.push(`<span class="state-badge expedition">Em expedicao</span>`);
     if (Echoes.hasHeroInjuries && Echoes.hasHeroInjuries(hero)) badges.push(`<span class="state-badge injured">Ferido</span>`);
 
@@ -379,7 +430,7 @@
     if (chosen) {
       return `
         <div class="specialization-panel chosen">
-          <h4>Especialização</h4>
+          <h4>Especializaï¿½ï¿½o</h4>
           <strong>${escapeHtml(chosen.name)} - ${escapeHtml(chosen.passiveName)}</strong>
           <p>${escapeHtml(chosen.description)}</p>
         </div>
@@ -390,7 +441,7 @@
 
     return `
       <div class="specialization-panel">
-        <h4>Escolher especialização</h4>
+        <h4>Escolher especializaï¿½ï¿½o</h4>
         <p>Escolha permanente para definir a progressao deste heroi.</p>
         <div class="specialization-options">
           ${Echoes.getClassSpecializations(hero.classKey)
@@ -528,7 +579,7 @@
           <select data-hero-list-control="status">
             ${renderSelectOption("all", "Todos", UI.heroList.status)}
             ${renderSelectOption("available", "Disponiveis", UI.heroList.status)}
-            ${renderSelectOption("formation", "Na formação", UI.heroList.status)}
+            ${renderSelectOption("formation", "Na formaï¿½ï¿½o", UI.heroList.status)}
             ${renderSelectOption("expedition", "Em expedicao", UI.heroList.status)}
             ${renderSelectOption("injured", "Feridos", UI.heroList.status)}
           </select>
@@ -570,7 +621,7 @@
       return `
         <section class="panel-grid">
           <h2>Herois</h2>
-          <p class="muted">Nenhum heroi recrutado ainda. Va ate Invocação para chamar a primeira equipe.</p>
+          <p class="muted">Nenhum heroi recrutado ainda. Va ate Invocaï¿½ï¿½o para chamar a primeira equipe.</p>
         </section>
       `;
     }
@@ -714,7 +765,7 @@
           }).join("")}
         </div>
         <div class="team-preset-actions">
-          <button type="button" class="secondary" data-action="saveExpeditionPresetFromFormation" data-preset-index="${index}">Usar 3 da formação</button>
+          <button type="button" class="secondary" data-action="saveExpeditionPresetFromFormation" data-preset-index="${index}">Usar 3 da formaï¿½ï¿½o</button>
           <button type="button" class="secondary" data-action="clearTeamPreset" data-preset-type="expedition" data-preset-index="${index}" ${heroCount === 0 ? "disabled" : ""}>Limpar</button>
         </div>
       </article>
@@ -734,7 +785,7 @@
           </div>
           <strong>${Echoes.CONFIG.maxTowerTeamPresets}+${Echoes.CONFIG.maxExpeditionTeamPresets} slots</strong>
         </div>
-        <p class="muted">Salve ate 3 times para torre e configure ate 3 times rapidos de expedicao. Os times salvos nao substituem automaticamente sua formação ate voce escolher usar.</p>
+        <p class="muted">Salve ate 3 times para torre e configure ate 3 times rapidos de expedicao. Os times salvos nao substituem automaticamente sua formaï¿½ï¿½o ate voce escolher usar.</p>
         <h3 class="subheading">Torre</h3>
         <div class="team-preset-grid">
           ${towerPresets.map((preset, index) => renderTowerPresetCard(state, preset, index)).join("")}
@@ -779,7 +830,7 @@
           <div class="section-head">
             <div>
               <p class="eyebrow">Equipe ativa</p>
-              <h2>Formação</h2>
+              <h2>Formaï¿½ï¿½o</h2>
             </div>
             <strong>Poder ${formatNumber(Echoes.getFormationPower(state))}</strong>
           </div>
@@ -796,7 +847,7 @@
           </div>
           ${
             availableHeroes.length === 0
-              ? `<p class="muted">Nao ha herois fora da formação.</p>`
+              ? `<p class="muted">Nao ha herois fora da formaï¿½ï¿½o.</p>`
               : `<div class="card-grid compact-grid">${availableHeroes.map((hero) => renderHeroCard(hero, { compact: true, state })).join("")}</div>`
           }
         </article>
@@ -1030,7 +1081,7 @@
     return `
       <div class="expedition-setup">
         <div class="summary-grid">
-          <div><span>Duração</span><strong>${Echoes.formatDuration(definition.durationMs)}</strong></div>
+          <div><span>Duraï¿½ï¿½o</span><strong>${Echoes.formatDuration(definition.durationMs)}</strong></div>
           <div><span>Poder recomendado</span><strong>${definition.recommendedPower}</strong></div>
           <div><span>Recompensa base</span><strong>${baseReward}</strong></div>
         </div>
@@ -1055,7 +1106,7 @@
       <section class="panel">
         <div class="section-head">
           <div>
-            <p class="eyebrow">Missões idle</p>
+            <p class="eyebrow">Missï¿½es idle</p>
             <h2>Expedicoes</h2>
           </div>
           <strong>${state.activeExpeditions.length}/3 em andamento</strong>
@@ -1167,7 +1218,7 @@
       <section class="panel-grid two-columns">
         <article class="panel summon-panel">
           <p class="eyebrow">Portal</p>
-          <h2>Invocação comum</h2>
+          <h2>Invocaï¿½ï¿½o comum</h2>
           <p class="muted">Custo: ${commonCost.amount} ouro.</p>
           <p class="rates">${renderSummonRates("common")}</p>
           <button type="button" data-action="summon" data-summon-type="common" ${
@@ -1176,7 +1227,7 @@
         </article>
         <article class="panel summon-panel superior">
           <p class="eyebrow">Cristais</p>
-          <h2>Invocação superior</h2>
+          <h2>Invocaï¿½ï¿½o superior</h2>
           <p class="muted">Custo: ${superiorCost.amount} cristais.</p>
           <p class="rates">${renderSummonRates("superior")}</p>
           <button type="button" data-action="summon" data-summon-type="superior" ${
@@ -1194,7 +1245,7 @@
           </div>
           ${
             state.summonHistory.length === 0
-              ? `<p class="muted">O historico aparecera aqui apos a primeira invocação.</p>`
+              ? `<p class="muted">O historico aparecera aqui apos a primeira invocaï¿½ï¿½o.</p>`
               : `<div class="history-list">${state.summonHistory
                   .map(
                     (entry) => `
@@ -1448,8 +1499,8 @@
       <section class="panel-grid">
         <article class="panel focus-panel mission-hero-panel">
           <p class="eyebrow">Objetivos</p>
-          <h2>Missões e conquistas</h2>
-          <p class="muted">Complete objetivos jogando normalmente e colete recompensas uma unica vez. Missões diarias reiniciam pela data local do navegador.</p>
+          <h2>Missï¿½es e conquistas</h2>
+          <p class="muted">Complete objetivos jogando normalmente e colete recompensas uma unica vez. Missï¿½es diarias reiniciam pela data local do navegador.</p>
           <div class="summary-grid">
             <div><span>Data diaria</span><strong>${escapeHtml(dailyDate)}</strong></div>
             <div><span>Recompensas prontas</span><strong>${claimable}</strong></div>
@@ -1460,7 +1511,7 @@
           <div class="section-head">
             <div>
               <p class="eyebrow">Reset diario</p>
-              <h2>Missões diarias</h2>
+              <h2>Missï¿½es diarias</h2>
             </div>
             <strong>${dailyDate}</strong>
           </div>
@@ -1494,7 +1545,7 @@
     }
 
     if (formationHeroes.length === 0) {
-      return { canBattle: false, message: "Monte uma formação antes de entrar na torre." };
+      return { canBattle: false, message: "Monte uma formaï¿½ï¿½o antes de entrar na torre." };
     }
 
     const busyHero = formationHeroes.find((hero) => Echoes.isHeroOnExpedition && Echoes.isHeroOnExpedition(state, hero.id));
@@ -2022,7 +2073,7 @@
         <article class="panel settings-panel">
           <p class="eyebrow">Restaurar progresso</p>
           <h2>Importar save</h2>
-          <p class="muted">Selecione um arquivo JSON exportado pelo jogo. O progresso atual sera sobrescrito apos confirmação.</p>
+          <p class="muted">Selecione um arquivo JSON exportado pelo jogo. O progresso atual sera sobrescrito apos confirmaï¿½ï¿½o.</p>
           <input class="hidden-file-input" id="saveImportInput" type="file" accept="application/json,.json" data-save-import />
           <button type="button" class="secondary" data-action="importSave">Selecionar arquivo</button>
         </article>
@@ -2035,7 +2086,7 @@
         <article class="panel wide settings-danger-panel">
           <p class="eyebrow">Zona de risco</p>
           <h2>Resetar save</h2>
-          <p class="muted">Remove todo o progresso local deste navegador. A ação e irreversível sem um backup exportado.</p>
+          <p class="muted">Remove todo o progresso local deste navegador. A aï¿½ï¿½o e irreversï¿½vel sem um backup exportado.</p>
           <button type="button" class="danger" data-action="reset">Resetar save</button>
         </article>
         <article class="panel wide settings-panel credits-panel">
