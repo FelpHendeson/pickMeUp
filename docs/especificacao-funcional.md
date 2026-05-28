@@ -17,6 +17,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 - `specializations.js` disponibiliza especializacoes por classe, requisitos de nivel e bonus permanentes.
 - `injuries.js` controla ferimentos, tratamento na enfermaria, estados temporarios e efeitos de desempenho.
 - `morale.js` gerencia moral de 0 a 100, estados emocionais e bonus/penalidades em combate.
+- `affinity.js` salva vinculos por par de herois, evolui afinidade e aplica bonus leves de equipe.
 
 ### Formação e equipamentos
 - `formation.js` organiza a equipe ativa, limites de slots, posicoes de frente/retaguarda e presets de time.

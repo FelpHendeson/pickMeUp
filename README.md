@@ -268,6 +268,24 @@ Arquivo principal:
 
 - `game/src/morale.js`
 
+### Afinidade entre herois
+
+Pares de herois acumulam afinidade quando atuam juntos. A afinidade e salva por par de IDs e aumenta em combates vencidos, chefes derrotados, expedicoes, eventos perigosos e quando ambos terminam uma batalha vivos.
+
+Niveis:
+
+- Desconhecidos;
+- Companheiros;
+- Confiaveis;
+- Irmandade;
+- Lenda Viva.
+
+Bonus leves podem conceder moral e energia inicial na batalha, pequena chance de protecao entre aliados e bonus pequeno de XP quando lutam juntos.
+
+Arquivo principal:
+
+- `game/src/affinity.js`
+
 ### Especializacoes de classe
 
 Ao atingir nivel 10, cada heroi pode escolher uma especializacao permanente. A especializacao altera levemente atributos e adiciona uma passiva de combate.
@@ -328,6 +346,7 @@ Arquivo principal:
 |       +-- heroes.js
 |       +-- recruitment.js
 |       +-- formation.js
+|       +-- affinity.js
 |       +-- equipment.js
 |       +-- consumables.js
 |       +-- expeditions.js
@@ -394,6 +413,7 @@ Responsabilidades principais:
 - `heroes.js`: criacao, atributos e progressao de herois;
 - `recruitment.js`: contratos, escolha entre 3 herois e veteranos de capitulo;
 - `formation.js`: equipe ativa;
+- `affinity.js`: vinculos entre pares de herois e bonus leves de equipe;
 - `equipment.js`: inventario e atributos efetivos;
 - `consumables.js`: consumiveis, validacao de uso, recuperacao e efeitos de proxima batalha;
 - `tower.js`: andares, inimigos e inicio de batalhas;
