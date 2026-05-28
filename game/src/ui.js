@@ -6,6 +6,7 @@
   const UI = {
     currentTab: "base",
     message: "",
+    activeEquipmentModalHeroId: null,
     heroList: {
       sortBy: "power",
       classKey: "all",
@@ -333,12 +334,12 @@
         </div>
         <div class="equipment-summary-grid">${equippedSummary}</div>
       </div>
-      ${renderHeroEquipmentModal(hero, state)}
     `;
   }
 
   function renderHeroEquipmentModal(hero, state) {
     Echoes.normalizeHeroEquipmentSlots(hero);
+    const isOpen = UI.activeEquipmentModalHeroId === hero.id;
 
     const freeItems = (state.inventory || [])
       .filter((item) => !Echoes.findEquipmentOwner(state, item.id))
@@ -373,8 +374,12 @@
       `;
     }).join("");
 
+    const modalAttributes = isOpen
+      ? 'role="dialog" aria-modal="true" aria-hidden="false"'
+      : 'role="dialog" aria-modal="true" aria-hidden="true" hidden';
+
     return `
-      <section class="equipment-backdrop" role="dialog" aria-modal="true" aria-hidden="true" hidden data-hero-equipment-modal="${hero.id}">
+      <section class="equipment-backdrop" ${modalAttributes} data-hero-equipment-modal="${hero.id}">
         <article class="equipment-modal">
           <div class="section-head">
             <div>
@@ -645,6 +650,7 @@
               : sortedHeroes.map((hero) => renderHeroCard(hero, { inFormation: Echoes.isHeroInFormation(state, hero.id), state })).join("")
           }
         </div>
+        ${sortedHeroes.map((hero) => renderHeroEquipmentModal(hero, state)).join("")}
       </section>
     `;
   }
@@ -2142,6 +2148,9 @@
 
   function setTab(tab) {
     UI.currentTab = tab;
+    if (tab !== "heroes") {
+      UI.activeEquipmentModalHeroId = null;
+    }
   }
 
   Echoes.UI = UI;

@@ -310,19 +310,22 @@
   }
 
   function handleOpenEquipmentModalAction(target) {
-    const modal = document.querySelector(`[data-hero-equipment-modal="${target.dataset.heroId}"]`);
-    if (!modal) return;
+    const heroId = target.dataset.heroId;
+    if (!heroId) return;
 
-    modal.hidden = false;
-    modal.setAttribute("aria-hidden", "false");
+    Echoes.UI.activeEquipmentModalHeroId = heroId;
+    Echoes.render(state);
   }
 
   function handleCloseEquipmentModalAction(target) {
-    const modal = target.closest("[data-hero-equipment-modal]");
-    if (!modal) return;
+    const heroId = target.dataset.heroId || target.closest("[data-hero-equipment-modal]")?.getAttribute("data-hero-equipment-modal");
+    if (!heroId) return;
 
-    modal.hidden = true;
-    modal.setAttribute("aria-hidden", "true");
+    if (Echoes.UI.activeEquipmentModalHeroId === heroId) {
+      Echoes.UI.activeEquipmentModalHeroId = null;
+    }
+
+    Echoes.render(state);
   }
 
   function getConsumableTargetHeroId(consumableId) {
