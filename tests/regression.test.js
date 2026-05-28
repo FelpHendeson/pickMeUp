@@ -280,3 +280,42 @@ test('dificuldades da torre modificam risco, recompensa e estatisticas', () => {
   assert.equal(state.deadHeroes.length, 1);
   assert.equal(state.towerDifficultyStats.hardcoreDeaths, 1);
 });
+
+test('combate registra estatisticas de desempenho para tela de resultado', () => {
+  const Echoes = loadAffinityEngine();
+  const state = Echoes.ensureStateShape(Echoes.createInitialState());
+  const hero = Echoes.generateHero({ rarity: 2, classKey: 'warrior' });
+  hero.stats = { hp: 180, atk: 80, def: 20, spd: 20, focus: 10, luck: 0 };
+  state.heroes.push(hero);
+
+  const playerTeam = Echoes.createPlayerTeam([hero], state);
+  const enemyTeam = [
+    {
+      id: 'enemy_test',
+      name: 'Alvo de Teste',
+      side: 'enemy',
+      role: 'dano',
+      stats: { hp: 30, atk: 1, def: 0, spd: 1, focus: 1, luck: 0 },
+      maxHp: 30,
+      hp: 30,
+      energy: 0,
+      statuses: {},
+      position: 'front',
+    },
+  ];
+
+  const originalRandom = Math.random;
+  Math.random = () => 0.5;
+  try {
+    const battle = Echoes.runAutoBattle(playerTeam, enemyTeam, ['Teste de resultado.'], {});
+    const stats = battle.performance[hero.id];
+
+    assert.equal(battle.result, 'victory');
+    assert.ok(stats.damageDealt > 0);
+    assert.ok(stats.kills >= 1);
+    assert.ok(Object.prototype.hasOwnProperty.call(stats, 'healingDone'));
+    assert.ok(Object.prototype.hasOwnProperty.call(stats, 'affinityProtections'));
+  } finally {
+    Math.random = originalRandom;
+  }
+});

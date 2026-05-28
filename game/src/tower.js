@@ -886,6 +886,89 @@
     });
   }
 
+  function getBattleResultMissionUpdates(state) {
+    if (!Echoes.DAILY_MISSION_DEFINITIONS || !Echoes.getDailyMissionProgress) return [];
+
+    return Echoes.DAILY_MISSION_DEFINITIONS.map((mission) => ({
+      id: mission.id,
+      title: mission.title,
+      progress: Echoes.getDailyMissionProgress(state, mission),
+      target: mission.target,
+      complete: Echoes.isDailyMissionComplete ? Echoes.isDailyMissionComplete(state, mission) : false,
+    })).filter((mission) => mission.progress > 0);
+  }
+
+  function getBattleResultAchievements(state) {
+    if (!Echoes.ACHIEVEMENT_DEFINITIONS || !Echoes.getAchievementProgress) return [];
+
+    return Echoes.ACHIEVEMENT_DEFINITIONS.map((achievement) => ({
+      id: achievement.id,
+      title: achievement.title,
+      progress: Echoes.getAchievementProgress(state, achievement),
+      target: achievement.target,
+      complete: Echoes.isAchievementComplete ? Echoes.isAchievementComplete(state, achievement) : false,
+      claimed: Boolean(state.achievements && state.achievements[achievement.id] && state.achievements[achievement.id].claimed),
+    })).filter((achievement) => achievement.complete && !achievement.claimed);
+  }
+
+  function getBattleResultLibraryUpdates(state, enemyTeam) {
+    if (!Echoes.getLibraryEnemyView) return [];
+
+    const seen = new Set();
+    return enemyTeam
+      .filter((enemy) => {
+        if (!enemy.enemyKey || seen.has(enemy.enemyKey)) return false;
+        seen.add(enemy.enemyKey);
+        return true;
+      })
+      .map((enemy) => {
+        const view = Echoes.getLibraryEnemyView(state, enemy.enemyKey);
+        return {
+          enemyKey: enemy.enemyKey,
+          name: view.name,
+          defeated: view.defeated,
+          detailsUnlocked: view.detailsUnlocked,
+        };
+      });
+  }
+
+  function enrichBattleResult(state, battleResult, context) {
+    const chapter = getTowerChapterByFloor(context.floorNumber);
+    const difficulty = Echoes.getTowerDifficultyMode ? Echoes.getTowerDifficultyMode(context.difficultyMode) : null;
+    const modifierSummary = getFloorModifierSummary(context.floorData);
+    const weeklyEvent = Echoes.getActiveWeeklyEventSummary ? Echoes.getActiveWeeklyEventSummary() : "";
+
+    battleResult.summary = {
+      chapterId: chapter ? chapter.id : "",
+      chapterName: chapter ? chapter.name : "",
+      chapterNumber: chapter ? chapter.number : 0,
+      difficultyId: difficulty ? difficulty.id : "normal",
+      difficultyName: difficulty ? difficulty.name : "Normal",
+      enemyNames: context.enemyTeam.map((enemy) => enemy.name),
+      modifiers: modifierSummary ? modifierSummary.split(" | ") : [],
+      weeklyEvent,
+      isBoss: isBossFloor(context.floorData),
+    };
+
+    battleResult.rewards = battleResult.rewards || (context.rawBattle && context.rawBattle.rewards) || {};
+    battleResult.progression = Object.assign(
+      {
+        heroXp: [],
+        levelUps: [],
+        specializationsAvailable: [],
+        missionUpdates: [],
+        achievementsAvailable: [],
+        libraryUpdates: [],
+      },
+      (context.rawBattle && context.rawBattle.progression) || {}
+    );
+    battleResult.progression.missionUpdates = getBattleResultMissionUpdates(state);
+    battleResult.progression.achievementsAvailable = getBattleResultAchievements(state);
+    battleResult.progression.libraryUpdates = getBattleResultLibraryUpdates(state, context.enemyTeam);
+
+    return battleResult;
+  }
+
   function runTowerBattle(state, options) {
     const repeatFloor = options && Number(options.repeatFloor);
     const isRepeat = Number.isInteger(repeatFloor);
@@ -1029,8 +1112,16 @@
       playerTeam,
       enemyTeam,
       battle.log,
-      battle.events
+      battle.events,
+      battle.performance
     );
+    enrichBattleResult(state, state.lastBattle, {
+      floorNumber,
+      floorData,
+      enemyTeam,
+      difficultyMode,
+      rawBattle: battle,
+    });
     return state.lastBattle;
   }
 

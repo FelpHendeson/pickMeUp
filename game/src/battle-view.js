@@ -203,6 +203,171 @@
     `;
   }
 
+  function safeNumber(value) {
+    return Math.max(0, Math.round(Number(value) || 0));
+  }
+
+  function renderResultMetric(label, value) {
+    return `<div><span>${Echoes.escapeHtml(label)}</span><strong>${Echoes.escapeHtml(String(value || "0"))}</strong></div>`;
+  }
+
+  function renderResultList(items, emptyText) {
+    if (!items || items.length === 0) return `<p class="muted">${Echoes.escapeHtml(emptyText)}</p>`;
+    return `<ul class="result-list">${items.map((item) => `<li>${Echoes.escapeHtml(item)}</li>`).join("")}</ul>`;
+  }
+
+  function getRewardLines(rewards) {
+    const reward = rewards || {};
+    const lines = [];
+    if (safeNumber(reward.gold) > 0) lines.push(`${safeNumber(reward.gold)} ouro`);
+    if (safeNumber(reward.crystals) > 0) lines.push(`${safeNumber(reward.crystals)} cristais`);
+    if (safeNumber(reward.essence) > 0) lines.push(`${safeNumber(reward.essence)} essencia`);
+    if (safeNumber(reward.fragments) > 0) lines.push(`${safeNumber(reward.fragments)} fragmentos`);
+    if (safeNumber(reward.echoFragments) > 0) lines.push(`${safeNumber(reward.echoFragments)} fragmentos de eco`);
+    if (safeNumber(reward.energyRefund) > 0) lines.push(`${safeNumber(reward.energyRefund)} energia recuperada`);
+    if (safeNumber(reward.heroContracts) > 0) lines.push(`${safeNumber(reward.heroContracts)} contrato(s) de heroi`);
+    (reward.equipment || []).forEach((item) => lines.push(`Equipamento: ${item.name}`));
+    (reward.consumables || []).forEach((item) => lines.push(`Consumivel: ${item.name} x${item.amount || 1}`));
+    return lines;
+  }
+
+  function getProgressionLines(battle) {
+    const progression = battle.progression || {};
+    const lines = [];
+
+    (progression.heroXp || []).forEach((item) => lines.push(`${item.heroName}: +${item.xp} XP`));
+    (progression.levelUps || []).forEach((item) => lines.push(`${item.heroName} subiu para o nivel ${item.level}`));
+    (progression.specializationsAvailable || []).forEach((item) =>
+      lines.push(`${item.heroName} pode escolher especializacao`)
+    );
+    (progression.missionUpdates || [])
+      .filter((item) => item.complete)
+      .forEach((item) => lines.push(`Missao pronta: ${item.title}`));
+    (progression.achievementsAvailable || []).forEach((item) => lines.push(`Conquista pronta: ${item.title}`));
+    (progression.libraryUpdates || []).forEach((item) =>
+      lines.push(`Biblioteca: ${item.name}${item.detailsUnlocked ? " com detalhes liberados" : " registrado"}`)
+    );
+
+    return lines;
+  }
+
+  function getConsequenceLines(battle) {
+    return getBattleEvents(battle)
+      .filter((event) => ["morale", "injury", "recovery", "death"].includes(event.type))
+      .map((event) => event.message);
+  }
+
+  function renderHeroPerformance(battle) {
+    const performance = Object.values(battle.performance || {});
+    if (performance.length === 0) {
+      return `<p class="muted">Estatisticas detalhadas nao existem para este combate salvo.</p>`;
+    }
+
+    return `
+      <div class="result-hero-grid">
+        ${performance
+          .sort((a, b) => safeNumber(b.damageDealt) + safeNumber(b.healingDone) - (safeNumber(a.damageDealt) + safeNumber(a.healingDone)))
+          .map(
+            (hero) => `
+              <article class="result-hero-card">
+                <div>
+                  <strong>${Echoes.escapeHtml(hero.name)}</strong>
+                  <span>${Echoes.escapeHtml(hero.className || "Heroi")}</span>
+                </div>
+                <div class="result-stat-grid">
+                  ${renderResultMetric("Dano", safeNumber(hero.damageDealt))}
+                  ${renderResultMetric("Cura", safeNumber(hero.healingDone))}
+                  ${renderResultMetric("Recebido", safeNumber(hero.damageTaken))}
+                  ${renderResultMetric("Abates", safeNumber(hero.kills))}
+                  ${renderResultMetric("Habilidades", safeNumber(hero.skillUses))}
+                  ${renderResultMetric("Falhas moral", safeNumber(hero.moraleFailures))}
+                  ${renderResultMetric("Protecoes", safeNumber(hero.affinityProtections))}
+                </div>
+              </article>
+            `
+          )
+          .join("")}
+      </div>
+    `;
+  }
+
+  function renderBattleResultView(state) {
+    const battle = state.lastBattle;
+    if (!battle) return renderEmptyBattleView();
+
+    const summary = battle.summary || {};
+    const resultLabel = battle.result === "victory" ? "Vitoria" : "Derrota";
+    const resultTone = battle.result === "victory" ? "victory" : "defeat";
+    const enemyNames = summary.enemyNames || (battle.enemyTeam || []).map((enemy) => enemy.name);
+    const modifierLines = (summary.modifiers || []).concat(summary.weeklyEvent ? [`Evento semanal: ${summary.weeklyEvent}`] : []);
+
+    return `
+      <section class="battle-result-layout">
+        <article class="panel battle-result-hero tone-${resultTone}">
+          <div>
+            <p class="eyebrow">Resultado da torre</p>
+            <h2>${resultLabel} no andar ${battle.floor}</h2>
+            <p class="muted">${summary.chapterName ? `Capitulo ${summary.chapterNumber}: ${Echoes.escapeHtml(summary.chapterName)}` : "Capitulo nao registrado"}</p>
+          </div>
+          <div class="battle-result-actions">
+            <button type="button" data-action="continueTower">Continuar</button>
+            <button type="button" class="secondary" data-action="viewBattleReplay">Ver replay</button>
+          </div>
+        </article>
+
+        <article class="panel">
+          <p class="eyebrow">Resumo</p>
+          <h2>O que aconteceu</h2>
+          <div class="summary-grid">
+            ${renderResultMetric("Dificuldade", summary.difficultyName || "Normal")}
+            ${renderResultMetric("Turnos", battle.rounds)}
+            ${renderResultMetric("Inimigos", enemyNames.length)}
+            ${renderResultMetric("Chefe", summary.isBoss ? "Sim" : "Nao")}
+          </div>
+          <h3 class="subheading">Inimigos enfrentados</h3>
+          ${renderResultList(enemyNames, "Nenhum inimigo registrado.")}
+          <h3 class="subheading">Modificadores ativos</h3>
+          ${renderResultList(modifierLines, "Nenhum modificador especial afetou a luta.")}
+        </article>
+
+        <article class="panel">
+          <p class="eyebrow">Ganhos</p>
+          <h2>Recompensas</h2>
+          ${renderResultList(getRewardLines(battle.rewards), battle.result === "victory" ? "Nenhuma recompensa especial registrada." : "Derrotas nao concedem recompensas.")}
+        </article>
+
+        <article class="panel">
+          <p class="eyebrow">Progressao</p>
+          <h2>Depois da luta</h2>
+          ${renderResultList(getProgressionLines(battle), "Nenhuma progressao nova registrada.")}
+        </article>
+
+        <article class="panel wide">
+          <p class="eyebrow">Herois</p>
+          <h2>Desempenho individual</h2>
+          ${renderHeroPerformance(battle)}
+        </article>
+
+        <article class="panel wide">
+          <p class="eyebrow">Consequencias</p>
+          <h2>Moral, ferimentos e perdas</h2>
+          ${renderResultList(getConsequenceLines(battle), "Nenhuma consequencia negativa relevante.")}
+        </article>
+
+        <article class="panel wide combat-log-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Log</p>
+              <h2>Ultimos eventos</h2>
+            </div>
+            <button type="button" class="secondary" data-action="viewBattleReplay">Abrir replay completo</button>
+          </div>
+          ${renderBattleLog(getBattleEvents(battle).slice(-12))}
+        </article>
+      </section>
+    `;
+  }
+
   function renderBattleView(state) {
     const battle = state.lastBattle;
 
@@ -291,6 +456,7 @@
   }
 
   Echoes.renderBattleView = renderBattleView;
+  Echoes.renderBattleResultView = renderBattleResultView;
   Echoes.stopBattlePlayback = stopBattlePlayback;
   Echoes.scheduleBattlePlayback = scheduleBattlePlayback;
   Echoes.setBattleSpeed = setBattleSpeed;

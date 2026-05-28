@@ -2080,6 +2080,90 @@ body.pref-compact .modifier {
   grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
 }
 
+.battle-result-layout {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.battle-result-hero {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  grid-column: 1 / -1;
+  justify-content: space-between;
+}
+
+.battle-result-hero.tone-victory {
+  border-color: rgba(86, 199, 189, 0.42);
+}
+
+.battle-result-hero.tone-defeat {
+  border-color: rgba(184, 91, 91, 0.5);
+}
+
+.battle-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+.result-list {
+  color: var(--muted);
+  display: grid;
+  gap: 0.45rem;
+  line-height: 1.45;
+  margin: 0.65rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.result-hero-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.result-hero-card {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+}
+
+.result-hero-card span {
+  color: var(--muted);
+  display: block;
+  font-size: 0.82rem;
+  margin-top: 0.2rem;
+}
+
+.result-stat-grid {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.result-stat-grid div {
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.result-stat-grid span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  margin: 0 0 0.15rem;
+  text-transform: uppercase;
+}
+
+.result-stat-grid strong {
+  color: var(--text);
+}
+
 .battle-stage {
   min-width: 0;
 }
@@ -2425,6 +2509,7 @@ body.pref-compact .modifier {
 @media (max-width: 860px) {
   .topbar,
   .section-head,
+  .battle-result-hero,
   .tower-title-row,
   .tower-progress-head,
   .mission-card-head {
@@ -2437,6 +2522,8 @@ body.pref-compact .modifier {
   .team-preset-grid,
   .team-preset-strip,
   .list-toolbar,
+  .battle-result-layout,
+  .battle-result-hero,
   .battle-layout,
   .battlefield,
   .equipment-row,

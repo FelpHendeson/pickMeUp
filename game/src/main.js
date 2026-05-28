@@ -252,7 +252,7 @@
       return;
     }
 
-    Echoes.setTab("battle");
+    Echoes.setTab("battleResult");
     saveAndRender(getBattleMessage(result, repeatFloor));
   }
 
@@ -275,6 +275,7 @@
         "Confirmar inicio do combate Hardcore apos o evento? Herois que cairem ainda podem morrer permanentemente."
       );
       if (!confirmed) {
+        state.pendingTowerDifficultyMode = null;
         Echoes.setTab("tower");
         saveAndRender(eventResult.message);
         return;
@@ -298,7 +299,7 @@
       return;
     }
 
-    Echoes.setTab("battle");
+    Echoes.setTab("battleResult");
     saveAndRender(`${eventResult.message} ${getBattleMessage(battleResult)}`);
   }
 
@@ -570,6 +571,18 @@
 
   function handleAction(target) {
     const action = target.dataset.action;
+
+    if (action === "continueTower") {
+      Echoes.setTab("tower");
+      Echoes.render(state);
+      return;
+    }
+
+    if (action === "viewBattleReplay") {
+      Echoes.setTab("battle");
+      Echoes.render(state);
+      return;
+    }
 
     if (action === "save") return handleSaveAction();
     if (action === "continueNarrative") return handleNarrativeAction(target, false);

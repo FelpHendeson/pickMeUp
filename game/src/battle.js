@@ -71,7 +71,31 @@
     return getLivingUnits(units).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0] || null;
   }
 
-  function selectAttackTarget(candidates, attacker) {
+  function ensureBattlePerformance(battle, unit) {
+    if (!battle || !unit || unit.side !== "player") return null;
+    battle.performance = battle.performance || {};
+    battle.performance[unit.id] = battle.performance[unit.id] || {
+      id: unit.id,
+      name: unit.name,
+      className: unit.className || unit.classKey || "",
+      damageDealt: 0,
+      healingDone: 0,
+      damageTaken: 0,
+      kills: 0,
+      skillUses: 0,
+      moraleFailures: 0,
+      affinityProtections: 0,
+    };
+    return battle.performance[unit.id];
+  }
+
+  function addPerformanceValue(battle, unit, key, amount) {
+    const stats = ensureBattlePerformance(battle, unit);
+    if (!stats) return;
+    stats[key] = Math.max(0, (stats[key] || 0) + amount);
+  }
+
+  function selectAttackTarget(candidates, attacker, battle) {
     const living = getLivingUnits(candidates);
     if (living.length === 0) return null;
 
@@ -94,7 +118,13 @@
       : target;
 
     if (specializedTarget !== target) return specializedTarget;
-    return Echoes.getAffinityProtectionTarget ? Echoes.getAffinityProtectionTarget(target, living, attacker) : target;
+
+    const affinityTarget = Echoes.getAffinityProtectionTarget ? Echoes.getAffinityProtectionTarget(target, living, attacker) : target;
+    if (affinityTarget !== target) {
+      addPerformanceValue(battle, affinityTarget, "affinityProtections", 1);
+    }
+
+    return affinityTarget;
   }
 
   function createPlayerTeam(formationHeroes, state) {
@@ -184,8 +214,10 @@
       events: [],
       round: 0,
       modifiers: modifiers || {},
+      performance: {},
     };
 
+    playerTeam.forEach((unit) => ensureBattlePerformance(battle, unit));
     introLines.forEach((line) => addBattleEvent(battle, "info", line));
     return battle;
   }
@@ -226,6 +258,8 @@
       if (attacker.hp > 0) {
         const counterDamage = calculateDamage(target, attacker, 0.55, 0.04, battle);
         attacker.hp = Math.max(0, attacker.hp - counterDamage.amount);
+        addPerformanceValue(battle, target, "damageDealt", counterDamage.amount);
+        addPerformanceValue(battle, attacker, "damageTaken", counterDamage.amount);
         addBattleEvent(
           battle,
           counterDamage.critical ? "critical" : "damage",
@@ -234,6 +268,7 @@
         );
 
         if (attacker.hp <= 0) {
+          addPerformanceValue(battle, target, "kills", 1);
           addBattleEvent(battle, "death", `${attacker.name} caiu.`, { actorId: target.id, targetId: attacker.id });
         }
       }
@@ -244,6 +279,8 @@
     const damage = calculateDamage(attacker, target, multiplier, critBonus, battle);
 
     target.hp = Math.max(0, target.hp - damage.amount);
+    addPerformanceValue(battle, attacker, "damageDealt", damage.amount);
+    addPerformanceValue(battle, target, "damageTaken", damage.amount);
     addUnitEnergy(attacker, BATTLE_CONFIG.attackEnergyGain);
     addUnitEnergy(target, BATTLE_CONFIG.damageEnergyGain);
 
@@ -258,6 +295,7 @@
 
     if (target.hp <= 0) {
       addUnitEnergy(attacker, BATTLE_CONFIG.killEnergyGain);
+      addPerformanceValue(battle, attacker, "kills", 1);
       addBattleEvent(battle, "death", `${target.name} caiu.`, { actorId: attacker.id, targetId: target.id });
     }
 
@@ -281,6 +319,7 @@
     );
 
     target.hp = Math.min(target.maxHp, target.hp + amount);
+    addPerformanceValue(battle, healer, "healingDone", amount);
     addUnitEnergy(healer, BATTLE_CONFIG.attackEnergyGain);
     addBattleEvent(
       battle,
@@ -291,7 +330,7 @@
   }
 
   function useWarriorSkill(unit, enemies, battle) {
-    const target = selectAttackTarget(enemies, unit);
+    const target = selectAttackTarget(enemies, unit, battle);
     if (!target) return;
 
     addBattleEvent(battle, "skill", `${unit.name} usou Golpe Pesado em ${target.name}.`, {
@@ -303,7 +342,7 @@
   }
 
   function useArcherSkill(unit, enemies, battle) {
-    const target = selectAttackTarget(enemies, unit);
+    const target = selectAttackTarget(enemies, unit, battle);
     if (!target) return;
 
     addBattleEvent(battle, "skill", `${unit.name} usou Flecha Precisa em ${target.name}.`, {
@@ -361,6 +400,8 @@
   }
 
   function usePlayerSpecialSkill(unit, allies, enemies, battle) {
+    addPerformanceValue(battle, unit, "skillUses", 1);
+
     if (unit.classKey === "warrior") return useWarriorSkill(unit, enemies, battle);
     if (unit.classKey === "archer") return useArcherSkill(unit, enemies, battle);
     if (unit.classKey === "mage") return useMageSkill(unit, enemies, battle);
@@ -368,7 +409,7 @@
     if (unit.classKey === "rogue") return useRogueSkill(unit, enemies, battle);
     if (unit.classKey === "guardian") return useGuardianSkill(unit, battle);
 
-    const target = selectAttackTarget(enemies, unit);
+    const target = selectAttackTarget(enemies, unit, battle);
     if (!target) return;
 
     addBattleEvent(battle, "skill", `${unit.name} usou uma habilidade especial em ${target.name}.`, {
@@ -381,7 +422,7 @@
 
   function useEnemySpecialSkill(unit, enemies, battle) {
     if (unit.enemyKey === "markedAcolyte") {
-      const target = selectAttackTarget(enemies, unit);
+      const target = selectAttackTarget(enemies, unit, battle);
       if (!target) return;
 
       if (Echoes.shouldResistNegativeStatus && Echoes.shouldResistNegativeStatus(target)) {
@@ -470,7 +511,7 @@
       return;
     }
 
-    const target = selectAttackTarget(enemies, unit);
+    const target = selectAttackTarget(enemies, unit, battle);
     if (target) {
       addBattleEvent(battle, "skill", `${unit.name} usou golpe feroz em ${target.name}.`, {
         actorId: unit.id,
@@ -511,7 +552,7 @@
   }
 
   function executeBasicAttack(unit, enemies, battle) {
-    const target = selectAttackTarget(enemies, unit);
+    const target = selectAttackTarget(enemies, unit, battle);
     if (target) {
       applyDamage(unit, target, 1, battle, "atacou", 0);
     }
@@ -536,6 +577,7 @@
     decrementStatuses(unit);
 
     if (Echoes.shouldUnitFailMoraleAction && Echoes.shouldUnitFailMoraleAction(unit)) {
+      addPerformanceValue(battle, unit, "moraleFailures", 1);
       addBattleEvent(battle, "morale", `${unit.name} hesitou por causa da moral baixa e perdeu a acao.`, {
         actorId: unit.id,
       });
@@ -589,7 +631,7 @@
     return result;
   }
 
-  function createBattleResult(result, floorNumber, round, playerTeam, enemyTeam, log, events) {
+  function createBattleResult(result, floorNumber, round, playerTeam, enemyTeam, log, events, performance) {
     return {
       ok: true,
       id: `battle_${floorNumber}_${Date.now()}`,
@@ -600,6 +642,7 @@
       enemyTeam: serializeBattleTeam(enemyTeam),
       log,
       events: events || [],
+      performance: performance || {},
     };
   }
 
@@ -621,6 +664,7 @@
       enemyTeam,
       log: battle.log,
       events: battle.events,
+      performance: battle.performance,
     };
   }
 

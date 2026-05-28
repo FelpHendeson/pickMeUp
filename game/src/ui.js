@@ -2063,6 +2063,7 @@
       library: renderLibrary,
       summon: renderSummon,
       tower: renderTower,
+      battleResult: Echoes.renderBattleResultView || renderBattle,
       battle: renderBattle,
       settings: renderSettings,
     };

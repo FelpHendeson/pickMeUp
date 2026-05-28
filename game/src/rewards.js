@@ -12,6 +12,35 @@
     log.push(message);
   }
 
+  function ensureBattleRewards(battle) {
+    if (!battle) return null;
+    battle.rewards = battle.rewards || {
+      gold: 0,
+      crystals: 0,
+      essence: 0,
+      fragments: 0,
+      echoFragments: 0,
+      energyRefund: 0,
+      heroContracts: 0,
+      equipment: [],
+      consumables: [],
+    };
+    return battle.rewards;
+  }
+
+  function ensureBattleProgression(battle) {
+    if (!battle) return null;
+    battle.progression = battle.progression || {
+      heroXp: [],
+      levelUps: [],
+      specializationsAvailable: [],
+      missionUpdates: [],
+      achievementsAvailable: [],
+      libraryUpdates: [],
+    };
+    return battle.progression;
+  }
+
   function addRewardLogLines(reward, crystalDrop, echoFragmentDrop, consumableDropId, equipmentDrop, log, battle, heroXpReward) {
     const displayedHeroXp = heroXpReward || reward.xp;
 
@@ -47,8 +76,18 @@
       const affinityMultiplier = Echoes.getAffinityXpMultiplier ? Echoes.getAffinityXpMultiplier(state, heroId, heroIds) : 1;
       const adjustedXp = Math.max(1, Math.round(xpAmount * affinityMultiplier));
       const xpResult = Echoes.addHeroXp(hero, adjustedXp);
+      const progression = ensureBattleProgression(battle);
+      if (progression) {
+        progression.heroXp.push({ heroId: hero.id, heroName: hero.name, xp: adjustedXp });
+      }
       if (xpResult.levelUps.length > 0) {
+        if (progression) {
+          progression.levelUps.push({ heroId: hero.id, heroName: hero.name, level: hero.level, levels: xpResult.levelUps.slice() });
+        }
         addRewardEvent(log, battle, "reward", `${hero.name} subiu para o nivel ${hero.level}.`);
+      }
+      if (hero.level >= 10 && !hero.specializationKey && progression) {
+        progression.specializationsAvailable.push({ heroId: hero.id, heroName: hero.name });
       }
     });
   }
@@ -102,6 +141,15 @@
     Object.keys(reward).forEach((resourceKey) => {
       Echoes.addResource(state, resourceKey, reward[resourceKey]);
     });
+    const battleRewards = ensureBattleRewards(battle);
+    if (battleRewards) {
+      battleRewards.heroContracts += reward.heroContracts || 0;
+      battleRewards.gold += reward.gold || 0;
+      battleRewards.crystals += reward.crystals || 0;
+      battleRewards.essence += reward.essence || 0;
+      battleRewards.fragments += reward.fragments || 0;
+      battleRewards.echoFragments += reward.echoFragments || 0;
+    }
 
     state.completedTowerChapters.push(chapter.id);
 
@@ -146,6 +194,7 @@
     const shouldDropEquipment = reward.guaranteedEquipment || Math.random() < reward.equipmentChance;
     const equipmentFloor = Math.max(1, floorNumber + (reward.equipmentRarityBonusFloors || 0));
     const equipmentDrop = shouldDropEquipment ? Echoes.addEquipmentToInventory(state, Echoes.generateEquipment(equipmentFloor)) : null;
+    const battleRewards = ensureBattleRewards(battle);
 
     Echoes.addResource(state, "gold", reward.gold);
     Echoes.addResource(state, "crystals", crystalDrop);
@@ -155,6 +204,18 @@
     if (consumableDropId && Echoes.addConsumable) Echoes.addConsumable(state, consumableDropId, 1);
     Echoes.addResource(state, "energy", reward.energyRefund);
     Echoes.addAccountXp(state, Math.ceil(reward.xp / 2));
+    if (battleRewards) {
+      battleRewards.gold += reward.gold;
+      battleRewards.crystals += crystalDrop;
+      battleRewards.essence += reward.essence;
+      battleRewards.fragments += reward.fragments;
+      battleRewards.echoFragments += echoFragmentDrop;
+      battleRewards.energyRefund += reward.energyRefund;
+      if (equipmentDrop) battleRewards.equipment.push(equipmentDrop);
+      if (consumableDropId && Echoes.getConsumableDefinition) {
+        battleRewards.consumables.push({ id: consumableDropId, name: Echoes.getConsumableDefinition(consumableDropId).name, amount: 1 });
+      }
+    }
 
     addRewardLogLines(reward, crystalDrop, echoFragmentDrop, consumableDropId, equipmentDrop, log, battle, heroXpReward);
     grantHeroXpRewards(state, participatingHeroIds, heroXpReward, log, battle);
