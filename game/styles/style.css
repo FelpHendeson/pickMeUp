@@ -84,6 +84,17 @@ button.danger {
   border-color: rgba(184, 91, 91, 0.65);
 }
 
+select {
+  background: #100f0e;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  min-height: 38px;
+  min-width: 0;
+  padding: 0.55rem;
+  width: 100%;
+}
+
 .app-shell {
   position: relative;
   width: min(1240px, calc(100% - 2rem));
@@ -246,6 +257,41 @@ h3 {
   color: #ffd6d6;
 }
 
+.narrative-backdrop {
+  align-items: center;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(214, 168, 78, 0.14), transparent 24rem),
+    rgba(8, 8, 7, 0.78);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 1rem;
+  position: fixed;
+  z-index: 30;
+}
+
+.narrative-card {
+  background:
+    linear-gradient(135deg, rgba(86, 199, 189, 0.08), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
+    rgba(28, 25, 24, 0.98);
+  border: 1px solid rgba(214, 168, 78, 0.34);
+  border-radius: 8px;
+  box-shadow: 0 28px 80px var(--shadow-strong);
+  max-width: 560px;
+  padding: 1.1rem;
+  width: min(100%, 560px);
+}
+
+.narrative-card h2 {
+  margin-bottom: 0.55rem;
+}
+
+.narrative-card p:not(.eyebrow) {
+  color: #ded2c4;
+  line-height: 1.62;
+}
+
 .panel-grid {
   display: grid;
   gap: 1.05rem;
@@ -354,9 +400,88 @@ h3 {
   gap: 0.25rem;
 }
 
+.settings-grid {
+  align-items: stretch;
+}
+
 .settings-panel button,
 .settings-danger-panel button {
   margin-top: auto;
+}
+
+.setting-segmented {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0.8rem;
+}
+
+.setting-segmented button {
+  margin-top: 0;
+}
+
+.setting-stack {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.8rem;
+}
+
+.setting-toggle {
+  align-items: center;
+  background: rgba(17, 15, 14, 0.7);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 0.7rem;
+}
+
+.setting-toggle input {
+  accent-color: var(--gold);
+  height: 18px;
+  width: 18px;
+}
+
+.setting-toggle span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.setting-toggle em,
+.setting-range span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-style: normal;
+  line-height: 1.35;
+}
+
+.setting-range {
+  align-items: center;
+  background: rgba(17, 15, 14, 0.7);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(110px, 0.25fr) minmax(160px, 1fr) 52px;
+  padding: 0.7rem;
+}
+
+.setting-range input {
+  accent-color: var(--gold);
+  width: 100%;
+}
+
+.setting-range strong {
+  color: var(--gold);
+  text-align: right;
+}
+
+.credits-panel .summary-grid strong {
+  overflow-wrap: anywhere;
 }
 
 .settings-danger-panel {
@@ -372,6 +497,49 @@ h3 {
   overflow: hidden;
   position: absolute;
   width: 1px;
+}
+
+body.pref-reduce-motion *,
+body.pref-reduce-motion *::before,
+body.pref-reduce-motion *::after {
+  animation: none !important;
+  scroll-behavior: auto !important;
+  transition: none !important;
+}
+
+body.pref-compact .app-shell {
+  padding-bottom: 1.4rem;
+  padding-top: 0.8rem;
+}
+
+body.pref-compact .panel,
+body.pref-compact .card,
+body.pref-compact .formation-slot {
+  box-shadow: 0 10px 28px var(--shadow);
+}
+
+body.pref-compact .panel,
+body.pref-compact .room-card,
+body.pref-compact .hero-card,
+body.pref-compact .inventory-card,
+body.pref-compact .expedition-card,
+body.pref-compact .battle-team,
+body.pref-compact .battle-unit {
+  padding: 0.65rem;
+}
+
+body.pref-compact .resource-bar,
+body.pref-compact .card-grid,
+body.pref-compact .panel-grid,
+body.pref-compact .summary-grid,
+body.pref-compact .room-grid {
+  gap: 0.5rem;
+}
+
+body.pref-compact .trait,
+body.pref-compact .rates,
+body.pref-compact .modifier {
+  margin-top: 0.5rem;
 }
 
 .wide {
@@ -406,6 +574,37 @@ h3 {
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.85rem;
+}
+
+.list-toolbar {
+  align-items: end;
+  background: #171514;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(150px, 1fr)) auto;
+  margin: 0.85rem 0 1rem;
+  padding: 0.75rem;
+}
+
+.list-toolbar strong {
+  color: var(--gold);
+  justify-self: end;
+  padding-bottom: 0.55rem;
+}
+
+.control-field {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.control-field span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .room-grid {
@@ -946,6 +1145,83 @@ h3 {
   margin-top: 1rem;
 }
 
+.team-preset-panel {
+  border-color: rgba(86, 199, 189, 0.3);
+}
+
+.team-preset-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.team-preset-card {
+  background: #171514;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.75rem;
+}
+
+.team-preset-head {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.team-preset-head h3 {
+  margin-bottom: 0;
+}
+
+.team-preset-head strong {
+  color: var(--gold);
+  flex: 0 0 auto;
+}
+
+.preset-hero-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.preset-hero-list span {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.45rem;
+}
+
+.preset-hero-list em,
+.expedition-preset-card span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-style: normal;
+  line-height: 1.35;
+}
+
+.preset-select-grid {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.team-preset-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: auto;
+}
+
+.team-preset-actions button {
+  flex: 1 1 120px;
+  min-height: 38px;
+  padding: 0.55rem 0.65rem;
+}
+
 .summon-panel {
   display: flex;
   flex-direction: column;
@@ -1062,6 +1338,35 @@ h3 {
   margin-top: 0.85rem;
 }
 
+.expedition-preset-panel {
+  background: rgba(86, 199, 189, 0.06);
+  border: 1px solid rgba(86, 199, 189, 0.22);
+  border-radius: 8px;
+  margin-top: 0.85rem;
+  padding: 0.7rem;
+}
+
+.expedition-preset-grid {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  margin-top: 0.65rem;
+}
+
+.expedition-preset-card {
+  background: #171514;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0.6rem;
+}
+
+.expedition-preset-card strong {
+  color: var(--text);
+}
+
 .expedition-hero-list {
   display: grid;
   gap: 0.45rem;
@@ -1141,6 +1446,35 @@ h3 {
 
 .tower-cost-grid {
   margin-bottom: 0.75rem;
+}
+
+.tower-preset-panel {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 0.85rem 0;
+  padding: 0.7rem;
+}
+
+.team-preset-strip {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0.65rem;
+}
+
+.preset-strip-card {
+  align-items: flex-start;
+  display: grid;
+  gap: 0.25rem;
+  min-height: 68px;
+  text-align: left;
+}
+
+.preset-strip-card span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .tower-status {
@@ -1822,11 +2156,15 @@ h3 {
 
   .two-columns,
   .formation-grid,
+  .team-preset-grid,
+  .team-preset-strip,
+  .list-toolbar,
   .battle-layout,
   .battlefield,
   .equipment-row,
   .helper-panel,
-  .weekly-event-content {
+  .weekly-event-content,
+  .setting-range {
     grid-template-columns: 1fr;
   }
 
@@ -1840,6 +2178,15 @@ h3 {
 
   .tower-floor-track {
     grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .setting-range strong {
+    text-align: left;
+  }
+
+  .list-toolbar strong {
+    justify-self: start;
+    padding-bottom: 0;
   }
 }
 
@@ -1869,6 +2216,10 @@ h3 {
 
   .tower-floor-track {
     grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .setting-segmented {
+    grid-template-columns: 1fr;
   }
 
   .combat-log {

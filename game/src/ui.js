@@ -6,6 +6,11 @@
   const UI = {
     currentTab: "base",
     message: "",
+    heroList: {
+      sortBy: "power",
+      classKey: "all",
+      status: "all",
+    },
   };
 
   const escapeHtml = Echoes.escapeHtml;
@@ -63,6 +68,25 @@
         : "info";
 
     return `<div class="notice notice-${tone}" role="status">${escapeHtml(text)}</div>`;
+  }
+
+  function renderNarrativeScene(state) {
+    const scene = Echoes.getPendingNarrativeScene ? Echoes.getPendingNarrativeScene(state) : null;
+    if (!scene) return "";
+
+    return `
+      <section class="narrative-backdrop" role="dialog" aria-modal="true" aria-labelledby="narrativeTitle">
+        <article class="narrative-card">
+          <p class="eyebrow">Cena</p>
+          <h2 id="narrativeTitle">${escapeHtml(scene.title)}</h2>
+          <p>${escapeHtml(scene.text)}</p>
+          <div class="button-row">
+            <button type="button" data-action="continueNarrative" data-scene-id="${scene.id}">Continuar</button>
+            <button type="button" class="secondary" data-action="skipNarrative" data-scene-id="${scene.id}">Pular</button>
+          </div>
+        </article>
+      </section>
+    `;
   }
 
   function renderRoomCard(title, level, description) {
@@ -255,13 +279,14 @@
   function renderHeroStatGrid(hero, state) {
     const stats = Echoes.getHeroEffectiveStats(state, hero);
     const baseStats = hero.stats || {};
+    const showDetailedNumbers = Echoes.shouldShowDetailedNumbers ? Echoes.shouldShowDetailedNumbers() : true;
 
     function renderStat(statKey) {
       const bonus = stats[statKey] - (baseStats[statKey] || 0);
       return `
         <span>
           ${statKey.toUpperCase()} <strong>${stats[statKey]}</strong>
-          ${bonus !== 0 ? `<em class="${bonus > 0 ? "positive" : "negative"}">${bonus > 0 ? "+" : ""}${bonus}</em>` : ""}
+          ${showDetailedNumbers && bonus !== 0 ? `<em class="${bonus > 0 ? "positive" : "negative"}">${bonus > 0 ? "+" : ""}${bonus}</em>` : ""}
         </span>
       `;
     }
@@ -330,8 +355,7 @@
   }
 
   function getClassBadgeLabel(hero) {
-    const initial = hero.className ? hero.className.charAt(0).toUpperCase() : "?";
-    return `${initial} ${hero.className}`;
+    return hero.className || "Classe";
   }
 
   function renderHeroStateBadges(hero, inFormation, expedition) {
@@ -433,6 +457,89 @@
     `;
   }
 
+  function setHeroListOption(key, value) {
+    const allowedSorts = ["power", "rarity", "level", "name", "class"];
+    const allowedStatuses = ["all", "available", "formation", "expedition", "injured"];
+    const classKeys = ["all"].concat(Object.keys(Echoes.HERO_CLASSES || {}));
+
+    if (key === "sortBy" && allowedSorts.includes(value)) UI.heroList.sortBy = value;
+    if (key === "classKey" && classKeys.includes(value)) UI.heroList.classKey = value;
+    if (key === "status" && allowedStatuses.includes(value)) UI.heroList.status = value;
+  }
+
+  function renderSelectOption(value, label, currentValue) {
+    return `<option value="${value}" ${value === currentValue ? "selected" : ""}>${label}</option>`;
+  }
+
+  function renderHeroListControls(resultCount, totalCount) {
+    const classOptions = [`<option value="all" ${UI.heroList.classKey === "all" ? "selected" : ""}>Todas as classes</option>`]
+      .concat(
+        Object.entries(Echoes.HERO_CLASSES || {}).map(([classKey, definition]) =>
+          renderSelectOption(classKey, definition.name, UI.heroList.classKey)
+        )
+      )
+      .join("");
+
+    return `
+      <div class="list-toolbar">
+        <label class="control-field">
+          <span>Ordenar</span>
+          <select data-hero-list-control="sortBy">
+            ${renderSelectOption("power", "Poder", UI.heroList.sortBy)}
+            ${renderSelectOption("rarity", "Raridade", UI.heroList.sortBy)}
+            ${renderSelectOption("level", "Nivel", UI.heroList.sortBy)}
+            ${renderSelectOption("name", "Nome", UI.heroList.sortBy)}
+            ${renderSelectOption("class", "Classe", UI.heroList.sortBy)}
+          </select>
+        </label>
+        <label class="control-field">
+          <span>Classe</span>
+          <select data-hero-list-control="classKey">
+            ${classOptions}
+          </select>
+        </label>
+        <label class="control-field">
+          <span>Status</span>
+          <select data-hero-list-control="status">
+            ${renderSelectOption("all", "Todos", UI.heroList.status)}
+            ${renderSelectOption("available", "Disponiveis", UI.heroList.status)}
+            ${renderSelectOption("formation", "Na formacao", UI.heroList.status)}
+            ${renderSelectOption("expedition", "Em expedicao", UI.heroList.status)}
+            ${renderSelectOption("injured", "Feridos", UI.heroList.status)}
+          </select>
+        </label>
+        <strong>${resultCount}/${totalCount} exibido(s)</strong>
+      </div>
+    `;
+  }
+
+  function heroMatchesStatus(hero, state, status) {
+    if (status === "all") return true;
+    if (status === "available") {
+      return (
+        !Echoes.isHeroInFormation(state, hero.id) &&
+        !(Echoes.isHeroOnExpedition && Echoes.isHeroOnExpedition(state, hero.id)) &&
+        !(Echoes.hasHeroInjuries && Echoes.hasHeroInjuries(hero))
+      );
+    }
+    if (status === "formation") return Echoes.isHeroInFormation(state, hero.id);
+    if (status === "expedition") return Echoes.isHeroOnExpedition && Echoes.isHeroOnExpedition(state, hero.id);
+    if (status === "injured") return Echoes.hasHeroInjuries && Echoes.hasHeroInjuries(hero);
+    return true;
+  }
+
+  function getHeroesForDisplay(heroes, state, options) {
+    const filters = options || UI.heroList;
+    const classKey = filters.classKey || "all";
+    const status = filters.status || "all";
+
+    return sortHeroesForDisplay(
+      heroes.filter((hero) => (classKey === "all" || hero.classKey === classKey) && heroMatchesStatus(hero, state, status)),
+      state,
+      filters.sortBy
+    );
+  }
+
   function renderHeroes(state) {
     if (state.heroes.length === 0) {
       return `
@@ -443,7 +550,7 @@
       `;
     }
 
-    const sortedHeroes = sortHeroesForDisplay(state.heroes, state);
+    const sortedHeroes = getHeroesForDisplay(state.heroes, state);
 
     return `
       <section class="panel">
@@ -454,17 +561,165 @@
           </div>
           <strong>${state.heroes.length} recrutado(s)</strong>
         </div>
+        ${renderHeroListControls(sortedHeroes.length, state.heroes.length)}
         <div class="card-grid">
-          ${sortedHeroes.map((hero) => renderHeroCard(hero, { inFormation: Echoes.isHeroInFormation(state, hero.id), state })).join("")}
+          ${
+            sortedHeroes.length === 0
+              ? `<p class="muted">Nenhum heroi corresponde aos filtros atuais.</p>`
+              : sortedHeroes.map((hero) => renderHeroCard(hero, { inFormation: Echoes.isHeroInFormation(state, hero.id), state })).join("")
+          }
         </div>
       </section>
     `;
   }
 
-  function sortHeroesForDisplay(heroes, state) {
-    return heroes
-      .slice()
-      .sort((a, b) => b.rarity - a.rarity || b.level - a.level || Echoes.getHeroPower(b, state) - Echoes.getHeroPower(a, state));
+  function sortHeroesForDisplay(heroes, state, sortBy) {
+    const selectedSort = sortBy || "power";
+
+    return heroes.slice().sort((a, b) => {
+      const powerDifference = Echoes.getHeroPower(b, state) - Echoes.getHeroPower(a, state);
+      const rarityDifference = b.rarity - a.rarity;
+      const levelDifference = b.level - a.level;
+
+      if (selectedSort === "name") return a.name.localeCompare(b.name) || powerDifference;
+      if (selectedSort === "class") return a.className.localeCompare(b.className) || powerDifference;
+      if (selectedSort === "level") return levelDifference || rarityDifference || powerDifference;
+      if (selectedSort === "rarity") return rarityDifference || levelDifference || powerDifference;
+      return powerDifference || rarityDifference || levelDifference;
+    });
+  }
+
+  function renderPresetHeroList(state, type, presetIndex) {
+    const heroes = Echoes.getTeamPresetHeroes(state, type, presetIndex);
+    const filledHeroes = heroes.filter(Boolean);
+
+    if (filledHeroes.length === 0) {
+      return `<p class="muted">Nenhum heroi salvo.</p>`;
+    }
+
+    return `
+      <div class="preset-hero-list">
+        ${filledHeroes
+          .map((hero) => {
+            const expedition = Echoes.getHeroExpedition ? Echoes.getHeroExpedition(state, hero.id) : null;
+            return `
+              <span>
+                <strong>${escapeHtml(hero.name)}</strong>
+                <em>${escapeHtml(hero.className)} | Poder ${Echoes.getHeroPower(hero, state)}${expedition ? ` | ${escapeHtml(expedition.name)}` : ""}</em>
+              </span>
+            `;
+          })
+          .join("")}
+      </div>
+    `;
+  }
+
+  function renderTeamPresetHeroOptions(state, currentHeroId, usedHeroIds) {
+    const heroes = sortHeroesForDisplay(state.heroes, state, "power");
+
+    return [`<option value="">Slot vazio</option>`]
+      .concat(
+        heroes.map((hero) => {
+          const selected = hero.id === currentHeroId;
+          const disabled = usedHeroIds.has(hero.id) && !selected;
+          return `
+            <option value="${hero.id}" ${selected ? "selected" : ""} ${disabled ? "disabled" : ""}>
+              ${escapeHtml(hero.name)} | ${escapeHtml(hero.className)} | Poder ${Echoes.getHeroPower(hero, state)}
+            </option>
+          `;
+        })
+      )
+      .join("");
+  }
+
+  function renderTowerPresetCard(state, preset, index) {
+    const heroCount = Echoes.getTeamPresetHeroIds(state, "tower", index).length;
+    const busyHeroes = Echoes.getTeamPresetBusyHeroes(state, "tower", index);
+
+    return `
+      <article class="team-preset-card">
+        <div class="team-preset-head">
+          <div>
+            <p class="eyebrow">Time salvo</p>
+            <h3>${escapeHtml(preset.name)}</h3>
+          </div>
+          <strong>${formatNumber(Echoes.getTeamPresetPower(state, "tower", index))}</strong>
+        </div>
+        ${renderPresetHeroList(state, "tower", index)}
+        ${busyHeroes.length > 0 ? `<p class="muted">Indisponivel para torre: ${escapeHtml(busyHeroes.map((hero) => hero.name).join(", "))}.</p>` : ""}
+        <div class="team-preset-actions">
+          <button type="button" class="secondary" data-action="saveTowerPreset" data-preset-index="${index}">Salvar atual</button>
+          <button type="button" data-action="applyTowerPreset" data-preset-index="${index}" ${heroCount === 0 ? "disabled" : ""}>Usar</button>
+          <button type="button" class="secondary" data-action="clearTeamPreset" data-preset-type="tower" data-preset-index="${index}" ${heroCount === 0 ? "disabled" : ""}>Limpar</button>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderExpeditionPresetCard(state, preset, index) {
+    const heroIds = preset.heroIds || [];
+    const usedHeroIds = new Set(heroIds.filter(Boolean));
+    const heroCount = Echoes.getTeamPresetHeroIds(state, "expedition", index).length;
+
+    return `
+      <article class="team-preset-card">
+        <div class="team-preset-head">
+          <div>
+            <p class="eyebrow">Expedicao salva</p>
+            <h3>${escapeHtml(preset.name)}</h3>
+          </div>
+          <strong>${formatNumber(Echoes.getTeamPresetPower(state, "expedition", index))}</strong>
+        </div>
+        <div class="preset-select-grid">
+          ${Array.from({ length: Echoes.CONFIG.maxExpeditionHeroes }, (_, slotIndex) => {
+            const currentHeroId = heroIds[slotIndex] || "";
+            return `
+              <label class="control-field">
+                <span>Heroi ${slotIndex + 1}</span>
+                <select
+                  data-team-preset-select
+                  data-preset-type="expedition"
+                  data-preset-index="${index}"
+                  data-preset-slot="${slotIndex}"
+                >
+                  ${renderTeamPresetHeroOptions(state, currentHeroId, usedHeroIds)}
+                </select>
+              </label>
+            `;
+          }).join("")}
+        </div>
+        <div class="team-preset-actions">
+          <button type="button" class="secondary" data-action="saveExpeditionPresetFromFormation" data-preset-index="${index}">Usar 3 da formacao</button>
+          <button type="button" class="secondary" data-action="clearTeamPreset" data-preset-type="expedition" data-preset-index="${index}" ${heroCount === 0 ? "disabled" : ""}>Limpar</button>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderFormationPresetManager(state) {
+    const towerPresets = Echoes.getTeamPresets(state, "tower");
+    const expeditionPresets = Echoes.getTeamPresets(state, "expedition");
+
+    return `
+      <section class="panel wide team-preset-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Favoritos</p>
+            <h2>Times predefinidos</h2>
+          </div>
+          <strong>${Echoes.CONFIG.maxTowerTeamPresets}+${Echoes.CONFIG.maxExpeditionTeamPresets} slots</strong>
+        </div>
+        <p class="muted">Salve ate 3 times para torre e configure ate 3 times rapidos de expedicao. Os times salvos nao substituem automaticamente sua formacao ate voce escolher usar.</p>
+        <h3 class="subheading">Torre</h3>
+        <div class="team-preset-grid">
+          ${towerPresets.map((preset, index) => renderTowerPresetCard(state, preset, index)).join("")}
+        </div>
+        <h3 class="subheading">Expedicoes</h3>
+        <div class="team-preset-grid">
+          ${expeditionPresets.map((preset, index) => renderExpeditionPresetCard(state, preset, index)).join("")}
+        </div>
+      </section>
+    `;
   }
 
   function renderFormationSlot(hero, index, state) {
@@ -487,24 +742,39 @@
     const formationHeroes = Echoes.getFormationHeroes(state);
     const slots = formationHeroes.map((hero, index) => renderFormationSlot(hero, index, state)).join("");
 
-    const availableHeroes = state.heroes.filter((hero) => !Echoes.isHeroInFormation(state, hero.id));
+    const availableHeroes = sortHeroesForDisplay(
+      state.heroes.filter((hero) => !Echoes.isHeroInFormation(state, hero.id)),
+      state,
+      UI.heroList.sortBy
+    );
 
     return `
-      <section class="panel">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Equipe ativa</p>
-            <h2>Formacao</h2>
+      <section class="panel-grid">
+        <article class="panel wide">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Equipe ativa</p>
+              <h2>Formacao</h2>
+            </div>
+            <strong>Poder ${formatNumber(Echoes.getFormationPower(state))}</strong>
           </div>
-          <strong>Poder ${formatNumber(Echoes.getFormationPower(state))}</strong>
-        </div>
-        <div class="formation-grid">${slots}</div>
-        <h3 class="subheading">Reservas</h3>
-        ${
-          availableHeroes.length === 0
-            ? `<p class="muted">Nao ha herois fora da formacao.</p>`
-            : `<div class="card-grid compact-grid">${availableHeroes.map((hero) => renderHeroCard(hero, { compact: true, state })).join("")}</div>`
-        }
+          <div class="formation-grid">${slots}</div>
+        </article>
+        ${renderFormationPresetManager(state)}
+        <article class="panel wide">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Banco</p>
+              <h2>Reservas</h2>
+            </div>
+            <strong>${availableHeroes.length} disponivel(is)</strong>
+          </div>
+          ${
+            availableHeroes.length === 0
+              ? `<p class="muted">Nao ha herois fora da formacao.</p>`
+              : `<div class="card-grid compact-grid">${availableHeroes.map((hero) => renderHeroCard(hero, { compact: true, state })).join("")}</div>`
+          }
+        </article>
       </section>
     `;
   }
@@ -606,6 +876,65 @@
     `;
   }
 
+  function renderExpeditionPresetActions(state, definition) {
+    const presets = Echoes.getTeamPresets(state, "expedition");
+
+    return `
+      <div class="expedition-preset-panel">
+        <div class="team-preset-head">
+          <div>
+            <p class="eyebrow">Times rapidos</p>
+            <h3>Usar predefinido</h3>
+          </div>
+          <strong>${Echoes.CONFIG.maxExpeditionHeroes} max.</strong>
+        </div>
+        <div class="expedition-preset-grid">
+          ${presets
+            .map((preset, index) => {
+              const heroIds = Echoes.getTeamPresetHeroIds(state, "expedition", index);
+              const busyHeroes = Echoes.getTeamPresetBusyHeroes(state, "expedition", index);
+              const disabled = heroIds.length === 0 || busyHeroes.length > 0;
+              const helperText =
+                heroIds.length === 0
+                  ? "Vazio"
+                  : busyHeroes.length > 0
+                    ? `Ocupado: ${busyHeroes.map((hero) => hero.name).join(", ")}`
+                    : `${heroIds.length} heroi(s) | Poder ${Echoes.getTeamPresetPower(state, "expedition", index)}`;
+
+              return `
+                <div class="expedition-preset-card">
+                  <strong>${escapeHtml(preset.name)}</strong>
+                  <span>${escapeHtml(helperText)}</span>
+                  <div class="team-preset-actions">
+                    <button
+                      type="button"
+                      class="secondary"
+                      data-action="selectExpeditionPreset"
+                      data-expedition-id="${definition.id}"
+                      data-preset-index="${index}"
+                      ${disabled ? "disabled" : ""}
+                    >
+                      Selecionar
+                    </button>
+                    <button
+                      type="button"
+                      data-action="startExpeditionPreset"
+                      data-expedition-id="${definition.id}"
+                      data-preset-index="${index}"
+                      ${disabled ? "disabled" : ""}
+                    >
+                      Enviar
+                    </button>
+                  </div>
+                </div>
+              `;
+            })
+            .join("")}
+        </div>
+      </div>
+    `;
+  }
+
   function renderAvailableExpedition(definition, state) {
     const availableHeroes = state.heroes.slice().sort((a, b) => Echoes.getHeroPower(b, state) - Echoes.getHeroPower(a, state));
     const selectableHeroes = availableHeroes.filter((hero) => !Echoes.getHeroExpedition(state, hero.id));
@@ -618,6 +947,8 @@
           <div><span>Poder recomendado</span><strong>${definition.recommendedPower}</strong></div>
           <div><span>Recompensa base</span><strong>${baseReward}</strong></div>
         </div>
+        ${renderExpeditionPresetActions(state, definition)}
+        <h3 class="subheading">Escolha manual</h3>
         <div class="expedition-hero-list" data-expedition-list="${definition.id}">
           ${
             availableHeroes.length === 0
@@ -873,6 +1204,49 @@
     return `<p class="tower-status ${status.canBattle ? "ready" : "blocked"}">${escapeHtml(status.message)}</p>`;
   }
 
+  function renderTowerPresetPicker(state) {
+    const presets = Echoes.getTeamPresets(state, "tower");
+
+    return `
+      <div class="tower-preset-panel">
+        <div class="team-preset-head">
+          <div>
+            <p class="eyebrow">Time de torre</p>
+            <h3>Selecionar favoritos</h3>
+          </div>
+          <strong>Atual ${formatNumber(Echoes.getFormationPower(state))}</strong>
+        </div>
+        <div class="team-preset-strip">
+          ${presets
+            .map((preset, index) => {
+              const heroCount = Echoes.getTeamPresetHeroIds(state, "tower", index).length;
+              const busyHeroes = Echoes.getTeamPresetBusyHeroes(state, "tower", index);
+              const helperText =
+                heroCount === 0
+                  ? "Vazio"
+                  : busyHeroes.length > 0
+                    ? `Ocupado: ${busyHeroes.map((hero) => hero.name).join(", ")}`
+                    : `${heroCount} heroi(s) | Poder ${Echoes.getTeamPresetPower(state, "tower", index)}`;
+
+              return `
+                <button
+                  type="button"
+                  class="secondary preset-strip-card"
+                  data-action="applyTowerPreset"
+                  data-preset-index="${index}"
+                  ${heroCount === 0 ? "disabled" : ""}
+                >
+                  <strong>${escapeHtml(preset.name)}</strong>
+                  <span>${escapeHtml(helperText)}</span>
+                </button>
+              `;
+            })
+            .join("")}
+        </div>
+      </div>
+    `;
+  }
+
   function renderTowerEventChoice(state, event, choice) {
     const availability = Echoes.canChooseTowerEventOption
       ? Echoes.canChooseTowerEventOption(state, event, choice.id)
@@ -1038,7 +1412,7 @@
     return `<span class="floor-badge">Andar comum</span>`;
   }
 
-  function renderRepeatFloors(state) {
+  function renderRepeatFloors(state, includePresetPicker) {
     const completedFloors = Echoes.TOWER_FLOORS.filter((floor) => Echoes.canRepeatTowerFloor(state, floor.floor));
     const battleStatus = getTowerBattleStatus(state);
 
@@ -1056,6 +1430,7 @@
           <strong>${completedFloors.length} liberado(s)</strong>
         </div>
         <p class="muted">Repita andares ja vencidos para buscar ouro, XP e chance de equipamentos. O progresso atual da torre nao muda.</p>
+        ${includePresetPicker ? renderTowerPresetPicker(state) : ""}
         <div class="summary-grid tower-cost-grid">
           <div><span>Custo por tentativa</span><strong>${Echoes.CONFIG.towerEnergyCost} energia</strong></div>
           <div><span>Energia atual</span><strong>${state.resources.energy}/${state.resources.maxEnergy}</strong></div>
@@ -1086,7 +1461,7 @@
 
   function renderTower(state) {
     const floorData = Echoes.getFloorData(state.towerFloor);
-    const repeatFloors = renderRepeatFloors(state);
+    const repeatFloors = renderRepeatFloors(state, !floorData);
     const pendingEvent = renderTowerEvent(state);
     const chapterCompletion = renderChapterCompletion(state);
 
@@ -1125,6 +1500,7 @@
           </div>
           <p class="muted">Nivel recomendado ${floorData.recommendedLevel}. Dificuldade estimada ${Echoes.getFloorPower(floorData.floor)}.</p>
           ${renderTowerProgress(state)}
+          ${renderTowerPresetPicker(state)}
           <div class="summary-grid">
             <div><span>Mecanica</span><strong>${floorData.mechanic}</strong></div>
             <div><span>Custo</span><strong>${Echoes.CONFIG.towerEnergyCost} energia</strong></div>
@@ -1164,9 +1540,97 @@
     return Echoes.renderBattleView(state);
   }
 
-  function renderSettings(state) {
+  function renderPreferenceSpeedButton(preferences, speed, label) {
+    const active = preferences.battle.defaultSpeed === speed;
+
     return `
-      <section class="panel-grid two-columns">
+      <button
+        type="button"
+        class="secondary ${active ? "active-speed" : ""}"
+        data-action="setPreference"
+        data-pref-path="battle.defaultSpeed"
+        data-pref-value="${speed}"
+      >
+        ${label}
+      </button>
+    `;
+  }
+
+  function renderPreferenceToggle(preferences, path, label, description) {
+    const [group, key] = path.split(".");
+    const checked = Boolean(preferences[group] && preferences[group][key]);
+
+    return `
+      <label class="setting-toggle">
+        <input
+          type="checkbox"
+          data-preference-input
+          data-pref-path="${path}"
+          ${checked ? "checked" : ""}
+        />
+        <span>
+          <strong>${label}</strong>
+          <em>${description}</em>
+        </span>
+      </label>
+    `;
+  }
+
+  function renderPreferenceRange(preferences, path, label) {
+    const [group, key] = path.split(".");
+    const value = preferences[group] && Number.isFinite(preferences[group][key]) ? preferences[group][key] : 0;
+
+    return `
+      <label class="setting-range">
+        <span>${label}</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value="${value}"
+          data-preference-input
+          data-pref-path="${path}"
+        />
+        <strong>${value}%</strong>
+      </label>
+    `;
+  }
+
+  function renderSettings(state) {
+    const preferences = Echoes.getPreferences ? Echoes.getPreferences() : Echoes.DEFAULT_PREFERENCES;
+
+    return `
+      <section class="panel-grid two-columns settings-grid">
+        <article class="panel settings-panel">
+          <p class="eyebrow">Combate</p>
+          <h2>Velocidade padrao</h2>
+          <p class="muted">Define a velocidade inicial do replay ao abrir combates novos.</p>
+          <div class="setting-segmented" aria-label="Velocidade padrao de combate">
+            ${renderPreferenceSpeedButton(preferences, "1x", "1x")}
+            ${renderPreferenceSpeedButton(preferences, "2x", "2x")}
+            ${renderPreferenceSpeedButton(preferences, "instant", "Instantaneo")}
+          </div>
+        </article>
+        <article class="panel settings-panel">
+          <p class="eyebrow">Visual</p>
+          <h2>Preferencias visuais</h2>
+          <div class="setting-stack">
+            ${renderPreferenceToggle(preferences, "visual.reduceAnimations", "Reduzir animacoes", "Remove pulsos, transicoes e entradas animadas.")}
+            ${renderPreferenceToggle(preferences, "visual.compactMode", "Modo compacto", "Reduz espacos e deixa listas mais densas.")}
+            ${renderPreferenceToggle(preferences, "visual.showDetailedNumbers", "Numeros detalhados", "Mostra valores completos e bonus quando disponiveis.")}
+          </div>
+        </article>
+        <article class="panel settings-panel wide">
+          <p class="eyebrow">Audio</p>
+          <h2>Volumes</h2>
+          <p class="muted">O audio ainda e estrutural, mas essas preferencias ja ficam salvas para a proxima etapa.</p>
+          <div class="setting-stack">
+            ${renderPreferenceRange(preferences, "audio.masterVolume", "Volume geral")}
+            ${renderPreferenceRange(preferences, "audio.musicVolume", "Musica")}
+            ${renderPreferenceRange(preferences, "audio.effectsVolume", "Efeitos")}
+          </div>
+        </article>
         <article class="panel settings-panel">
           <p class="eyebrow">Backup local</p>
           <h2>Exportar save</h2>
@@ -1185,11 +1649,26 @@
           <input class="hidden-file-input" id="saveImportInput" type="file" accept="application/json,.json" data-save-import />
           <button type="button" class="secondary" data-action="importSave">Selecionar arquivo</button>
         </article>
+        <article class="panel settings-panel">
+          <p class="eyebrow">Preferencias</p>
+          <h2>Restaurar padroes</h2>
+          <p class="muted">Restaura apenas configuracoes de visual, audio e combate. O save do jogo nao e alterado.</p>
+          <button type="button" class="secondary" data-action="resetPreferences">Restaurar preferencias</button>
+        </article>
         <article class="panel wide settings-danger-panel">
           <p class="eyebrow">Zona de risco</p>
           <h2>Resetar save</h2>
           <p class="muted">Remove todo o progresso local deste navegador. A acao e irreversivel sem um backup exportado.</p>
           <button type="button" class="danger" data-action="reset">Resetar save</button>
+        </article>
+        <article class="panel wide settings-panel credits-panel">
+          <p class="eyebrow">Creditos</p>
+          <h2>Ascensao dos Ecos</h2>
+          <div class="summary-grid">
+            <div><span>Versao do jogo</span><strong>${Echoes.CONFIG.gameVersion}</strong></div>
+            <div><span>Projeto</span><strong>Ascensao dos Ecos</strong></div>
+            <div><span>Tecnologias</span><strong>HTML, CSS, JavaScript puro, localStorage</strong></div>
+          </div>
         </article>
       </section>
     `;
@@ -1222,7 +1701,7 @@
       button.classList.toggle("active", button.dataset.tab === UI.currentTab);
     });
 
-    document.getElementById("app").innerHTML = `${renderMessage()}${renderCurrentTab(state)}`;
+    document.getElementById("app").innerHTML = `${renderMessage()}${renderCurrentTab(state)}${renderNarrativeScene(state)}`;
     Echoes.scheduleBattlePlayback(state, render);
   }
 
@@ -1238,4 +1717,5 @@
   Echoes.render = render;
   Echoes.setMessage = setMessage;
   Echoes.setTab = setTab;
+  Echoes.setHeroListOption = setHeroListOption;
 })(window);

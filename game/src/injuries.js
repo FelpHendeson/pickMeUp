@@ -180,6 +180,10 @@
           `${hero.name} ${verb} um ferimento: ${definition.name} (${definition.description}, ${INJURY_CONFIG.durationBattles} batalhas).`
         );
       }
+
+      if (Echoes.queueFirstSevereInjuryNarrative) {
+        Echoes.queueFirstSevereInjuryNarrative(state);
+      }
     });
   }
 

@@ -6,6 +6,7 @@
   const CONFIG = {
     saveKey: "ascensao-dos-ecos-save-v1",
     saveVersion: 1,
+    gameVersion: "0.4.0",
     commonSummonCost: 100,
     superiorSummonCost: 100,
     towerEnergyCost: 5,
@@ -13,9 +14,61 @@
     energyRegenMs: 5 * 60 * 1000,
     maxFormationSize: 5,
     frontSlots: 2,
+    maxTowerTeamPresets: 3,
+    maxExpeditionTeamPresets: 3,
     towerMaxFloor: 40,
     maxExpeditionHeroes: 3,
   };
+
+  function createTeamPreset(type, index, size) {
+    const label = type === "tower" ? "Torre" : "Expedicao";
+
+    return {
+      id: `${type}_${index + 1}`,
+      name: `${label} ${index + 1}`,
+      heroIds: Array(size).fill(null),
+    };
+  }
+
+  function createTeamPresetList(type) {
+    const count = type === "tower" ? CONFIG.maxTowerTeamPresets : CONFIG.maxExpeditionTeamPresets;
+    const size = type === "tower" ? CONFIG.maxFormationSize : CONFIG.maxExpeditionHeroes;
+
+    return Array.from({ length: count }, (_, index) => createTeamPreset(type, index, size));
+  }
+
+  function normalizeTeamPresetList(type, savedPresets, validHeroIds) {
+    const defaults = createTeamPresetList(type);
+    const size = type === "tower" ? CONFIG.maxFormationSize : CONFIG.maxExpeditionHeroes;
+
+    return defaults.map((defaultPreset, index) => {
+      const savedPreset = Array.isArray(savedPresets) ? savedPresets[index] : null;
+      const savedHeroIds = savedPreset && Array.isArray(savedPreset.heroIds) ? savedPreset.heroIds : [];
+      const used = new Set();
+      const heroIds = Array(size).fill(null);
+
+      savedHeroIds.slice(0, size).forEach((heroId, slotIndex) => {
+        if (!heroId || used.has(heroId) || !validHeroIds.has(heroId)) return;
+        used.add(heroId);
+        heroIds[slotIndex] = heroId;
+      });
+
+      return {
+        id: defaultPreset.id,
+        name: typeof savedPreset?.name === "string" && savedPreset.name.trim() ? savedPreset.name.trim() : defaultPreset.name,
+        heroIds,
+      };
+    });
+  }
+
+  function normalizeTeamPresets(savedPresets, validHeroIds) {
+    const heroIdSet = validHeroIds instanceof Set ? validHeroIds : new Set();
+
+    return {
+      tower: normalizeTeamPresetList("tower", savedPresets && savedPresets.tower, heroIdSet),
+      expedition: normalizeTeamPresetList("expedition", savedPresets && savedPresets.expedition, heroIdSet),
+    };
+  }
 
   function createInitialState() {
     const now = Date.now();
@@ -38,6 +91,10 @@
       inventory: [],
       activeExpeditions: [],
       formation: [null, null, null, null, null],
+      teamPresets: {
+        tower: createTeamPresetList("tower"),
+        expedition: createTeamPresetList("expedition"),
+      },
       baseRooms: {
         summonPortal: 1,
         barracks: 1,
@@ -54,6 +111,10 @@
       towerEventHistory: [],
       completedTowerChapters: [],
       lastChapterCompletion: null,
+      narrative: {
+        seenSceneIds: [],
+        pendingScenes: [],
+      },
       missionStats: {},
       dailyMissions: null,
       achievements: {},
@@ -153,6 +214,7 @@
     safe.completedTowerChapters = Array.isArray(safe.completedTowerChapters) ? safe.completedTowerChapters : [];
     safe.lastChapterCompletion =
       safe.lastChapterCompletion && typeof safe.lastChapterCompletion === "object" ? safe.lastChapterCompletion : null;
+    safe.narrative = safe.narrative && typeof safe.narrative === "object" ? safe.narrative : fresh.narrative;
     safe.missionStats = safe.missionStats && typeof safe.missionStats === "object" ? safe.missionStats : {};
     safe.achievements = safe.achievements && typeof safe.achievements === "object" ? safe.achievements : {};
 
@@ -162,6 +224,7 @@
 
     const validHeroIds = new Set(safe.heroes.map((hero) => hero.id));
     safe.formation = safe.formation.map((heroId) => (validHeroIds.has(heroId) ? heroId : null));
+    safe.teamPresets = normalizeTeamPresets(safe.teamPresets, validHeroIds);
     safe.summonHistory = Array.isArray(safe.summonHistory) ? safe.summonHistory.slice(0, 12) : [];
     safe.lastEnergyAt = Number.isFinite(safe.lastEnergyAt) ? safe.lastEnergyAt : Date.now();
 
@@ -177,6 +240,10 @@
       Echoes.normalizeMissionState(safe);
     }
 
+    if (Echoes.normalizeNarrativeState) {
+      Echoes.normalizeNarrativeState(safe);
+    }
+
     return safe;
   }
 
@@ -189,5 +256,7 @@
   Echoes.spendResource = spendResource;
   Echoes.addResource = addResource;
   Echoes.regenerateEnergy = regenerateEnergy;
+  Echoes.createTeamPresetList = createTeamPresetList;
+  Echoes.normalizeTeamPresets = normalizeTeamPresets;
   Echoes.ensureStateShape = ensureStateShape;
 })(window);

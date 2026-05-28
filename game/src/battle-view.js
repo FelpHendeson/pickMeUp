@@ -4,7 +4,7 @@
   const Echoes = (global.Echoes = global.Echoes || {});
 
   const BattleView = {
-    speed: "instant",
+    speed: Echoes.getDefaultBattleSpeed ? Echoes.getDefaultBattleSpeed() : "instant",
     eventCursor: 0,
     playbackId: null,
     timer: null,
@@ -95,6 +95,8 @@
   function renderBattleUnit(unit) {
     const hpPercent = unit.maxHp > 0 ? unit.hp / unit.maxHp : 0;
     const energy = Math.min(unit.energy || 0, unit.maxEnergy || 100);
+    const energyPercent = unit.maxEnergy > 0 ? energy / unit.maxEnergy : 0;
+    const showDetailedNumbers = Echoes.shouldShowDetailedNumbers ? Echoes.shouldShowDetailedNumbers() : true;
     const aliveClass = unit.alive === false || unit.hp <= 0 ? "dead" : hpPercent <= 0.3 ? "low-hp" : "";
     const statusLabels = getUnitStatusLabels(unit);
 
@@ -110,12 +112,12 @@
         <div class="bar-row">
           <span>HP</span>
           ${renderBattleBar("hp", unit.hp || 0, unit.maxHp || 1)}
-          <strong>${unit.hp || 0}/${unit.maxHp || 0}</strong>
+          <strong>${showDetailedNumbers ? `${unit.hp || 0}/${unit.maxHp || 0}` : `${Math.round(hpPercent * 100)}%`}</strong>
         </div>
         <div class="bar-row">
           <span>EN</span>
           ${renderBattleBar("energy", energy, unit.maxEnergy || 100)}
-          <strong>${energy}/${unit.maxEnergy || 100}</strong>
+          <strong>${showDetailedNumbers ? `${energy}/${unit.maxEnergy || 100}` : `${Math.round(energyPercent * 100)}%`}</strong>
         </div>
         ${
           statusLabels.length > 0
@@ -283,8 +285,14 @@
     }
   }
 
+  function applyBattlePreferences() {
+    BattleView.speed = Echoes.getDefaultBattleSpeed ? Echoes.getDefaultBattleSpeed() : BattleView.speed;
+    BattleView.eventCursor = BattleView.speed === "instant" ? Number.MAX_SAFE_INTEGER : 1;
+  }
+
   Echoes.renderBattleView = renderBattleView;
   Echoes.stopBattlePlayback = stopBattlePlayback;
   Echoes.scheduleBattlePlayback = scheduleBattlePlayback;
   Echoes.setBattleSpeed = setBattleSpeed;
+  Echoes.applyBattlePreferences = applyBattlePreferences;
 })(window);

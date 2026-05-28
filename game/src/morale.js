@@ -133,7 +133,11 @@
           return;
         }
 
+        const moraleBefore = hero.morale;
         const delta = updateUnusedHeroMorale(hero, now);
+        if (moraleBefore >= 20 && hero.morale < 20 && Echoes.queueFirstCriticalMoraleNarrative) {
+          Echoes.queueFirstCriticalMoraleNarrative(state);
+        }
         if (delta < 0) {
           messages.push(`${hero.name} perdeu ${Math.abs(delta)} de moral por ficar fora da torre por muito tempo.`);
         }
@@ -150,9 +154,14 @@
         delta -= Math.min(6, witnessedFalls * MORALE_CONFIG.allyFallLoss);
       }
 
+      const moraleBefore = hero.morale;
       const actualDelta = adjustHeroMorale(hero, delta);
       hero.battlesSinceLastUsed = 0;
       hero.lastUsedAt = now;
+
+      if (moraleBefore >= 20 && hero.morale < 20 && Echoes.queueFirstCriticalMoraleNarrative) {
+        Echoes.queueFirstCriticalMoraleNarrative(state);
+      }
 
       if (actualDelta !== 0) {
         const signal = actualDelta > 0 ? `ganhou ${actualDelta}` : `perdeu ${Math.abs(actualDelta)}`;

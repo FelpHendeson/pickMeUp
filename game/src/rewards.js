@@ -133,6 +133,13 @@
       unlockFloorMilestones(state, floorNumber, log, battle);
       grantChapterCompletionReward(state, floorNumber, log, battle);
       state.towerFloor = Math.max(state.towerFloor, Math.min(Echoes.CONFIG.towerMaxFloor + 1, floorNumber + 1));
+
+      if (Echoes.queueBossAfterNarrative) {
+        Echoes.queueBossAfterNarrative(state, floorNumber);
+      }
+      if (Echoes.queueChapterStartNarrative) {
+        Echoes.queueChapterStartNarrative(state, state.towerFloor);
+      }
     }
   }
 
