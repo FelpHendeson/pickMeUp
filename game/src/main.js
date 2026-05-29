@@ -761,18 +761,6 @@
     }
   }
 
-  function renderWithExpeditionPreservation() {
-    if (Echoes.UI.currentTab !== "expeditions") {
-      Echoes.render(state);
-      return;
-    }
-
-    const selections = captureExpeditionSelections();
-    const scrollState = captureExpeditionScrollState();
-    Echoes.render(state);
-    restoreExpeditionSelections(selections);
-    restoreExpeditionScrollState(scrollState);
-  }
 
   function updateExpeditionTabBadge() {
     const ready = state.activeExpeditions.filter((entry) => Echoes.isExpeditionComplete(entry)).length;
@@ -826,17 +814,28 @@
 
   function refreshTimedState() {
     const gained = Echoes.regenerateEnergy(state);
+    const onExpeditionsTab = Echoes.UI.currentTab === "expeditions";
+
+    if (onExpeditionsTab) {
+      if (gained > 0) {
+        state = Echoes.saveGameState(state);
+        if (Echoes.updateLiveHud) {
+          Echoes.updateLiveHud(state);
+        }
+      }
+
+      if (state.activeExpeditions.length > 0) {
+        updateExpeditionCountdowns();
+      }
+
+      return;
+    }
 
     if (gained > 0) {
       state = Echoes.saveGameState(state);
       if (Echoes.UI.currentTab !== "battle") {
-        renderWithExpeditionPreservation();
+        Echoes.render(state);
       }
-      return;
-    }
-
-    if (Echoes.UI.currentTab === "expeditions" && state.activeExpeditions.length > 0) {
-      updateExpeditionCountdowns();
     }
   }
 

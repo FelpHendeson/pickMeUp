@@ -128,6 +128,33 @@
     });
   }
 
+  let lastSyncedMessage = null;
+  let messageDismissTimer = null;
+
+  function clearMessageDismissTimer() {
+    if (messageDismissTimer) {
+      global.clearTimeout(messageDismissTimer);
+      messageDismissTimer = null;
+    }
+  }
+
+  function ensureNoticeHost() {
+    let host = document.getElementById("noticeHost");
+    if (host) return host;
+
+    host = document.createElement("div");
+    host.id = "noticeHost";
+    host.className = "notice-host";
+    host.setAttribute("aria-live", "polite");
+
+    const app = document.getElementById("app");
+    if (app && app.parentNode) {
+      app.parentNode.insertBefore(host, app);
+    }
+
+    return host;
+  }
+
   function renderMessage() {
     if (!UI.message) return "";
     const text = UI.message;
@@ -141,23 +168,21 @@
   }
 
   function syncNoticeMessage() {
-    const app = document.getElementById("app");
-    if (!app) return;
-
-    const existingNotice = app.querySelector(".notice");
+    const host = ensureNoticeHost();
+    if (!host) return;
 
     if (!UI.message) {
-      if (existingNotice) existingNotice.remove();
+      lastSyncedMessage = null;
+      host.innerHTML = "";
       return;
     }
 
-    const markup = renderMessage();
-    if (existingNotice) {
-      existingNotice.outerHTML = markup;
+    if (UI.message === lastSyncedMessage) {
       return;
     }
 
-    app.insertAdjacentHTML("afterbegin", markup);
+    lastSyncedMessage = UI.message;
+    host.innerHTML = renderMessage();
   }
 
   function renderNarrativeScene(state) {
@@ -2443,12 +2468,34 @@
     });
     renderTabBadges(state);
 
-    document.getElementById("app").innerHTML = `${renderMessage()}${renderCurrentTab(state)}${renderRecruitmentChoiceModal(state)}${renderNarrativeScene(state)}`;
+    document.getElementById("app").innerHTML = `${renderCurrentTab(state)}${renderRecruitmentChoiceModal(state)}${renderNarrativeScene(state)}`;
+    syncNoticeMessage();
     Echoes.scheduleBattlePlayback(state, render);
+  }
+
+  function updateLiveHud(state) {
+    renderResourceBar(state);
+    renderAccountBadge(state);
+    renderSaveStatus(state);
+    renderTabBadges(state);
   }
 
   function setMessage(message) {
     UI.message = message || "";
+    clearMessageDismissTimer();
+
+    if (!UI.message) {
+      syncNoticeMessage();
+      return;
+    }
+
+    syncNoticeMessage();
+
+    messageDismissTimer = global.setTimeout(() => {
+      UI.message = "";
+      messageDismissTimer = null;
+      syncNoticeMessage();
+    }, 5000);
   }
 
   function setTab(tab) {
@@ -2462,6 +2509,7 @@
   Echoes.render = render;
   Echoes.setMessage = setMessage;
   Echoes.syncNoticeMessage = syncNoticeMessage;
+  Echoes.updateLiveHud = updateLiveHud;
   Echoes.setTab = setTab;
   Echoes.setHeroListOption = setHeroListOption;
 })(window);
