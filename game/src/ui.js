@@ -140,6 +140,26 @@
     return `<div class="notice notice-${tone}" role="status">${escapeHtml(text)}</div>`;
   }
 
+  function syncNoticeMessage() {
+    const app = document.getElementById("app");
+    if (!app) return;
+
+    const existingNotice = app.querySelector(".notice");
+
+    if (!UI.message) {
+      if (existingNotice) existingNotice.remove();
+      return;
+    }
+
+    const markup = renderMessage();
+    if (existingNotice) {
+      existingNotice.outerHTML = markup;
+      return;
+    }
+
+    app.insertAdjacentHTML("afterbegin", markup);
+  }
+
   function renderNarrativeScene(state) {
     const scene = Echoes.getPendingNarrativeScene ? Echoes.getPendingNarrativeScene(state) : null;
     if (!scene) return "";
@@ -1267,18 +1287,35 @@
   function renderActiveExpedition(definition, activeExpedition, state) {
     const remainingMs = Echoes.getExpeditionRemainingMs(activeExpedition);
     const isComplete = Echoes.isExpeditionComplete(activeExpedition);
+    const durationMs = Echoes.getExpeditionDurationMs ? Echoes.getExpeditionDurationMs(state, definition) : definition.durationMs;
+    const progressValue = isComplete ? durationMs : Math.max(0, durationMs - remainingMs);
     const sentHeroes = activeExpedition.heroIds.map((heroId) => Echoes.findHero(state, heroId)).filter(Boolean);
     const reward = Echoes.getActiveExpeditionReward(state, activeExpedition);
 
     return `
-      <div class="expedition-active">
+      <div class="expedition-active ${isComplete ? "is-ready" : ""}" data-expedition-active="${definition.id}">
+        <div class="expedition-progress-wrap">
+          <progress
+            class="expedition-progress"
+            data-expedition-progress
+            value="${progressValue}"
+            max="${durationMs}"
+            aria-label="Progresso da expedicao"
+          ></progress>
+        </div>
         <div class="summary-grid">
-          <div><span>Tempo restante</span><strong>${isComplete ? "Pronta" : Echoes.formatDuration(remainingMs)}</strong></div>
+          <div><span>Tempo restante</span><strong data-expedition-remaining>${isComplete ? "Pronta" : Echoes.formatDuration(remainingMs)}</strong></div>
           <div><span>Poder enviado</span><strong>${reward.power}/${definition.recommendedPower}</strong></div>
           <div><span>Recompensa</span><strong>${reward.amount} ${Echoes.getExpeditionRewardName(reward.type)}</strong></div>
         </div>
         <p class="muted">Herois enviados: ${sentHeroes.map((hero) => hero.name).join(", ")}</p>
-        <button type="button" data-action="collectExpedition" data-expedition-id="${definition.id}" ${isComplete ? "" : "disabled"}>
+        <button
+          type="button"
+          data-action="collectExpedition"
+          data-expedition-collect
+          data-expedition-id="${definition.id}"
+          ${isComplete ? "" : "disabled"}
+        >
           Coletar recompensa
         </button>
       </div>
@@ -2424,6 +2461,7 @@
   Echoes.UI = UI;
   Echoes.render = render;
   Echoes.setMessage = setMessage;
+  Echoes.syncNoticeMessage = syncNoticeMessage;
   Echoes.setTab = setTab;
   Echoes.setHeroListOption = setHeroListOption;
 })(window);

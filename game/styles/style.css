@@ -2096,6 +2096,51 @@ body.pref-compact .modifier {
   margin-top: 0.85rem;
 }
 
+.expedition-progress-wrap {
+  margin-bottom: 0.75rem;
+}
+
+.expedition-progress {
+  appearance: none;
+  background: rgba(10, 10, 18, 0.72);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  height: 0.65rem;
+  overflow: hidden;
+  width: 100%;
+}
+
+.expedition-progress::-webkit-progress-bar {
+  background: rgba(10, 10, 18, 0.72);
+}
+
+.expedition-progress::-webkit-progress-value {
+  background: linear-gradient(90deg, var(--violet), var(--cyan));
+  border-radius: 999px;
+  transition: width 0.35s linear;
+}
+
+.expedition-progress::-moz-progress-bar {
+  background: linear-gradient(90deg, var(--violet), var(--cyan));
+  border-radius: 999px;
+}
+
+.expedition-active.is-ready .expedition-progress::-webkit-progress-value,
+.expedition-active.is-ready .expedition-progress::-moz-progress-bar {
+  background: linear-gradient(90deg, var(--green), var(--gold));
+}
+
+.expedition-active.is-ready [data-expedition-remaining] {
+  color: #d8ffd2;
+}
+
+.expedition-active.is-ready {
+  background: rgba(120, 184, 109, 0.06);
+  border: 1px solid rgba(120, 184, 109, 0.24);
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
 .expedition-preset-panel {
   background: rgba(86, 199, 189, 0.06);
   border: 1px solid rgba(86, 199, 189, 0.22);

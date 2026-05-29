@@ -540,7 +540,7 @@
 
     const preset = Echoes.getTeamPreset(state, "expedition", presetIndex);
     Echoes.setMessage(`${preset ? preset.name : "Time"} selecionado para expedicao.`);
-    renderTimedState();
+    Echoes.syncNoticeMessage();
   }
 
   function handleStartExpeditionPresetAction(target) {
@@ -585,7 +585,7 @@
 
     choice.checked = false;
     Echoes.setMessage(`Cada expedicao aceita no maximo ${Echoes.CONFIG.maxExpeditionHeroes} herois.`);
-    renderTimedState();
+    Echoes.syncNoticeMessage();
   }
 
   function handleAction(target) {
@@ -761,7 +761,7 @@
     }
   }
 
-  function renderTimedState() {
+  function renderWithExpeditionPreservation() {
     if (Echoes.UI.currentTab !== "expeditions") {
       Echoes.render(state);
       return;
@@ -774,20 +774,69 @@
     restoreExpeditionScrollState(scrollState);
   }
 
+  function updateExpeditionTabBadge() {
+    const ready = state.activeExpeditions.filter((entry) => Echoes.isExpeditionComplete(entry)).length;
+    const badge = document.querySelector('.tab-button[data-tab="expeditions"] .tab-badge');
+
+    if (!badge) return;
+
+    badge.textContent = ready > 9 ? "9+" : String(ready);
+    badge.hidden = ready <= 0;
+    badge.setAttribute("aria-hidden", ready <= 0 ? "true" : "false");
+  }
+
+  function updateExpeditionCountdowns() {
+    if (Echoes.UI.currentTab !== "expeditions") return;
+
+    (Echoes.EXPEDITION_DEFINITIONS || []).forEach((definition) => {
+      const activeExpedition = Echoes.getActiveExpedition(state, definition.id);
+      if (!activeExpedition) return;
+
+      const container = document.querySelector(`[data-expedition-active="${definition.id}"]`);
+      if (!container) return;
+
+      const remainingMs = Echoes.getExpeditionRemainingMs(activeExpedition);
+      const isComplete = Echoes.isExpeditionComplete(activeExpedition);
+      const durationMs = Echoes.getExpeditionDurationMs
+        ? Echoes.getExpeditionDurationMs(state, definition)
+        : definition.durationMs;
+      const progressValue = isComplete ? durationMs : Math.max(0, durationMs - remainingMs);
+
+      const remainingEl = container.querySelector("[data-expedition-remaining]");
+      if (remainingEl) {
+        remainingEl.textContent = isComplete ? "Pronta" : Echoes.formatDuration(remainingMs);
+      }
+
+      const progressEl = container.querySelector("[data-expedition-progress]");
+      if (progressEl) {
+        progressEl.max = durationMs;
+        progressEl.value = progressValue;
+      }
+
+      container.classList.toggle("is-ready", isComplete);
+
+      const collectBtn = container.querySelector("[data-expedition-collect]");
+      if (collectBtn) {
+        collectBtn.disabled = !isComplete;
+      }
+    });
+
+    updateExpeditionTabBadge();
+  }
+
   function refreshTimedState() {
     const gained = Echoes.regenerateEnergy(state);
-    const shouldRefreshCountdown = Echoes.UI.currentTab === "expeditions" && state.activeExpeditions.length > 0;
 
     if (gained > 0) {
       state = Echoes.saveGameState(state);
       if (Echoes.UI.currentTab !== "battle") {
-        renderTimedState();
+        renderWithExpeditionPreservation();
       }
       return;
     }
 
-    if (shouldRefreshCountdown) {
-      renderTimedState();
+    if (Echoes.UI.currentTab === "expeditions" && state.activeExpeditions.length > 0) {
+      updateExpeditionCountdowns();
     }
   }
 
