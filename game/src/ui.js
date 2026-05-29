@@ -17,50 +17,115 @@
   const escapeHtml = Echoes.escapeHtml;
   const formatNumber = Echoes.formatNumber;
 
-  function getResourceItems(state) {
+  function getPrimaryResources(state) {
     const maxFloor = Echoes.CONFIG.towerMaxFloor;
-    const consumableTotal = Object.values(state.consumables || {}).reduce((total, amount) => total + (Number(amount) || 0), 0);
+    const floorLabel = state.towerFloor > maxFloor ? `${maxFloor}/${maxFloor}` : String(state.towerFloor);
+
     return [
-      ["Conta", `Nv. ${state.accountLevel}`],
-      ["Andar", state.towerFloor > maxFloor ? `${maxFloor}/${maxFloor}` : state.towerFloor],
-      ["Ouro", formatNumber(state.resources.gold)],
-      ["Cristais", formatNumber(state.resources.crystals)],
+      { key: "gold", label: "Ouro", value: formatNumber(state.resources.gold), tone: "gold" },
+      { key: "crystals", label: "Cristais", value: formatNumber(state.resources.crystals), tone: "violet" },
+      { key: "energy", label: "Energia", value: `${state.resources.energy}/${state.resources.maxEnergy}`, tone: "cyan" },
+      { key: "power", label: "Poder da equipe", value: formatNumber(Echoes.getFormationPower(state)), tone: "gold" },
+      { key: "floor", label: "Andar da torre", value: floorLabel, tone: "cyan" },
+    ];
+  }
+
+  function getSecondaryResources(state) {
+    const consumableTotal = Object.values(state.consumables || {}).reduce((total, amount) => total + (Number(amount) || 0), 0);
+    const injuredCount = Echoes.getInjuredHeroes ? Echoes.getInjuredHeroes(state).length : 0;
+    const claimableMissions = Echoes.getClaimableMissionCount ? Echoes.getClaimableMissionCount(state) : 0;
+
+    return [
       ["Essencia", formatNumber(state.resources.essence)],
       ["Fragmentos", formatNumber(state.resources.fragments)],
       ["Frag. Eco", formatNumber(state.echoFragments || 0)],
       ["Contratos", formatNumber(state.heroContracts || 0)],
       ["Consum.", formatNumber(consumableTotal)],
-      ["Energia", `${state.resources.energy}/${state.resources.maxEnergy}`],
-      ["Equip.", state.inventory.length],
-      ["Feridos", Echoes.getInjuredHeroes ? Echoes.getInjuredHeroes(state).length : 0],
-      ["Exped.", state.activeExpeditions.length],
-      ["Missões", Echoes.getClaimableMissionCount ? Echoes.getClaimableMissionCount(state) : 0],
+      ["Equip.", String(state.inventory.length)],
+      ["Exped.", String(state.activeExpeditions.length)],
+      ["Feridos", String(injuredCount)],
+      ["Missoes", String(claimableMissions)],
     ];
+  }
+
+  function renderResourcePill(label, value, options) {
+    const tone = (options && options.tone) || "";
+    const featured = options && options.featured;
+
+    return `
+      <div class="resource-pill ${featured ? "featured" : ""} tone-${tone}">
+        <span>${label}</span>
+        <strong>${value}</strong>
+      </div>
+    `;
   }
 
   function renderResourceBar(state) {
     const resourceBar = document.getElementById("resourceBar");
-    resourceBar.innerHTML = getResourceItems(state)
-      .map(
-        ([label, value]) => `
-          <div class="resource-pill">
-            <span>${label}</span>
-            <strong>${value}</strong>
-          </div>
-        `
-      )
+    const primary = getPrimaryResources(state)
+      .map((item) => renderResourcePill(item.label, item.value, { tone: item.tone, featured: true }))
       .join("");
+    const secondary = getSecondaryResources(state)
+      .map(([label, value]) => renderResourcePill(label, value))
+      .join("");
+
+    resourceBar.innerHTML = `
+      <div class="resource-primary">${primary}</div>
+      <div class="resource-secondary">${secondary}</div>
+    `;
+  }
+
+  function renderAccountBadge(state) {
+    const accountBadge = document.getElementById("accountBadge");
+    if (!accountBadge) return;
+
+    const accountNext = Echoes.getAccountXpForNextLevel(state.accountLevel);
+    accountBadge.innerHTML = `
+      <span class="account-level">Nv. ${state.accountLevel}</span>
+      <span class="account-xp">XP ${state.accountXp}/${accountNext}</span>
+    `;
   }
 
   function renderSaveStatus(state) {
     const saveStatus = document.getElementById("saveStatus");
     if (!state.lastSavedAt) {
       saveStatus.textContent = "Save local pronto";
+      saveStatus.classList.remove("is-synced");
       return;
     }
 
     const savedAt = new Date(state.lastSavedAt);
     saveStatus.textContent = `Salvo ${savedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+    saveStatus.classList.add("is-synced");
+  }
+
+  function getTabBadgeCount(tab, state) {
+    if (tab === "missions" && Echoes.getClaimableMissionCount) {
+      return Echoes.getClaimableMissionCount(state);
+    }
+
+    if (tab === "base" && Echoes.getInjuredHeroes) {
+      return Echoes.getInjuredHeroes(state).length;
+    }
+
+    if (tab === "expeditions") {
+      const ready = state.activeExpeditions.filter((entry) => Echoes.isExpeditionComplete(entry)).length;
+      return ready;
+    }
+
+    return 0;
+  }
+
+  function renderTabBadges(state) {
+    document.querySelectorAll(".tab-button").forEach((button) => {
+      const badge = button.querySelector(".tab-badge");
+      if (!badge) return;
+
+      const count = getTabBadgeCount(button.dataset.tab, state);
+      badge.textContent = count > 9 ? "9+" : String(count);
+      badge.hidden = count <= 0;
+      badge.setAttribute("aria-hidden", count <= 0 ? "true" : "false");
+    });
   }
 
   function renderMessage() {
@@ -94,15 +159,30 @@
     `;
   }
 
-  function renderRoomCard(title, level, description) {
-    const levelText = level > 0 ? `Nivel ${level}` : "Bloqueada";
+  function renderRoomCard(title, level, description, options) {
+    const config = options || {};
+    const isLocked = level <= 0;
+    const levelText = isLocked ? "Bloqueada" : `Nv. ${level}`;
+    const stateClass = isLocked ? "locked" : config.upgradeable ? "upgradeable" : "available";
+    const benefit = config.benefit || (isLocked ? "Desbloqueie avancando na torre." : "Sala operacional.");
+    const tabButton = config.tab
+      ? `<button type="button" class="secondary room-action" data-tab="${config.tab}">${escapeHtml(config.actionLabel || "Abrir")}</button>`
+      : config.anchor
+        ? `<button type="button" class="secondary room-action" data-action="scrollToAnchor" data-anchor="${config.anchor}">${escapeHtml(config.actionLabel || "Ver")}</button>`
+        : "";
+
     return `
-      <article class="card room-card ${level > 0 ? "" : "locked"}">
-        <div>
-          <h3>${title}</h3>
-          <p>${description}</p>
+      <article class="card room-card ${stateClass}">
+        <div class="room-card-head">
+          <span class="room-glyph" aria-hidden="true">${config.glyph || "&#9670;"}</span>
+          <div>
+            <h3>${escapeHtml(title)}</h3>
+            <span class="room-level ${isLocked ? "is-locked" : ""}">${levelText}</span>
+          </div>
         </div>
-        <strong>${levelText}</strong>
+        <p class="muted room-desc">${escapeHtml(description)}</p>
+        <p class="room-benefit">${escapeHtml(benefit)}</p>
+        ${tabButton}
       </article>
     `;
   }
@@ -194,22 +274,168 @@
 
   function renderInfirmary(state) {
     const injuredHeroes = Echoes.getInjuredHeroes ? Echoes.getInjuredHeroes(state) : [];
+    const hasInjured = injuredHeroes.length > 0;
 
     return `
-      <article class="panel wide infirmary-panel">
+      <article class="panel wide infirmary-panel ${hasInjured ? "has-patients" : "is-clear"}" id="infirmary">
         <div class="section-head">
           <div>
             <p class="eyebrow">Enfermaria</p>
             <h2>Tratamento de ferimentos</h2>
           </div>
-          <strong>${injuredHeroes.length} ferido(s)</strong>
+          <span class="infirmary-count ${hasInjured ? "alert" : ""}">${injuredHeroes.length} ferido(s)</span>
         </div>
         <p class="muted">Herois derrotados podem voltar com penalidades por 3 batalhas. Trate ferimentos usando ouro ou essencia.</p>
         ${
-          injuredHeroes.length === 0
-            ? `<p class="muted">Nenhum heroi precisa de tratamento agora.</p>`
-            : `<div class="card-grid infirmary-grid">${injuredHeroes.map((hero) => renderInfirmaryPatient(hero, state)).join("")}</div>`
+          hasInjured
+            ? `<div class="card-grid infirmary-grid">${injuredHeroes.map((hero) => renderInfirmaryPatient(hero, state)).join("")}</div>`
+            : `
+              <div class="infirmary-empty">
+                <span class="infirmary-empty-glyph" aria-hidden="true">&#10003;</span>
+                <strong>Equipe em plena forma</strong>
+                <p class="muted">Nenhum heroi precisa de tratamento agora. Volte apos combates dificeis na torre.</p>
+              </div>
+            `
         }
+      </article>
+    `;
+  }
+
+  function renderBaseChapterBrief(state) {
+    const floorData = Echoes.getFloorData ? Echoes.getFloorData(state.towerFloor) : null;
+    const chapter = Echoes.getTowerChapterByFloor ? Echoes.getTowerChapterByFloor(state.towerFloor) : null;
+
+    if (!chapter) {
+      return `
+        <article class="panel wide base-chapter-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Campanha</p>
+              <h2>Torre concluida</h2>
+              <p class="muted">Repita andares para fortalecer a equipe e buscar equipamentos.</p>
+            </div>
+            <button type="button" data-tab="tower">Ir para Torre</button>
+          </div>
+        </article>
+      `;
+    }
+
+    const regional = chapter.regionalModifier || {};
+    const isBoss = floorData && Echoes.isBossFloor ? Echoes.isBossFloor(floorData) : false;
+
+    return `
+      <article class="panel wide base-chapter-panel tone-${chapter.tone}">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Capitulo ${chapter.number} &middot; Andar ${state.towerFloor}</p>
+            <h2>${escapeHtml(chapter.name)}</h2>
+            <p class="muted">${escapeHtml(chapter.description)}</p>
+          </div>
+          <span class="floor-badge ${isBoss ? "boss" : "elite"}">${isBoss ? "Chefe proximo" : "Em campanha"}</span>
+        </div>
+        <div class="chapter-brief-grid">
+          <div><span>Andar atual</span><strong>${floorData ? `${floorData.floor}. ${escapeHtml(floorData.title)}` : state.towerFloor}</strong></div>
+          <div><span>Chefe do capitulo</span><strong>${escapeHtml(chapter.finalBoss)}</strong></div>
+          <div><span>Modificador regional</span><strong>${escapeHtml(regional.label || "Sem modificador")}</strong></div>
+        </div>
+        ${regional.description ? `<p class="modifier">${escapeHtml(regional.description)}</p>` : ""}
+        <div class="button-row">
+          <button type="button" data-tab="tower">Ir para Torre</button>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderBaseNextActions(state) {
+    const injuredCount = Echoes.getInjuredHeroes ? Echoes.getInjuredHeroes(state).length : 0;
+    const claimable = Echoes.getClaimableMissionCount ? Echoes.getClaimableMissionCount(state) : 0;
+
+    const actions = [
+      { label: "Ir para Torre", hint: `Andar ${state.towerFloor}`, tab: "tower", tone: "gold" },
+      { label: "Invocar heroi", hint: `${formatNumber(state.resources.gold)} ouro`, tab: "summon", tone: "violet" },
+      { label: "Ver formacao", hint: `Poder ${formatNumber(Echoes.getFormationPower(state))}`, tab: "formation", tone: "cyan" },
+      { label: "Enviar expedicao", hint: `${state.activeExpeditions.length}/3 ativas`, tab: "expeditions", tone: "cyan" },
+    ];
+
+    if (injuredCount > 0) {
+      actions.push({
+        label: "Tratar feridos",
+        hint: `${injuredCount} heroi(s)`,
+        anchor: "infirmary",
+        tone: "danger",
+        actionLabel: "Ver enfermaria",
+      });
+    }
+
+    if (claimable > 0) {
+      actions.push({
+        label: "Coletar missoes",
+        hint: `${claimable} pronta(s)`,
+        tab: "missions",
+        tone: "gold",
+      });
+    }
+
+    return `
+      <article class="panel base-actions-panel">
+        <p class="eyebrow">Proximas acoes</p>
+        <h2>Ordens rapidas</h2>
+        <div class="quick-action-grid">
+          ${actions
+            .map((action) => {
+              const attrs = action.tab
+                ? `data-tab="${action.tab}"`
+                : `data-action="scrollToAnchor" data-anchor="${action.anchor}"`;
+
+              return `
+                <button type="button" class="quick-action tone-${action.tone}" ${attrs}>
+                  <strong>${escapeHtml(action.label)}</strong>
+                  <span>${escapeHtml(action.hint)}</span>
+                </button>
+              `;
+            })
+            .join("")}
+        </div>
+      </article>
+    `;
+  }
+
+  function renderBaseTeamSummary(state) {
+    const formationHeroes = Echoes.getFormationHeroes(state).filter(Boolean);
+    const formationPower = Echoes.getFormationPower(state);
+
+    return `
+      <article class="panel base-team-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Equipe ativa</p>
+            <h2>Formacao atual</h2>
+          </div>
+          <strong>${formatNumber(formationPower)}</strong>
+        </div>
+        ${
+          formationHeroes.length === 0
+            ? `<p class="muted">Nenhum heroi na formacao. Recrute e organize sua equipe antes da torre.</p>`
+            : `
+              <div class="base-team-list">
+                ${formationHeroes
+                  .map((hero) => {
+                    const injured = Echoes.hasHeroInjuries && Echoes.hasHeroInjuries(hero);
+                    return `
+                      <span class="base-team-member ${injured ? "injured" : ""}">
+                        <strong>${escapeHtml(hero.name)}</strong>
+                        <em>${escapeHtml(hero.className)} &middot; Poder ${Echoes.getHeroPower(hero, state)}${injured ? " &middot; Ferido" : ""}</em>
+                      </span>
+                    `;
+                  })
+                  .join("")}
+              </div>
+            `
+        }
+        <div class="button-row">
+          <button type="button" class="secondary" data-tab="formation">Gerenciar formacao</button>
+          <button type="button" class="secondary" data-tab="heroes">Ver herois</button>
+        </div>
       </article>
     `;
   }
@@ -236,32 +462,75 @@
   }
 
   function renderBase(state) {
-    const formationPower = Echoes.getFormationPower(state);
     const accountNext = Echoes.getAccountXpForNextLevel(state.accountLevel);
 
     return `
-      <section class="panel-grid">
+      <section class="panel-grid base-hub">
         ${renderWeeklyEventBanner()}
-        <article class="panel focus-panel">
-          <p class="eyebrow">Comando</p>
-          <h2>Base dimensional</h2>
-          <p class="muted">Gerencie recursos, invoque herois e avance pela torre inicial de ${Echoes.CONFIG.towerMaxFloor} andares.</p>
-          <div class="summary-grid">
-            <div><span>Poder da equipe</span><strong>${formatNumber(formationPower)}</strong></div>
-            <div><span>Herois</span><strong>${state.heroes.length}</strong></div>
-            <div><span>XP da conta</span><strong>${state.accountXp}/${accountNext}</strong></div>
+        ${renderBaseChapterBrief(state)}
+        <section class="base-hub-row two-columns">
+          ${renderBaseNextActions(state)}
+          ${renderBaseTeamSummary(state)}
+        </section>
+        <article class="panel wide base-status-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Status da base</p>
+              <h2>Comando dimensional</h2>
+            </div>
+            <button type="button" class="secondary" data-action="save">Salvar jogo</button>
           </div>
-          <div class="button-row">
-            <button type="button" data-action="save">Salvar jogo</button>
+          <div class="summary-grid">
+            <div><span>Herois recrutados</span><strong>${state.heroes.length}</strong></div>
+            <div><span>XP da conta</span><strong>${state.accountXp}/${accountNext}</strong></div>
+            <div><span>Andares da torre</span><strong>${Echoes.CONFIG.towerMaxFloor}</strong></div>
           </div>
         </article>
-        <section class="room-grid">
-          ${renderRoomCard("Portal de Invocação", state.baseRooms.summonPortal, "Recruta novos herois com ouro ou cristais.")}
-          ${renderRoomCard("Quartel", state.baseRooms.barracks, "Organiza a lista de herois e a equipe ativa.")}
-          ${renderRoomCard("Campo de Treino", state.baseRooms.trainingGround, "Base para progressao futura de XP passivo.")}
-          ${renderRoomCard("Enfermaria", state.baseRooms.infirmary, "Trata ferimentos de herois derrotados na torre.")}
-          ${renderRoomCard("Oficina", state.baseRooms.workshop, "Desbloqueia ao vencer o andar 10.")}
-          ${renderRoomCard("Conselho de Missões", state.baseRooms.missionBoard, "Preparado para expedicoes em versoes futuras.")}
+        <section class="base-rooms-section">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Instalacoes</p>
+              <h2>Salas da base</h2>
+            </div>
+          </div>
+          <div class="room-grid">
+            ${renderRoomCard("Portal de Invocacao", state.baseRooms.summonPortal, "Recruta novos herois com ouro ou cristais.", {
+              glyph: "&#10022;",
+              benefit: "Invocacao comum e superior.",
+              tab: "summon",
+              actionLabel: "Invocar",
+            })}
+            ${renderRoomCard("Quartel", state.baseRooms.barracks, "Organiza a lista de herois e a equipe ativa.", {
+              glyph: "&#9876;",
+              benefit: `${state.heroes.length} heroi(s) recrutado(s).`,
+              tab: "heroes",
+              actionLabel: "Abrir quartel",
+            })}
+            ${renderRoomCard("Campo de Treino", state.baseRooms.trainingGround, "Base para progressao futura de XP passivo.", {
+              glyph: "&#9650;",
+              benefit: "Preparado para treino passivo.",
+              tab: "formation",
+              actionLabel: "Ver equipe",
+            })}
+            ${renderRoomCard("Enfermaria", state.baseRooms.infirmary, "Trata ferimentos de herois derrotados na torre.", {
+              glyph: "&#10010;",
+              benefit: "Curas com ouro ou essencia.",
+              anchor: "infirmary",
+              actionLabel: "Ver feridos",
+            })}
+            ${renderRoomCard("Oficina", state.baseRooms.workshop, "Desbloqueia ao vencer o andar 10.", {
+              glyph: "&#9881;",
+              benefit: state.baseRooms.workshop > 0 ? "Gerencie equipamentos." : "Venca o andar 10.",
+              tab: state.baseRooms.workshop > 0 ? "inventory" : "",
+              actionLabel: state.baseRooms.workshop > 0 ? "Abrir oficina" : "",
+            })}
+            ${renderRoomCard("Conselho de Missoes", state.baseRooms.missionBoard, "Objetivos diarios e conquistas permanentes.", {
+              glyph: "&#9783;",
+              benefit: "Recompensas por progresso.",
+              tab: "missions",
+              actionLabel: "Ver missoes",
+            })}
+          </div>
         </section>
         ${renderInfirmary(state)}
       </section>
@@ -2129,11 +2398,13 @@
     Echoes.stopBattlePlayback();
     Echoes.regenerateEnergy(state);
     renderResourceBar(state);
+    renderAccountBadge(state);
     renderSaveStatus(state);
 
     document.querySelectorAll(".tab-button").forEach((button) => {
       button.classList.toggle("active", button.dataset.tab === UI.currentTab);
     });
+    renderTabBadges(state);
 
     document.getElementById("app").innerHTML = `${renderMessage()}${renderCurrentTab(state)}${renderRecruitmentChoiceModal(state)}${renderNarrativeScene(state)}`;
     Echoes.scheduleBattlePlayback(state, render);

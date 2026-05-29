@@ -640,6 +640,13 @@
     if (action === "startExpeditionPreset") return handleStartExpeditionPresetAction(target);
     if (action === "startExpedition") return handleStartExpeditionAction(target);
     if (action === "collectExpedition") return handleCollectExpeditionAction(target);
+    if (action === "scrollToAnchor") {
+      const anchor = document.getElementById(target.dataset.anchor);
+      if (anchor) {
+        anchor.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      return;
+    }
     if (action === "setBattleSpeed") {
       Echoes.setBattleSpeed(target.dataset.speed);
       Echoes.render(state);

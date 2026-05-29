@@ -3,34 +3,71 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Ascensao dos Ecos - MVP</title>
+    <title>Ascensao dos Ecos</title>
     <link rel="stylesheet" href="styles/style.css" />
   </head>
   <body>
     <div class="app-shell">
-      <header class="topbar">
-        <div>
-          <p class="eyebrow">MVP local</p>
+      <header class="command-header">
+        <div class="command-brand">
+          <p class="eyebrow">Hub de comando</p>
           <h1>Ascensao dos Ecos</h1>
         </div>
-        <div id="saveStatus" class="save-status">Carregando...</div>
+        <div class="command-meta">
+          <div id="accountBadge" class="account-badge" aria-live="polite"></div>
+          <div id="saveStatus" class="save-status">Carregando...</div>
+        </div>
       </header>
 
       <section id="resourceBar" class="resource-bar" aria-live="polite"></section>
 
-      <nav class="tabs" aria-label="Telas principais">
-        <button class="tab-button active" data-tab="base" type="button">Base</button>
-        <button class="tab-button" data-tab="heroes" type="button">Herois</button>
-        <button class="tab-button" data-tab="formation" type="button">Formacao</button>
-        <button class="tab-button" data-tab="inventory" type="button">Inventario</button>
-        <button class="tab-button" data-tab="expeditions" type="button">Expedicoes</button>
-        <button class="tab-button" data-tab="missions" type="button">Missoes</button>
-        <button class="tab-button" data-tab="relics" type="button">Reliquias</button>
-        <button class="tab-button" data-tab="library" type="button">Biblioteca</button>
-        <button class="tab-button" data-tab="summon" type="button">Invocacao</button>
-        <button class="tab-button" data-tab="tower" type="button">Torre</button>
-        <button class="tab-button" data-tab="battle" type="button">Combate</button>
-        <button class="tab-button" data-tab="settings" type="button">Config</button>
+      <nav class="command-nav" aria-label="Telas principais">
+        <div class="nav-group">
+          <span class="nav-group-label">Comando</span>
+          <div class="nav-group-tabs">
+            <button class="tab-button active" data-tab="base" type="button">
+              Base
+              <span class="tab-badge" hidden aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+        <div class="nav-group">
+          <span class="nav-group-label">Equipe</span>
+          <div class="nav-group-tabs">
+            <button class="tab-button" data-tab="heroes" type="button">Herois</button>
+            <button class="tab-button" data-tab="formation" type="button">Formacao</button>
+            <button class="tab-button" data-tab="inventory" type="button">Inventario</button>
+          </div>
+        </div>
+        <div class="nav-group">
+          <span class="nav-group-label">Operacao</span>
+          <div class="nav-group-tabs">
+            <button class="tab-button" data-tab="expeditions" type="button">
+              Expedicoes
+              <span class="tab-badge" hidden aria-hidden="true"></span>
+            </button>
+            <button class="tab-button" data-tab="missions" type="button">
+              Missoes
+              <span class="tab-badge" hidden aria-hidden="true"></span>
+            </button>
+            <button class="tab-button" data-tab="summon" type="button">Invocacao</button>
+          </div>
+        </div>
+        <div class="nav-group">
+          <span class="nav-group-label">Torre</span>
+          <div class="nav-group-tabs">
+            <button class="tab-button" data-tab="tower" type="button">Torre</button>
+            <button class="tab-button" data-tab="battle" type="button">Combate</button>
+            <button class="tab-button" data-tab="relics" type="button">Reliquias</button>
+            <button class="tab-button" data-tab="library" type="button">Biblioteca</button>
+          </div>
+        </div>
+        <div class="nav-group nav-group-system">
+          <span class="nav-group-label">Sistema</span>
+          <div class="nav-group-tabs">
+            <button class="tab-button" data-tab="settings" type="button">Config</button>
+          </div>
+        </div>
       </nav>
 
       <main id="app" class="content" aria-live="polite"></main>
