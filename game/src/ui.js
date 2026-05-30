@@ -356,7 +356,7 @@
 
     if (!chapter) {
       return `
-        <article class="panel wide base-chapter-panel">
+        <article class="panel wide art-card chapter-card base-chapter-panel">
           <div class="section-head">
             <div>
               <p class="eyebrow">Campanha</p>
@@ -373,7 +373,7 @@
     const isBoss = floorData && Echoes.isBossFloor ? Echoes.isBossFloor(floorData) : false;
 
     return `
-      <article class="panel wide base-chapter-panel tone-${chapter.tone}">
+      <article class="panel wide art-card chapter-card base-chapter-panel tone-${chapter.tone}">
         <div class="section-head">
           <div>
             <p class="eyebrow">Capitulo ${chapter.number} &middot; Andar ${state.towerFloor}</p>
@@ -1550,7 +1550,7 @@
     }
 
     return `
-      <article class="card expedition-summary-card status-${status.key}" data-expedition-card="${definition.id}">
+      <article class="card art-card location-card expedition-summary-card status-${status.key}" data-expedition-card="${definition.id}">
         <div class="expedition-summary-head">
           <div>
             <h3>${escapeHtml(definition.name)}</h3>
@@ -2231,7 +2231,7 @@
       : Object.keys(reward).map((key) => `${reward[key]} ${key}`).join(" | ");
 
     return `
-      <article class="panel wide chapter-completion-panel">
+      <article class="panel wide chapter-completion-panel art-card chapter-card tone-abyss">
         <div class="section-head">
           <div>
             <p class="eyebrow">Capitulo concluido</p>
@@ -2258,7 +2258,7 @@
     const regional = chapter.regionalModifier || {};
 
     return `
-      <article class="panel wide tower-chapter-panel tone-${chapter.tone}">
+      <article class="panel wide art-card chapter-card tower-chapter-panel tone-${chapter.tone}">
         <div class="section-head">
           <div>
             <p class="eyebrow">Capitulo ${chapter.number} | Andares ${chapter.startFloor}-${chapter.endFloor}</p>
@@ -2608,6 +2608,12 @@
 
     document.getElementById("app").innerHTML = `${renderCurrentTab(state)}${renderRecruitmentChoiceModal(state)}${renderNarrativeScene(state)}`;
     syncNoticeMessage();
+
+    const appShell = document.querySelector(".app-shell");
+    if (appShell) {
+      appShell.classList.add("heroic-panel");
+    }
+
     Echoes.scheduleBattlePlayback(state, render);
   }
 

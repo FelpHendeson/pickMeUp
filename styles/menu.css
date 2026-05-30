@@ -13,6 +13,53 @@
   --line: rgba(245, 200, 107, 0.28);
   --glow-gold: rgba(245, 200, 107, 0.18);
   --glow-violet: rgba(155, 127, 232, 0.14);
+  /* Art slots — imagem opcional via CSS */
+  --card-art: none;
+  --screen-art: url("../ArtPickMeUp.png");
+  --location-art: none;
+  --art-overlay: linear-gradient(180deg, rgba(4, 5, 12, 0.35) 0%, rgba(4, 5, 12, 0.88) 100%);
+  --screen-overlay:
+    linear-gradient(90deg, rgba(4, 5, 12, 0.94) 0%, rgba(6, 7, 18, 0.62) 42%, rgba(6, 7, 18, 0.22) 68%, rgba(4, 5, 12, 0.88) 100%),
+    linear-gradient(180deg, rgba(4, 5, 12, 0.12) 0%, rgba(4, 5, 12, 0.42) 48%, rgba(4, 5, 12, 0.94) 100%);
+  --card-art-gradient: linear-gradient(145deg, rgba(18, 18, 30, 0.92), rgba(8, 8, 16, 0.96));
+  --screen-art-gradient:
+    radial-gradient(circle at 72% 28%, rgba(86, 199, 189, 0.12), transparent 28rem),
+    radial-gradient(circle at 18% 72%, rgba(155, 127, 232, 0.16), transparent 24rem),
+    linear-gradient(160deg, #05060c 0%, #0a0b14 52%, #04050a 100%);
+}
+
+/* Art slots reutilizaveis (home) */
+.art-card {
+  isolation: isolate;
+  overflow: hidden;
+  position: relative;
+}
+
+.art-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.art-card::before {
+  background-image: var(--art-overlay), var(--location-art, var(--card-art, none)), var(--location-art-gradient, var(--card-art-gradient));
+  background-position: center, center, center;
+  background-repeat: no-repeat;
+  background-size: cover, cover, cover;
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+.heroic-panel {
+  isolation: isolate;
+  position: relative;
+}
+
+.heroic-panel > * {
+  position: relative;
+  z-index: 1;
 }
 
 * {
@@ -46,18 +93,14 @@ body::after {
 
 body::before {
   z-index: -3;
-  background-image: url("../ArtPickMeUp.png");
-  background-position: center 18%;
-  background-size: cover;
+  background-image: var(--screen-overlay), var(--screen-art, none), var(--screen-art-gradient);
+  background-position: center 18%, center, center;
+  background-size: cover, cover, cover;
 }
 
 body::after {
   z-index: -2;
-  background:
-    radial-gradient(circle at 72% 28%, rgba(86, 199, 189, 0.12), transparent 28rem),
-    radial-gradient(circle at 18% 72%, rgba(155, 127, 232, 0.16), transparent 24rem),
-    linear-gradient(90deg, rgba(4, 5, 12, 0.94) 0%, rgba(6, 7, 18, 0.62) 42%, rgba(6, 7, 18, 0.22) 68%, rgba(4, 5, 12, 0.88) 100%),
-    linear-gradient(180deg, rgba(4, 5, 12, 0.12) 0%, rgba(4, 5, 12, 0.42) 48%, rgba(4, 5, 12, 0.94) 100%);
+  background: transparent;
 }
 
 a {
@@ -322,12 +365,10 @@ h1 {
 
 .about-panel {
   align-self: end;
+  --card-art-gradient: linear-gradient(135deg, rgba(155, 127, 232, 0.14), rgba(8, 10, 20, 0.94) 58%);
   padding: 24px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background:
-    linear-gradient(135deg, rgba(155, 127, 232, 0.08), transparent 42%),
-    var(--panel);
   box-shadow:
     0 18px 52px rgba(0, 0, 0, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -401,14 +442,11 @@ h1 {
 
 @media (max-width: 900px) {
   body::before {
-    background-position: 62% 18%;
-  }
-
-  body::after {
-    background:
-      radial-gradient(circle at 50% 20%, rgba(155, 127, 232, 0.1), transparent 20rem),
-      linear-gradient(90deg, rgba(4, 5, 12, 0.92) 0%, rgba(6, 7, 18, 0.66) 62%, rgba(4, 5, 12, 0.88) 100%),
-      linear-gradient(180deg, rgba(4, 5, 12, 0.22) 0%, rgba(4, 5, 12, 0.56) 52%, rgba(4, 5, 12, 0.94) 100%);
+    background-image:
+      var(--screen-overlay),
+      var(--screen-art, none),
+      var(--screen-art-gradient);
+    background-position: 62% 18%, center, center;
   }
 
   .hero-menu {

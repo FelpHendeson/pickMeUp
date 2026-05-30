@@ -20,6 +20,126 @@
   --glow-gold: rgba(232, 188, 88, 0.14);
   --glow-violet: rgba(155, 127, 232, 0.12);
   --glow-cyan: rgba(86, 199, 189, 0.1);
+  /* Art slots — defina URLs futuras sem alterar HTML */
+  --card-art: none;
+  --screen-art: none;
+  --location-art: none;
+  --art-overlay: linear-gradient(180deg, rgba(8, 10, 20, 0.42) 0%, rgba(8, 10, 20, 0.92) 100%);
+  --screen-overlay: linear-gradient(180deg, rgba(8, 10, 20, 0.18) 0%, rgba(8, 10, 20, 0.62) 100%);
+  --card-art-gradient: linear-gradient(145deg, rgba(28, 24, 38, 0.96), rgba(10, 10, 18, 0.98));
+  --location-art-gradient: var(--card-art-gradient);
+  --screen-art-gradient:
+    radial-gradient(circle at 14% 0%, rgba(155, 127, 232, 0.14), transparent 28rem),
+    radial-gradient(circle at 88% 8%, rgba(86, 199, 189, 0.12), transparent 24rem),
+    linear-gradient(160deg, #08080f 0%, #10101a 48%, #06060c 100%);
+}
+
+/* Art slots reutilizaveis — imagem opcional via --card-art / --screen-art / --location-art */
+.art-card {
+  isolation: isolate;
+  overflow: hidden;
+  position: relative;
+}
+
+.art-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.art-card::before {
+  background-image: var(--art-overlay), var(--location-art, var(--card-art, none)), var(--location-art-gradient, var(--card-art-gradient));
+  background-position: center, center, center;
+  background-repeat: no-repeat;
+  background-size: cover, cover, cover;
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+.location-card {
+  --location-art-gradient: linear-gradient(145deg, rgba(18, 22, 34, 0.96), rgba(10, 12, 22, 0.98));
+}
+
+.chapter-card {
+  --card-art-gradient: linear-gradient(135deg, rgba(155, 127, 232, 0.2), rgba(10, 10, 18, 0.96) 62%);
+}
+
+.chapter-card::after {
+  background: linear-gradient(90deg, rgba(232, 188, 88, 0.42), rgba(107, 184, 255, 0.18), transparent);
+  content: "";
+  height: 3px;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 2;
+}
+
+.chapter-card.tone-ruins {
+  --card-art-gradient: linear-gradient(135deg, rgba(232, 188, 88, 0.24), rgba(12, 10, 8, 0.96) 58%);
+}
+
+.chapter-card.tone-forest {
+  --card-art-gradient: linear-gradient(135deg, rgba(120, 184, 109, 0.22), rgba(8, 14, 10, 0.96) 58%);
+}
+
+.chapter-card.tone-crypt {
+  --card-art-gradient: linear-gradient(135deg, rgba(155, 127, 232, 0.24), rgba(12, 10, 20, 0.96) 58%);
+}
+
+.chapter-card.tone-abyss {
+  --card-art-gradient: linear-gradient(135deg, rgba(200, 107, 107, 0.22), rgba(14, 8, 10, 0.96) 58%);
+}
+
+.location-card.status-available {
+  --location-art-gradient: linear-gradient(145deg, rgba(86, 199, 189, 0.22), rgba(8, 14, 18, 0.96) 58%);
+}
+
+.location-card.status-active {
+  --location-art-gradient: linear-gradient(145deg, rgba(155, 127, 232, 0.22), rgba(12, 10, 22, 0.96) 58%);
+}
+
+.location-card.status-ready {
+  --location-art-gradient: linear-gradient(145deg, rgba(120, 184, 109, 0.2), rgba(10, 16, 12, 0.96) 58%);
+}
+
+/* Exemplo futuro por id:
+   [data-expedition-card="training"] { --location-art: url("../art/expedition-training.webp"); }
+   .chapter-card.tone-crypt { --card-art: url("../art/chapter-crypt.webp"); }
+*/
+
+.heroic-panel {
+  isolation: isolate;
+  position: relative;
+}
+
+.heroic-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.heroic-panel::before {
+  background-image: var(--screen-overlay), var(--screen-art, none), var(--screen-art-gradient);
+  background-position: center, center, center;
+  background-repeat: no-repeat;
+  background-size: cover, cover, cover;
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+  z-index: 0;
+}
+
+.heroic-panel.app-shell::before {
+  opacity: 0.55;
+}
+
+.panel.art-card,
+.card.art-card {
+  background: transparent;
 }
 
 * {
@@ -867,40 +987,19 @@ body.pref-compact .modifier {
   position: relative;
 }
 
-.base-chapter-panel::before {
-  background: linear-gradient(90deg, rgba(232, 188, 88, 0.42), rgba(107, 184, 255, 0.18), transparent);
-  content: "";
-  height: 3px;
-  left: 0;
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-
 .base-chapter-panel.tone-ruins {
-  background:
-    linear-gradient(135deg, rgba(232, 188, 88, 0.08), transparent 42%),
-    rgba(18, 18, 28, 0.98);
+  border-color: rgba(232, 188, 88, 0.28);
 }
 
 .base-chapter-panel.tone-forest {
-  background:
-    linear-gradient(135deg, rgba(120, 184, 109, 0.1), transparent 42%),
-    rgba(18, 18, 28, 0.98);
   border-color: rgba(120, 184, 109, 0.28);
 }
 
 .base-chapter-panel.tone-crypt {
-  background:
-    linear-gradient(135deg, rgba(155, 127, 232, 0.11), transparent 42%),
-    rgba(18, 18, 28, 0.98);
   border-color: rgba(155, 127, 232, 0.3);
 }
 
 .base-chapter-panel.tone-abyss {
-  background:
-    linear-gradient(135deg, rgba(200, 107, 107, 0.12), transparent 42%),
-    rgba(18, 18, 28, 0.98);
   border-color: rgba(200, 107, 107, 0.34);
 }
 
@@ -2687,42 +2786,16 @@ body.pref-compact .modifier {
   position: relative;
 }
 
-.tower-chapter-panel::before,
-.chapter-completion-panel::before {
-  background: linear-gradient(90deg, rgba(214, 168, 78, 0.36), transparent);
-  content: "";
-  height: 3px;
-  left: 0;
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-
-.tower-chapter-panel.tone-ruins {
-  background:
-    linear-gradient(135deg, rgba(214, 168, 78, 0.1), transparent 42%),
-    rgba(28, 25, 24, 0.97);
-}
-
 .tower-chapter-panel.tone-forest {
-  background:
-    linear-gradient(135deg, rgba(120, 184, 109, 0.12), transparent 42%),
-    rgba(28, 25, 24, 0.97);
   border-color: rgba(120, 184, 109, 0.32);
 }
 
 .tower-chapter-panel.tone-crypt {
-  background:
-    linear-gradient(135deg, rgba(155, 127, 232, 0.13), transparent 42%),
-    rgba(28, 25, 24, 0.97);
   border-color: rgba(155, 127, 232, 0.34);
 }
 
 .tower-chapter-panel.tone-abyss,
 .chapter-completion-panel {
-  background:
-    linear-gradient(135deg, rgba(184, 91, 91, 0.14), transparent 42%),
-    rgba(28, 25, 24, 0.97);
   border-color: rgba(184, 91, 91, 0.4);
 }
 
