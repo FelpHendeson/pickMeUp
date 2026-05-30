@@ -499,6 +499,51 @@
     return choices.filter((choice) => choice.checked && !choice.disabled).map((choice) => choice.value);
   }
 
+  function updateExpeditionManualPower(expeditionId) {
+    const powerEl = document.querySelector("[data-expedition-manual-power]");
+    if (!powerEl) return;
+
+    const heroIds = getSelectedExpeditionHeroIds(expeditionId);
+    const power = heroIds.reduce((total, heroId) => {
+      const hero = Echoes.findHero(state, heroId);
+      return total + (hero ? Echoes.getHeroPower(hero, state) : 0);
+    }, 0);
+
+    powerEl.textContent = Echoes.formatNumber ? Echoes.formatNumber(power) : String(power);
+  }
+
+  function renderExpeditionModalWithPreservation(nextTab) {
+    const expeditionId = Echoes.UI.expeditionModal.expeditionId;
+    const selections = expeditionId ? { [expeditionId]: new Set(getSelectedExpeditionHeroIds(expeditionId)) } : {};
+    const scrollState = captureExpeditionScrollState();
+
+    if (nextTab) {
+      Echoes.setExpeditionModalTab(nextTab);
+    }
+
+    Echoes.render(state);
+    restoreExpeditionSelections(selections);
+    restoreExpeditionScrollState(scrollState);
+
+    if (expeditionId) {
+      updateExpeditionManualPower(expeditionId);
+    }
+  }
+
+  function handleOpenExpeditionModalAction(target) {
+    Echoes.openExpeditionModal(target.dataset.expeditionId);
+    Echoes.render(state);
+  }
+
+  function handleCloseExpeditionModalAction() {
+    Echoes.closeExpeditionModal();
+    Echoes.render(state);
+  }
+
+  function handleSetExpeditionModalTabAction(target) {
+    renderExpeditionModalWithPreservation(target.dataset.modalTab);
+  }
+
   function handleStartExpeditionAction(target) {
     const heroIds = getSelectedExpeditionHeroIds(target.dataset.expeditionId);
     const result = Echoes.startExpedition(state, target.dataset.expeditionId, heroIds);
@@ -512,6 +557,7 @@
       Echoes.recordMissionProgress(state, "expeditionsStarted", 1);
     }
 
+    Echoes.closeExpeditionModal();
     Echoes.setTab("expeditions");
     saveAndRender(result.message);
   }
@@ -533,10 +579,14 @@
       return;
     }
 
+    renderExpeditionModalWithPreservation("manual");
+
     const choices = Array.from(document.querySelectorAll(`[data-expedition-choice="${expeditionId}"]`));
     choices.forEach((choice) => {
       choice.checked = heroIds.includes(choice.value) && !choice.disabled;
     });
+
+    updateExpeditionManualPower(expeditionId);
 
     const preset = Echoes.getTeamPreset(state, "expedition", presetIndex);
     Echoes.setMessage(`${preset ? preset.name : "Time"} selecionado para expedicao.`);
@@ -557,6 +607,7 @@
       Echoes.recordMissionProgress(state, "expeditionsStarted", 1);
     }
 
+    Echoes.closeExpeditionModal();
     Echoes.setTab("expeditions");
     saveAndRender(result.message);
   }
@@ -578,14 +629,19 @@
   }
 
   function handleExpeditionChoiceChange(choice) {
-    if (!choice.checked) return;
+    const expeditionId = choice.dataset.expeditionChoice;
 
-    const selectedHeroIds = getSelectedExpeditionHeroIds(choice.dataset.expeditionChoice);
-    if (selectedHeroIds.length <= Echoes.CONFIG.maxExpeditionHeroes) return;
+    if (choice.checked) {
+      const selectedHeroIds = getSelectedExpeditionHeroIds(expeditionId);
+      if (selectedHeroIds.length > Echoes.CONFIG.maxExpeditionHeroes) {
+        choice.checked = false;
+        Echoes.setMessage(`Cada expedicao aceita no maximo ${Echoes.CONFIG.maxExpeditionHeroes} herois.`);
+        Echoes.syncNoticeMessage();
+        return;
+      }
+    }
 
-    choice.checked = false;
-    Echoes.setMessage(`Cada expedicao aceita no maximo ${Echoes.CONFIG.maxExpeditionHeroes} herois.`);
-    Echoes.syncNoticeMessage();
+    updateExpeditionManualPower(expeditionId);
   }
 
   function handleAction(target) {
@@ -640,6 +696,9 @@
     if (action === "startExpeditionPreset") return handleStartExpeditionPresetAction(target);
     if (action === "startExpedition") return handleStartExpeditionAction(target);
     if (action === "collectExpedition") return handleCollectExpeditionAction(target);
+    if (action === "openExpeditionModal") return handleOpenExpeditionModalAction(target);
+    if (action === "closeExpeditionModal") return handleCloseExpeditionModalAction(target);
+    if (action === "setExpeditionModalTab") return handleSetExpeditionModalTabAction(target);
     if (action === "scrollToAnchor") {
       const anchor = document.getElementById(target.dataset.anchor);
       if (anchor) {
@@ -773,6 +832,29 @@
     badge.setAttribute("aria-hidden", ready <= 0 ? "true" : "false");
   }
 
+  function ensureExpeditionCollectButton(card, definitionId) {
+    if (card.querySelector("[data-expedition-collect]")) return;
+
+    const actions = card.querySelector(".expedition-summary-actions");
+    const buttonRow = actions || document.createElement("div");
+
+    if (!actions) {
+      buttonRow.className = "button-row expedition-summary-actions";
+      card.appendChild(buttonRow);
+    }
+
+    buttonRow.innerHTML = `
+      <button
+        type="button"
+        data-action="collectExpedition"
+        data-expedition-collect
+        data-expedition-id="${definitionId}"
+      >
+        Coletar
+      </button>
+    `;
+  }
+
   function updateExpeditionCountdowns() {
     if (Echoes.UI.currentTab !== "expeditions") return;
 
@@ -780,6 +862,7 @@
       const activeExpedition = Echoes.getActiveExpedition(state, definition.id);
       if (!activeExpedition) return;
 
+      const card = document.querySelector(`[data-expedition-card="${definition.id}"]`);
       const container = document.querySelector(`[data-expedition-active="${definition.id}"]`);
       if (!container) return;
 
@@ -803,7 +886,21 @@
 
       container.classList.toggle("is-ready", isComplete);
 
-      const collectBtn = container.querySelector("[data-expedition-collect]");
+      if (card) {
+        card.classList.remove("status-active", "status-ready", "status-available");
+        card.classList.add(isComplete ? "status-ready" : "status-active");
+
+        const statusBadge = card.querySelector("[data-expedition-status]");
+        if (statusBadge) {
+          statusBadge.textContent = isComplete ? "Pronta" : "Em andamento";
+        }
+
+        if (isComplete) {
+          ensureExpeditionCollectButton(card, definition.id);
+        }
+      }
+
+      const collectBtn = card ? card.querySelector("[data-expedition-collect]") : null;
       if (collectBtn) {
         collectBtn.disabled = !isComplete;
       }

@@ -7,6 +7,10 @@
     currentTab: "base",
     message: "",
     activeEquipmentModalHeroId: null,
+    expeditionModal: {
+      expeditionId: null,
+      tab: "presets",
+    },
     heroList: {
       sortBy: "power",
       classKey: "all",
@@ -1274,6 +1278,29 @@
     `;
   }
 
+  function getExpeditionRewardLabel(definition) {
+    const rewardName = Echoes.getExpeditionRewardName(definition.reward.type);
+    return `${definition.reward.amount} ${rewardName}`;
+  }
+
+  function getExpeditionDurationLabel(state, definition) {
+    const durationMs = Echoes.getExpeditionDurationMs ? Echoes.getExpeditionDurationMs(state, definition) : definition.durationMs;
+    return Echoes.formatDuration(durationMs);
+  }
+
+  function getExpeditionCardStatus(definition, state) {
+    const activeExpedition = Echoes.getActiveExpedition(state, definition.id);
+    if (!activeExpedition) {
+      return { key: "available", label: "Disponivel" };
+    }
+
+    if (Echoes.isExpeditionComplete(activeExpedition)) {
+      return { key: "ready", label: "Pronta" };
+    }
+
+    return { key: "active", label: "Em andamento" };
+  }
+
   function renderExpeditionHeroOption(hero, definition, state) {
     const busyExpedition = Echoes.getHeroExpedition(state, hero.id);
     const disabled = busyExpedition ? "disabled" : "";
@@ -1292,73 +1319,12 @@
     `;
   }
 
-  function renderExpeditionHelper() {
-    return `
-      <aside class="helper-panel">
-        <div>
-          <p class="eyebrow">Ajuda rapida</p>
-          <h3>Como expedir</h3>
-        </div>
-        <div class="helper-list">
-          <span><strong>${Echoes.CONFIG.maxExpeditionHeroes}</strong> herois no maximo por expedicao.</span>
-          <span>Herois enviados não entram na torre ate retornarem.</span>
-          <span>Poder abaixo do recomendado reduz a recompensa, sem chance de falha.</span>
-          <span>O tempo continua contando com o jogo fechado.</span>
-        </div>
-      </aside>
-    `;
-  }
-
-  function renderActiveExpedition(definition, activeExpedition, state) {
-    const remainingMs = Echoes.getExpeditionRemainingMs(activeExpedition);
-    const isComplete = Echoes.isExpeditionComplete(activeExpedition);
-    const durationMs = Echoes.getExpeditionDurationMs ? Echoes.getExpeditionDurationMs(state, definition) : definition.durationMs;
-    const progressValue = isComplete ? durationMs : Math.max(0, durationMs - remainingMs);
-    const sentHeroes = activeExpedition.heroIds.map((heroId) => Echoes.findHero(state, heroId)).filter(Boolean);
-    const reward = Echoes.getActiveExpeditionReward(state, activeExpedition);
-
-    return `
-      <div class="expedition-active ${isComplete ? "is-ready" : ""}" data-expedition-active="${definition.id}">
-        <div class="expedition-progress-wrap">
-          <progress
-            class="expedition-progress"
-            data-expedition-progress
-            value="${progressValue}"
-            max="${durationMs}"
-            aria-label="Progresso da expedicao"
-          ></progress>
-        </div>
-        <div class="summary-grid">
-          <div><span>Tempo restante</span><strong data-expedition-remaining>${isComplete ? "Pronta" : Echoes.formatDuration(remainingMs)}</strong></div>
-          <div><span>Poder enviado</span><strong>${reward.power}/${definition.recommendedPower}</strong></div>
-          <div><span>Recompensa</span><strong>${reward.amount} ${Echoes.getExpeditionRewardName(reward.type)}</strong></div>
-        </div>
-        <p class="muted">Herois enviados: ${sentHeroes.map((hero) => hero.name).join(", ")}</p>
-        <button
-          type="button"
-          data-action="collectExpedition"
-          data-expedition-collect
-          data-expedition-id="${definition.id}"
-          ${isComplete ? "" : "disabled"}
-        >
-          Coletar recompensa
-        </button>
-      </div>
-    `;
-  }
-
-  function renderExpeditionPresetActions(state, definition) {
+  function renderExpeditionModalPresetsTab(definition, state) {
     const presets = Echoes.getTeamPresets(state, "expedition");
 
     return `
-      <div class="expedition-preset-panel">
-        <div class="team-preset-head">
-          <div>
-            <p class="eyebrow">Times rapidos</p>
-            <h3>Usar predefinido</h3>
-          </div>
-          <strong>${Echoes.CONFIG.maxExpeditionHeroes} max.</strong>
-        </div>
+      <div class="expedition-modal-panel">
+        <p class="muted">Use um time salvo para preencher a escolha manual ou enviar direto.</p>
         <div class="expedition-preset-grid">
           ${presets
             .map((preset, index) => {
@@ -1373,7 +1339,7 @@
                     : `${heroIds.length} heroi(s) | Poder ${Echoes.getTeamPresetPower(state, "expedition", index)}`;
 
               return `
-                <div class="expedition-preset-card">
+                <article class="expedition-preset-card">
                   <strong>${escapeHtml(preset.name)}</strong>
                   <span>${escapeHtml(helperText)}</span>
                   <div class="team-preset-actions">
@@ -1397,7 +1363,7 @@
                       Enviar
                     </button>
                   </div>
-                </div>
+                </article>
               `;
             })
             .join("")}
@@ -1406,21 +1372,19 @@
     `;
   }
 
-  function renderAvailableExpedition(definition, state) {
+  function renderExpeditionModalManualTab(definition, state) {
     const availableHeroes = state.heroes.slice().sort((a, b) => Echoes.getHeroPower(b, state) - Echoes.getHeroPower(a, state));
     const selectableHeroes = availableHeroes.filter((hero) => !Echoes.getHeroExpedition(state, hero.id));
-    const baseReward = `${definition.reward.amount} ${Echoes.getExpeditionRewardName(definition.reward.type)}`;
-    const durationMs = Echoes.getExpeditionDurationMs ? Echoes.getExpeditionDurationMs(state, definition) : definition.durationMs;
 
     return `
-      <div class="expedition-setup">
-        <div class="summary-grid">
-          <div><span>Duração</span><strong>${Echoes.formatDuration(definition.durationMs)}</strong></div>
-          <div><span>Poder recomendado</span><strong>${definition.recommendedPower}</strong></div>
-          <div><span>Recompensa base</span><strong>${baseReward}</strong></div>
+      <div class="expedition-modal-panel">
+        <div class="expedition-manual-head">
+          <p class="muted">Selecione ate ${Echoes.CONFIG.maxExpeditionHeroes} herois disponiveis.</p>
+          <div class="expedition-manual-power">
+            <span>Poder selecionado</span>
+            <strong data-expedition-manual-power>0</strong>
+          </div>
         </div>
-        ${renderExpeditionPresetActions(state, definition)}
-        <h3 class="subheading">Escolha manual</h3>
         <div class="expedition-hero-list" data-expedition-list="${definition.id}">
           ${
             availableHeroes.length === 0
@@ -1428,10 +1392,180 @@
               : availableHeroes.map((hero) => renderExpeditionHeroOption(hero, definition, state)).join("")
           }
         </div>
-        <button type="button" data-action="startExpedition" data-expedition-id="${definition.id}" ${
-          selectableHeroes.length === 0 ? "disabled" : ""
-        }>Enviar expedicao</button>
+        <button
+          type="button"
+          data-action="startExpedition"
+          data-expedition-id="${definition.id}"
+          ${selectableHeroes.length === 0 ? "disabled" : ""}
+        >
+          Enviar expedicao
+        </button>
       </div>
+    `;
+  }
+
+  function renderExpeditionModalDetailsTab(definition, state) {
+    const baseReward = getExpeditionRewardLabel(definition);
+    const durationLabel = getExpeditionDurationLabel(state, definition);
+
+    return `
+      <div class="expedition-modal-panel">
+        <div class="expedition-details-grid">
+          <div><span>Duracao</span><strong>${durationLabel}</strong></div>
+          <div><span>Poder recomendado</span><strong>${definition.recommendedPower}</strong></div>
+          <div><span>Recompensa base</span><strong>${baseReward}</strong></div>
+          <div><span>Herois max.</span><strong>${Echoes.CONFIG.maxExpeditionHeroes}</strong></div>
+        </div>
+        <p class="muted">${escapeHtml(definition.description)}</p>
+        <ul class="expedition-details-notes">
+          <li>Herois enviados ficam fora da torre ate retornarem.</li>
+          <li>Poder abaixo do recomendado reduz a recompensa, sem chance de falha.</li>
+          <li>O tempo continua contando com o jogo fechado.</li>
+        </ul>
+      </div>
+    `;
+  }
+
+  function renderExpeditionModal(state) {
+    const expeditionId = UI.expeditionModal.expeditionId;
+    if (!expeditionId || UI.currentTab !== "expeditions") return "";
+
+    const definition = Echoes.EXPEDITION_DEFINITIONS.find((entry) => entry.id === expeditionId);
+    if (!definition) return "";
+
+    const activeExpedition = Echoes.getActiveExpedition(state, definition.id);
+    if (activeExpedition) return "";
+
+    const modalTab = UI.expeditionModal.tab || "presets";
+    const tabPanels = {
+      presets: renderExpeditionModalPresetsTab(definition, state),
+      manual: renderExpeditionModalManualTab(definition, state),
+      details: renderExpeditionModalDetailsTab(definition, state),
+    };
+
+    return `
+      <section class="expedition-backdrop" role="dialog" aria-modal="true" aria-labelledby="expeditionModalTitle" data-expedition-modal>
+        <article class="expedition-modal">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Preparacao</p>
+              <h2 id="expeditionModalTitle">${escapeHtml(definition.name)}</h2>
+              <p class="muted">${escapeHtml(definition.description)}</p>
+            </div>
+            <button type="button" class="secondary" data-action="closeExpeditionModal">Fechar</button>
+          </div>
+          <nav class="expedition-modal-tabs" aria-label="Preparacao da expedicao">
+            <button
+              type="button"
+              class="expedition-modal-tab ${modalTab === "presets" ? "active" : ""}"
+              data-action="setExpeditionModalTab"
+              data-modal-tab="presets"
+            >
+              Times rapidos
+            </button>
+            <button
+              type="button"
+              class="expedition-modal-tab ${modalTab === "manual" ? "active" : ""}"
+              data-action="setExpeditionModalTab"
+              data-modal-tab="manual"
+            >
+              Escolha manual
+            </button>
+            <button
+              type="button"
+              class="expedition-modal-tab ${modalTab === "details" ? "active" : ""}"
+              data-action="setExpeditionModalTab"
+              data-modal-tab="details"
+            >
+              Detalhes
+            </button>
+          </nav>
+          ${tabPanels[modalTab] || tabPanels.presets}
+        </article>
+      </section>
+    `;
+  }
+
+  function renderExpeditionSummaryCard(definition, state) {
+    const activeExpedition = Echoes.getActiveExpedition(state, definition.id);
+    const status = getExpeditionCardStatus(definition, state);
+    const durationLabel = getExpeditionDurationLabel(state, definition);
+    let rewardLabel = getExpeditionRewardLabel(definition);
+
+    if (activeExpedition) {
+      const reward = Echoes.getActiveExpeditionReward(state, activeExpedition);
+      rewardLabel = `${reward.amount} ${Echoes.getExpeditionRewardName(reward.type)}`;
+    }
+
+    let activeBlock = "";
+    let actionButton = "";
+
+    if (status.key === "available") {
+      actionButton = `<button type="button" data-action="openExpeditionModal" data-expedition-id="${definition.id}">Preparar equipe</button>`;
+    } else if (activeExpedition) {
+      const remainingMs = Echoes.getExpeditionRemainingMs(activeExpedition);
+      const isComplete = status.key === "ready";
+      const durationMs = Echoes.getExpeditionDurationMs ? Echoes.getExpeditionDurationMs(state, definition) : definition.durationMs;
+      const progressValue = isComplete ? durationMs : Math.max(0, durationMs - remainingMs);
+      const sentHeroes = activeExpedition.heroIds.map((heroId) => Echoes.findHero(state, heroId)).filter(Boolean);
+      const reward = Echoes.getActiveExpeditionReward(state, activeExpedition);
+
+      activeBlock = `
+        <div class="expedition-active-compact ${isComplete ? "is-ready" : ""}" data-expedition-active="${definition.id}">
+          <div class="expedition-progress-wrap">
+            <progress
+              class="expedition-progress"
+              data-expedition-progress
+              value="${progressValue}"
+              max="${durationMs}"
+              aria-label="Progresso da expedicao"
+            ></progress>
+          </div>
+          <div class="expedition-active-meta">
+            <div>
+              <span>${isComplete ? "Status" : "Tempo restante"}</span>
+              <strong data-expedition-remaining>${isComplete ? "Pronta" : Echoes.formatDuration(remainingMs)}</strong>
+            </div>
+            <div>
+              <span>Poder enviado</span>
+              <strong>${reward.power}/${definition.recommendedPower}</strong>
+            </div>
+          </div>
+          <p class="muted expedition-sent-heroes">Equipe: ${sentHeroes.map((hero) => escapeHtml(hero.name)).join(", ") || "Nenhum"}</p>
+        </div>
+      `;
+
+      if (isComplete) {
+        actionButton = `
+          <button
+            type="button"
+            data-action="collectExpedition"
+            data-expedition-collect
+            data-expedition-id="${definition.id}"
+          >
+            Coletar
+          </button>
+        `;
+      }
+    }
+
+    return `
+      <article class="card expedition-summary-card status-${status.key}" data-expedition-card="${definition.id}">
+        <div class="expedition-summary-head">
+          <div>
+            <h3>${escapeHtml(definition.name)}</h3>
+            <p class="muted expedition-summary-desc">${escapeHtml(definition.description)}</p>
+          </div>
+          <span class="expedition-status-badge" data-expedition-status>${status.label}</span>
+        </div>
+        <div class="expedition-summary-stats">
+          <div><span>Duracao</span><strong>${durationLabel}</strong></div>
+          <div><span>Poder recomendado</span><strong>${definition.recommendedPower}</strong></div>
+          <div><span>Recompensa</span><strong>${rewardLabel}</strong></div>
+        </div>
+        ${activeBlock}
+        ${actionButton ? `<div class="button-row expedition-summary-actions">${actionButton}</div>` : ""}
+      </article>
     `;
   }
 
@@ -1440,31 +1574,35 @@
       <section class="panel">
         <div class="section-head">
           <div>
-            <p class="eyebrow">Missões idle</p>
+            <p class="eyebrow">Missoes idle</p>
             <h2>Expedicoes</h2>
+            <p class="muted">Monte equipes rapidas e envie herois em missoes paralelas.</p>
           </div>
           <strong>${state.activeExpeditions.length}/3 em andamento</strong>
         </div>
         <div class="card-grid expedition-grid">
-          ${Echoes.EXPEDITION_DEFINITIONS.map((definition) => {
-            const activeExpedition = Echoes.getActiveExpedition(state, definition.id);
-            return `
-              <article class="card expedition-card">
-                <div class="hero-topline">
-                  <div>
-                    <h3>${definition.name}</h3>
-                    <p class="muted">${definition.description}</p>
-                  </div>
-                  <span class="class-badge">${definition.reward.type === "xp" ? "XP" : Echoes.getExpeditionRewardName(definition.reward.type)}</span>
-                </div>
-                ${activeExpedition ? renderActiveExpedition(definition, activeExpedition, state) : renderAvailableExpedition(definition, state)}
-              </article>
-            `;
-          }).join("")}
+          ${Echoes.EXPEDITION_DEFINITIONS.map((definition) => renderExpeditionSummaryCard(definition, state)).join("")}
         </div>
-        ${renderExpeditionHelper()}
       </section>
+      ${renderExpeditionModal(state)}
     `;
+  }
+
+  function openExpeditionModal(expeditionId) {
+    UI.expeditionModal.expeditionId = expeditionId;
+    UI.expeditionModal.tab = "presets";
+  }
+
+  function closeExpeditionModal() {
+    UI.expeditionModal.expeditionId = null;
+    UI.expeditionModal.tab = "presets";
+  }
+
+  function setExpeditionModalTab(tab) {
+    const allowed = ["presets", "manual", "details"];
+    if (allowed.includes(tab)) {
+      UI.expeditionModal.tab = tab;
+    }
   }
 
 
@@ -2503,6 +2641,10 @@
     if (tab !== "heroes") {
       UI.activeEquipmentModalHeroId = null;
     }
+    if (tab !== "expeditions") {
+      UI.expeditionModal.expeditionId = null;
+      UI.expeditionModal.tab = "presets";
+    }
   }
 
   Echoes.UI = UI;
@@ -2512,4 +2654,7 @@
   Echoes.updateLiveHud = updateLiveHud;
   Echoes.setTab = setTab;
   Echoes.setHeroListOption = setHeroListOption;
+  Echoes.openExpeditionModal = openExpeditionModal;
+  Echoes.closeExpeditionModal = closeExpeditionModal;
+  Echoes.setExpeditionModalTab = setExpeditionModalTab;
 })(window);
