@@ -42,6 +42,7 @@ export type EquipmentItem = {
   bonusStat: StatKey;
   bonusValue: number;
   floorNumber?: number;
+  obtainedAt?: string;
 };
 
 export type TeamPreset = {

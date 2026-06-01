@@ -5,3 +5,4 @@ export { ensureStateShape } from "./state/normalizeState";
 export { addResource, canSpendResource, getResourceAmount, spendResource } from "./state/resources";
 export { parseImportedSaveText, validateImportedSaveData } from "./save/saveSchema";
 export * from "./heroes";
+export * from "./equipment";

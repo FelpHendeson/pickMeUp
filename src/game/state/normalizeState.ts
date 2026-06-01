@@ -1,5 +1,6 @@
 import { GAME_CONFIG } from "../config";
 import type { GameState, PartialGameState } from "../types";
+import { normalizeInventoryItems, removeMissingEquipmentFromHeroes } from "../equipment";
 import { normalizeHero } from "../heroes";
 import { createInitialState } from "./createInitialState";
 import { normalizeTeamPresets } from "./teamPresets";
@@ -37,7 +38,8 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   merged.resources.energy = Math.min(merged.resources.energy, merged.resources.maxEnergy);
   merged.baseRooms = { ...fresh.baseRooms, ...Object.fromEntries(Object.entries(baseRooms).map(([key, value]) => [key, nonNegativeInteger(value)])) };
   merged.heroes = arrayOrEmpty(source.heroes).map(normalizeHero);
-  merged.inventory = arrayOrEmpty(source.inventory);
+  merged.inventory = normalizeInventoryItems(source.inventory);
+  removeMissingEquipmentFromHeroes(merged.heroes, merged.inventory);
   merged.activeExpeditions = arrayOrEmpty(source.activeExpeditions);
   merged.formation = arrayOrEmpty<string | null>(source.formation).slice(0, GAME_CONFIG.maxFormationSize);
 
