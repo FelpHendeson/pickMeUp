@@ -20,6 +20,7 @@
   --glow-gold: rgba(232, 188, 88, 0.14);
   --glow-violet: rgba(155, 127, 232, 0.12);
   --glow-cyan: rgba(86, 199, 189, 0.1);
+  --modal-z: 1000;
   /* Art slots — defina URLs futuras sem alterar HTML */
   --card-art: none;
   --screen-art: none;
@@ -537,13 +538,14 @@ h3 {
   align-items: center;
   background:
     radial-gradient(circle at 50% 30%, rgba(214, 168, 78, 0.14), transparent 24rem),
-    rgba(8, 8, 7, 0.78);
+    rgba(8, 8, 7, 0.92);
+  backdrop-filter: blur(8px);
   display: flex;
   inset: 0;
   justify-content: center;
   padding: 1rem;
   position: fixed;
-  z-index: 30;
+  z-index: var(--modal-z);
 }
 
 .narrative-card {
@@ -556,7 +558,9 @@ h3 {
   box-shadow: 0 28px 80px var(--shadow-strong);
   max-width: 560px;
   padding: 1.1rem;
+  position: relative;
   width: min(100%, 560px);
+  z-index: calc(var(--modal-z) + 1);
 }
 
 .narrative-card h2 {
@@ -1306,7 +1310,7 @@ body.pref-compact .modifier {
 
 .recruitment-backdrop {
   align-items: center;
-  background: rgba(8, 7, 7, 0.84);
+  background: rgba(8, 7, 7, 0.92);
   backdrop-filter: blur(10px);
   bottom: 0;
   display: flex;
@@ -1316,7 +1320,7 @@ body.pref-compact .modifier {
   position: fixed;
   right: 0;
   top: 0;
-  z-index: 30;
+  z-index: var(--modal-z);
 }
 
 .recruitment-modal {
@@ -1330,7 +1334,9 @@ body.pref-compact .modifier {
   max-width: 1120px;
   overflow: auto;
   padding: 1rem;
+  position: relative;
   width: min(100%, 1120px);
+  z-index: calc(var(--modal-z) + 1);
 }
 
 .recruitment-grid {
@@ -2044,7 +2050,7 @@ body.pref-compact .modifier {
 
 .equipment-backdrop {
   align-items: center;
-  background: rgba(8, 7, 7, 0.84);
+  background: rgba(8, 7, 7, 0.92);
   backdrop-filter: blur(10px);
   bottom: 0;
   display: flex;
@@ -2054,7 +2060,7 @@ body.pref-compact .modifier {
   position: fixed;
   right: 0;
   top: 0;
-  z-index: 30;
+  z-index: var(--modal-z);
 }
 
 .equipment-backdrop[hidden] {
@@ -2072,7 +2078,9 @@ body.pref-compact .modifier {
   max-width: 960px;
   overflow: auto;
   padding: 1rem;
+  position: relative;
   width: min(100%, 960px);
+  z-index: calc(var(--modal-z) + 1);
 }
 
 .equipment-modal-grid {
@@ -2336,7 +2344,7 @@ body.pref-compact .modifier {
 
 .expedition-backdrop {
   align-items: center;
-  background: rgba(8, 7, 12, 0.84);
+  background: rgba(8, 7, 12, 0.92);
   backdrop-filter: blur(10px);
   bottom: 0;
   display: flex;
@@ -2346,7 +2354,7 @@ body.pref-compact .modifier {
   position: fixed;
   right: 0;
   top: 0;
-  z-index: 30;
+  z-index: var(--modal-z);
 }
 
 .expedition-modal {
@@ -2360,7 +2368,9 @@ body.pref-compact .modifier {
   max-width: 720px;
   overflow: auto;
   padding: 1rem;
+  position: relative;
   width: min(100%, 720px);
+  z-index: calc(var(--modal-z) + 1);
 }
 
 .expedition-modal-tabs {
