@@ -203,3 +203,34 @@ export function shouldDuelistEvade(unit: { side?: string; specializationKey?: st
 export function shouldResistNegativeStatus(unit: { side?: string; specializationKey?: string | null } | null | undefined, random: () => number = Math.random): boolean {
   return hasUnitSpecialization(unit, "colossus") && random() < 0.45;
 }
+
+type ProtectionBattleUnit = {
+  side?: string;
+  position?: string;
+  hp: number;
+  specializationKey?: string | null;
+};
+
+export function getSpecializationProtectionTarget<T extends ProtectionBattleUnit>(
+  target: T | null | undefined,
+  candidates: T[],
+  random: () => number = Math.random,
+): T | null | undefined {
+  if (!target || target.side !== "player" || target.position !== "back") return target;
+
+  const protectors = candidates.filter(
+    (unit) =>
+      unit.hp > 0 &&
+      unit.side === "player" &&
+      unit.position === "front" &&
+      (hasUnitSpecialization(unit, "knight") || hasUnitSpecialization(unit, "sentinel")),
+  );
+
+  if (protectors.length === 0) return target;
+
+  const sentinel = protectors.find((unit) => hasUnitSpecialization(unit, "sentinel"));
+  const chance = sentinel ? 0.38 : 0.26;
+  if (random() >= chance) return target;
+
+  return sentinel || protectors[0];
+}

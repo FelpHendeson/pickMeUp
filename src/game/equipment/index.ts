@@ -11,4 +11,5 @@ export {
   addEquipmentToInventory,
   removeMissingEquipmentFromHeroes,
 } from "./equipmentFactory";
+export { findEquipment, getEquippedItems, getHeroEffectiveStats, getHeroPowerWithEquipment } from "./heroEffectiveStats";
 export type { GenerateEquipmentOptions } from "./equipmentFactory";
