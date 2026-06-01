@@ -10,9 +10,12 @@ import {
   RELIC_DEFINITIONS,
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
+import { useState } from "react";
 
 export function RelicsPanel() {
   const state = useGameStore((store) => store.state);
+  const upgradeRelicAction = useGameStore((store) => store.upgradeRelic);
+  const [feedback, setFeedback] = useState<string | null>(null);
   const unlockedCount = RELIC_DEFINITIONS.filter((relic) => isRelicUnlocked(state, relic)).length;
   const totalLevels = RELIC_DEFINITIONS.reduce((total, relic) => total + getRelicState(state, relic.id).level, 0);
 
@@ -21,7 +24,7 @@ export function RelicsPanel() {
       <div className="section-heading">
         <span>Reliquias React</span>
         <h2>Progressao permanente</h2>
-        <p>Bonus globais de conta lidos pelo core TypeScript e preservados no save.</p>
+        <p>Aprimore reliquias pelo core TypeScript com persistencia no save legado.</p>
       </div>
 
       <div className="tower-summary roster-summary">
@@ -48,6 +51,7 @@ export function RelicsPanel() {
           const maxed = relicState.level >= relic.maxLevel;
           const cost = getRelicUpgradeCost(relic, relicState.level);
           const affordable = state.echoFragments >= cost;
+          const canUpgrade = unlocked && !maxed && affordable;
 
           return (
             <article className={`relic-card${unlocked ? " unlocked" : " locked"}${maxed ? " maxed" : ""}`} key={relic.id}>
@@ -72,10 +76,24 @@ export function RelicsPanel() {
               </div>
               <small>{getRelicUnlockText(state, relic)}</small>
               <em>{maxed ? "Nivel maximo" : unlocked ? `${cost} Fragmentos de Eco${affordable ? "" : " necessarios"}` : "Aguardando requisito"}</em>
+              {canUpgrade ? (
+                <button
+                  className="hero-inline-action primary"
+                  onClick={() => {
+                    const result = upgradeRelicAction(relic.id);
+                    setFeedback(result.message);
+                  }}
+                  type="button"
+                >
+                  Aprimorar ({cost} fragmentos)
+                </button>
+              ) : null}
             </article>
           );
         })}
       </div>
+
+      {feedback ? <p className="hero-action-feedback">{feedback}</p> : null}
     </section>
   );
 }

@@ -2,6 +2,7 @@
 
 import { getAdjustedSummonRarityTable, getSummonCost } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
+import { useState } from "react";
 
 function Rates({ type }: { type: "common" | "superior" }) {
   return (
@@ -17,6 +18,8 @@ function Rates({ type }: { type: "common" | "superior" }) {
 
 export function SummonPanel() {
   const state = useGameStore((store) => store.state);
+  const summonHeroAction = useGameStore((store) => store.summonHero);
+  const [feedback, setFeedback] = useState<string | null>(null);
   const commonCost = getSummonCost(state, "common");
   const superiorCost = getSummonCost(state, "superior");
   const lastSummons = state.summonHistory.slice(0, 6);
@@ -26,7 +29,7 @@ export function SummonPanel() {
       <div className="section-heading">
         <span>Portal Migrado</span>
         <h2>Invocacao</h2>
-        <p>Custos e chances calculados pelo core TypeScript, incluindo reliquias e evento semanal ativo.</p>
+        <p>Invoque herois pelo core TypeScript com persistencia no save legado.</p>
       </div>
 
       <div className="summon-grid-react">
@@ -37,6 +40,16 @@ export function SummonPanel() {
             Custo: {commonCost.amount} {commonCost.resource === "gold" ? "ouro" : "cristais"}.
           </p>
           <Rates type="common" />
+          <button
+            className="hero-inline-action primary"
+            onClick={() => {
+              const result = summonHeroAction("common");
+              setFeedback(result.message);
+            }}
+            type="button"
+          >
+            Invocar comum
+          </button>
         </article>
 
         <article className="summon-card-react superior">
@@ -46,6 +59,16 @@ export function SummonPanel() {
             Custo: {superiorCost.amount} {superiorCost.resource === "gold" ? "ouro" : "cristais"}.
           </p>
           <Rates type="superior" />
+          <button
+            className="hero-inline-action primary"
+            onClick={() => {
+              const result = summonHeroAction("superior");
+              setFeedback(result.message);
+            }}
+            type="button"
+          >
+            Invocar superior
+          </button>
         </article>
       </div>
 
@@ -64,6 +87,8 @@ export function SummonPanel() {
           <p>Nenhuma invocacao registrada neste save.</p>
         )}
       </article>
+
+      {feedback ? <p className="hero-action-feedback">{feedback}</p> : null}
     </section>
   );
 }

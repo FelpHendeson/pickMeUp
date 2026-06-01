@@ -2,6 +2,7 @@
 
 import {
   EQUIPMENT_SLOTS,
+  getClassSpecializations,
   getEquipmentBonusLabel,
   getEquipmentTypeName,
   getHeroActiveInjuries,
@@ -12,6 +13,7 @@ import {
   getHeroPower,
   getHeroXpForNextLevel,
   getUnequippedInventory,
+  SPECIALIZATION_LEVEL,
   type EquipmentItem,
   type EquipmentSlot,
   type Hero,
@@ -49,6 +51,7 @@ function HeroCard({
   const removeHeroFromFormation = useGameStore((store) => store.removeHeroFromFormation);
   const equipItemOnHero = useGameStore((store) => store.equipItem);
   const unequipItemFromHero = useGameStore((store) => store.unequipItem);
+  const chooseHeroSpecializationAction = useGameStore((store) => store.chooseHeroSpecialization);
   const [selectedBySlot, setSelectedBySlot] = useState<Partial<Record<EquipmentSlot, string>>>({});
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -61,6 +64,8 @@ function HeroCard({
   const moraleState = getHeroMoraleState(hero);
   const injurySummary = getHeroInjurySummary(hero);
   const specialization = getHeroSpecialization(hero);
+  const specializationOptions = getClassSpecializations(hero.classKey);
+  const canChooseSpecialization = hero.level >= SPECIALIZATION_LEVEL && !hero.specializationKey;
   const affinities = getHeroAffinitySummaries(state, hero.id).slice(0, 2);
 
   return (
@@ -167,6 +172,25 @@ function HeroCard({
           );
         })}
       </div>
+
+      {canChooseSpecialization ? (
+        <div className="hero-specialization-picker">
+          <strong>Escolher especializacao (nivel {SPECIALIZATION_LEVEL}+)</strong>
+          {specializationOptions.map((option) => (
+            <button
+              className="hero-inline-action"
+              key={option.key}
+              onClick={() => {
+                const result = chooseHeroSpecializationAction(hero.id, option.key);
+                setFeedback(result.message);
+              }}
+              type="button"
+            >
+              {option.name}: {option.description}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       <div className="hero-action-row">
         {inFormation ? (

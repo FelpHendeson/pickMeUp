@@ -11,9 +11,13 @@ import {
   isDailyMissionComplete,
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
+import { useState } from "react";
 
 export function MissionsPanel() {
   const state = useGameStore((store) => store.state);
+  const claimDailyMission = useGameStore((store) => store.claimDailyMission);
+  const claimAchievement = useGameStore((store) => store.claimAchievement);
+  const [feedback, setFeedback] = useState<string | null>(null);
   const claimableCount = getClaimableMissionCount(state);
 
   return (
@@ -21,7 +25,7 @@ export function MissionsPanel() {
       <div className="section-heading">
         <span>Missoes React</span>
         <h2>Objetivos e conquistas</h2>
-        <p>Leitura inicial das missoes diarias e conquistas permanentes pelo core TypeScript.</p>
+        <p>Colete recompensas de missoes diarias e conquistas pelo core TypeScript.</p>
       </div>
 
       <div className="tower-summary roster-summary">
@@ -48,6 +52,7 @@ export function MissionsPanel() {
               const progress = getDailyMissionProgress(state, mission);
               const complete = isDailyMissionComplete(state, mission);
               const claimed = Boolean(state.dailyMissions.claimed[mission.id]);
+              const canClaim = complete && !claimed;
 
               return (
                 <div className={`mission-row${complete ? " complete" : ""}${claimed ? " claimed" : ""}`} key={mission.id}>
@@ -57,6 +62,18 @@ export function MissionsPanel() {
                     {progress}/{mission.target} | {claimed ? "Coletada" : complete ? "Pronta" : "Em progresso"}
                   </small>
                   <em>{formatMissionReward(mission.reward)}</em>
+                  {canClaim ? (
+                    <button
+                      className="hero-inline-action primary"
+                      onClick={() => {
+                        const result = claimDailyMission(mission.id);
+                        setFeedback(result.message);
+                      }}
+                      type="button"
+                    >
+                      Coletar recompensa
+                    </button>
+                  ) : null}
                 </div>
               );
             })}
@@ -71,6 +88,7 @@ export function MissionsPanel() {
               const progress = getAchievementProgress(state, achievement);
               const complete = isAchievementComplete(state, achievement);
               const claimed = Boolean(state.achievements[achievement.id]?.claimed);
+              const canClaim = complete && !claimed;
 
               return (
                 <div className={`mission-row${complete ? " complete" : ""}${claimed ? " claimed" : ""}`} key={achievement.id}>
@@ -80,12 +98,26 @@ export function MissionsPanel() {
                     {progress}/{achievement.target} | {claimed ? "Coletada" : complete ? "Pronta" : "Em progresso"}
                   </small>
                   <em>{formatMissionReward(achievement.reward)}</em>
+                  {canClaim ? (
+                    <button
+                      className="hero-inline-action primary"
+                      onClick={() => {
+                        const result = claimAchievement(achievement.id);
+                        setFeedback(result.message);
+                      }}
+                      type="button"
+                    >
+                      Coletar recompensa
+                    </button>
+                  ) : null}
                 </div>
               );
             })}
           </div>
         </article>
       </div>
+
+      {feedback ? <p className="hero-action-feedback">{feedback}</p> : null}
     </section>
   );
 }
