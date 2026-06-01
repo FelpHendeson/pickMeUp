@@ -1,27 +1,24 @@
 "use client";
 
-import { getEquipmentBonusLabel, getEquipmentTypeName, getHeroPower, getHeroXpForNextLevel, type EquipmentItem, type Hero } from "@/src/game";
+import {
+  getEquipmentBonusLabel,
+  getEquipmentTypeName,
+  getHeroActiveInjuries,
+  getHeroInjurySummary,
+  getHeroMoraleState,
+  getHeroPower,
+  getHeroXpForNextLevel,
+  type EquipmentItem,
+  type Hero,
+} from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
-
-function getMoraleLabel(morale: number): string {
-  if (morale > 80) return "Inspirado";
-  if (morale >= 40) return "Estavel";
-  if (morale >= 20) return "Abalado";
-  return "Em colapso";
-}
 
 function getRarityStars(rarity: number): string {
   return "\u2605".repeat(rarity) + "\u2606".repeat(Math.max(0, 5 - rarity));
 }
 
 function getActiveInjuryCount(hero: Hero): number {
-  return Array.isArray(hero.injuries)
-    ? hero.injuries.filter((injury) => {
-        if (!injury || typeof injury !== "object") return false;
-        const remaining = Number((injury as { remainingBattles?: unknown }).remainingBattles);
-        return remaining > 0;
-      }).length
-    : 0;
+  return getHeroActiveInjuries(hero).length;
 }
 
 function getEquippedItems(hero: Hero, inventory: EquipmentItem[]): EquipmentItem[] {
@@ -44,6 +41,8 @@ function HeroCard({
   const hpPercent = Math.round((Math.max(0, currentHp) / Math.max(1, hero.stats.hp)) * 100);
   const equippedItems = getEquippedItems(hero, inventory);
   const injuryCount = getActiveInjuryCount(hero);
+  const moraleState = getHeroMoraleState(hero);
+  const injurySummary = getHeroInjurySummary(hero);
 
   return (
     <article className={`hero-card rarity-${hero.rarity}${inFormation ? " in-formation" : ""}${injuryCount > 0 ? " injured" : ""}`}>
@@ -58,7 +57,7 @@ function HeroCard({
       <div className="hero-tags">
         {inFormation ? <span>Formacao</span> : null}
         {injuryCount > 0 ? <span>{injuryCount} ferimento(s)</span> : null}
-        <span>{getMoraleLabel(hero.morale)}</span>
+        <span>{moraleState.label}</span>
       </div>
 
       <div className="hero-bars">
@@ -86,7 +85,7 @@ function HeroCard({
       </div>
 
       <div className="hero-equipment">
-        <strong>Equipamentos</strong>
+        <strong>{injurySummary || "Equipamentos"}</strong>
         {equippedItems.length > 0 ? (
           equippedItems.map((item) => (
             <span key={item.id}>

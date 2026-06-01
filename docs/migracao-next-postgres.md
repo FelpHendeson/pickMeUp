@@ -91,6 +91,7 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   e opcoes de heroi quando existirem no save.
 - Dominio inicial de ferimentos e moral migrado para `src/game/hero-status/`, incluindo normalizacao por heroi,
   efeitos de atributos, tratamentos, estados de moral e chance de falha por moral baixa.
+- Painel React de herois passou a usar os helpers do core para estados de moral e resumo de ferimentos.
 
 ## Legado no Next
 
