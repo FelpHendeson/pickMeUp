@@ -6,10 +6,11 @@ import { HeroRosterPanel } from "./HeroRosterPanel";
 import { InventoryPanel } from "./InventoryPanel";
 import { MigrationBridgePanel } from "./MigrationBridgePanel";
 import { MissionsPanel } from "./MissionsPanel";
+import { RecruitmentPanel } from "./RecruitmentPanel";
 import { RelicsPanel } from "./RelicsPanel";
 import { TowerCampaignPanel } from "./TowerCampaignPanel";
 
-type DashboardTab = "base" | "tower" | "heroes" | "inventory" | "expeditions" | "missions" | "relics" | "roadmap";
+type DashboardTab = "base" | "tower" | "heroes" | "inventory" | "expeditions" | "missions" | "relics" | "recruitment" | "roadmap";
 
 const dashboardTabs: Array<{ id: DashboardTab; label: string }> = [
   { id: "base", label: "Base" },
@@ -19,6 +20,7 @@ const dashboardTabs: Array<{ id: DashboardTab; label: string }> = [
   { id: "expeditions", label: "Expedicoes" },
   { id: "missions", label: "Missoes" },
   { id: "relics", label: "Reliquias" },
+  { id: "recruitment", label: "Recrutamento" },
   { id: "roadmap", label: "Roadmap" },
 ];
 
@@ -127,6 +129,7 @@ export function MigrationDashboard() {
         {activeTab === "expeditions" ? <ExpeditionsPanel /> : null}
         {activeTab === "missions" ? <MissionsPanel /> : null}
         {activeTab === "relics" ? <RelicsPanel /> : null}
+        {activeTab === "recruitment" ? <RecruitmentPanel /> : null}
         {activeTab === "roadmap" ? <RoadmapPanel /> : null}
       </div>
     </section>

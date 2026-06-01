@@ -200,7 +200,8 @@ article,
 .inventory-panel,
 .expeditions-panel,
 .missions-panel,
-.relics-panel {
+.relics-panel,
+.recruitment-panel-react {
   border: 1px solid var(--line);
   background: var(--panel);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
@@ -705,6 +706,50 @@ article,
   font-style: normal;
 }
 
+.recruitment-choice-card h3 {
+  margin: 0.25rem 0 0.8rem;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.recruitment-options-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.recruitment-option-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+  padding: 0.8rem;
+}
+
+.recruitment-option-card strong,
+.recruitment-option-card span,
+.recruitment-option-card small,
+.recruitment-option-card em {
+  display: block;
+}
+
+.recruitment-option-card strong {
+  color: var(--gold);
+}
+
+.recruitment-option-card span,
+.recruitment-option-card small,
+.recruitment-option-card em {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  margin-top: 0.25rem;
+}
+
+.recruitment-option-card em {
+  color: var(--teal);
+  font-style: normal;
+}
+
 .columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -726,7 +771,8 @@ code {
   .inventory-columns,
   .expedition-grid,
   .mission-columns,
-  .relic-grid {
+  .relic-grid,
+  .recruitment-options-grid {
     grid-template-columns: 1fr;
   }
 }

@@ -87,6 +87,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   niveis, custos e efeitos atuais/proximos.
 - Dominio inicial de recrutamento migrado para `src/game/recruitment/`, incluindo contratos, escolha entre 3,
   veteranos por capitulo, normalizacao e selecao do heroi recrutado.
+- Aba React de recrutamento criada em `app/components/RecruitmentPanel.tsx`, exibindo contratos, escolha pendente
+  e opcoes de heroi quando existirem no save.
 
 ## Legado no Next
 
