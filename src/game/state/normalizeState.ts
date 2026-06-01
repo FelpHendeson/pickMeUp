@@ -7,6 +7,7 @@ import { normalizeExpeditions } from "../expeditions";
 import { normalizeHero } from "../heroes";
 import { normalizeMissionState } from "../missions";
 import { normalizeRelicState } from "../relics";
+import { normalizeRecruitmentState } from "../recruitment";
 import { getCompletedTowerChapterIds } from "../tower";
 import { createInitialState } from "./createInitialState";
 import { normalizeTeamPresets } from "./teamPresets";
@@ -62,7 +63,9 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   merged.plannedTowerPostEvent =
     source.plannedTowerPostEvent && typeof source.plannedTowerPostEvent === "object" ? source.plannedTowerPostEvent : null;
   merged.pendingRecruitmentChoice =
-    source.pendingRecruitmentChoice && typeof source.pendingRecruitmentChoice === "object" ? source.pendingRecruitmentChoice : null;
+    source.pendingRecruitmentChoice && typeof source.pendingRecruitmentChoice === "object"
+      ? (source.pendingRecruitmentChoice as GameState["pendingRecruitmentChoice"])
+      : null;
   merged.towerBattleEffects = arrayOrEmpty(source.towerBattleEffects);
   merged.towerEventHistory = arrayOrEmpty(source.towerEventHistory).slice(0, 8);
   merged.completedTowerChapters = getCompletedTowerChapterIds({
@@ -90,6 +93,7 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   merged.lastEnergyAt = Number.isFinite(Number(source.lastEnergyAt)) ? Number(source.lastEnergyAt) : now;
   normalizeMissionState(merged);
   normalizeRelicState(merged);
+  normalizeRecruitmentState(merged);
 
   return merged;
 }

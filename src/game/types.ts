@@ -82,6 +82,15 @@ export type RelicState = {
   unlockedAt: string | null;
 };
 
+export type RecruitmentChoice = {
+  id: string;
+  source: string;
+  title: string;
+  description: string;
+  options: Hero[];
+  createdAt: string;
+};
+
 export type ActiveExpedition = {
   id: string;
   expeditionId: string;
@@ -131,7 +140,7 @@ export type GameState = {
   lastBattle: unknown | null;
   pendingTowerEvent: unknown | null;
   plannedTowerPostEvent: unknown | null;
-  pendingRecruitmentChoice: unknown | null;
+  pendingRecruitmentChoice: RecruitmentChoice | null;
   towerBattleEffects: unknown[];
   towerEventHistory: unknown[];
   completedTowerChapters: string[];

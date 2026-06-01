@@ -85,6 +85,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   custos, upgrade, textos de efeito e multiplicadores globais.
 - Aba React de reliquias criada em `app/components/RelicsPanel.tsx`, exibindo fragmentos de eco, bloqueios,
   niveis, custos e efeitos atuais/proximos.
+- Dominio inicial de recrutamento migrado para `src/game/recruitment/`, incluindo contratos, escolha entre 3,
+  veteranos por capitulo, normalizacao e selecao do heroi recrutado.
 
 ## Legado no Next
 
