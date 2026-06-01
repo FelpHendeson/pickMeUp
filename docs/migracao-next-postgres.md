@@ -131,6 +131,11 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   para `src/game/formation/`.
 - Paineis React de herois e inventario passaram a equipar, desequipar, montar formacao e usar consumiveis
   com persistencia no save legado.
+- Paineis React de expedicoes, missoes, reliquias, invocacao e recrutamento passaram a executar acoes
+  reais pelo core TypeScript com persistencia no save legado.
+- Escolha de especializacao disponivel no painel React de herois.
+- API inicial de save em PostgreSQL criada em `app/api/saves/[playerId]/route.ts`, com helpers em
+  `src/lib/playerSave.ts` e sincronizacao na ponte de save da Base.
 
 ## Legado no Next
 
