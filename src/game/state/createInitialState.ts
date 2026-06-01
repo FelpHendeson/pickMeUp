@@ -1,6 +1,7 @@
 import { GAME_CONFIG } from "../config";
 import { createTowerDifficultyStats } from "../difficulty";
 import { createDailyMissionState, normalizeAchievements } from "../missions";
+import { RELIC_DEFINITIONS } from "../relics";
 import type { GameState } from "../types";
 import { createTeamPresets } from "./teamPresets";
 
@@ -20,7 +21,7 @@ export function createInitialState(now = Date.now()): GameState {
       maxEnergy: GAME_CONFIG.maxEnergy,
     },
     echoFragments: 0,
-    relics: {},
+    relics: Object.fromEntries(RELIC_DEFINITIONS.map((relic) => [relic.id, { level: 0, unlockedAt: null }])),
     heroContracts: 0,
     consumables: {},
     affinities: {},

@@ -77,6 +77,11 @@ export type DailyMissionState = {
 
 export type AchievementState = Record<string, { claimed: boolean }>;
 
+export type RelicState = {
+  level: number;
+  unlockedAt: string | null;
+};
+
 export type ActiveExpedition = {
   id: string;
   expeditionId: string;
@@ -108,7 +113,7 @@ export type GameState = {
   towerFloor: number;
   resources: ResourceState;
   echoFragments: number;
-  relics: Record<string, unknown>;
+  relics: Record<string, RelicState>;
   heroContracts: number;
   consumables: Record<string, number>;
   affinities: Record<string, unknown>;

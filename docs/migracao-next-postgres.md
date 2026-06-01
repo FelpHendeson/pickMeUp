@@ -81,6 +81,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   reset diario local, recompensas, normalizacao e contagem de itens coletaveis.
 - Aba React de missoes criada em `app/components/MissionsPanel.tsx`, exibindo diarias e conquistas com progresso,
   estado de coleta e recompensas.
+- Dominio inicial de reliquias migrado para `src/game/relics/`, incluindo definicoes, normalizacao, desbloqueio,
+  custos, upgrade, textos de efeito e multiplicadores globais.
 
 ## Legado no Next
 

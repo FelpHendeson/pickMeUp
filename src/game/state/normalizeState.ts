@@ -6,6 +6,7 @@ import { normalizeInventoryItems, removeMissingEquipmentFromHeroes } from "../eq
 import { normalizeExpeditions } from "../expeditions";
 import { normalizeHero } from "../heroes";
 import { normalizeMissionState } from "../missions";
+import { normalizeRelicState } from "../relics";
 import { getCompletedTowerChapterIds } from "../tower";
 import { createInitialState } from "./createInitialState";
 import { normalizeTeamPresets } from "./teamPresets";
@@ -76,7 +77,7 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   };
   merged.missionStats = asRecord(source.missionStats) as Record<string, number>;
   merged.echoFragments = nonNegativeInteger(source.echoFragments);
-  merged.relics = asRecord(source.relics);
+  merged.relics = asRecord(source.relics) as GameState["relics"];
   merged.heroContracts = nonNegativeInteger(source.heroContracts);
   merged.consumables = normalizeConsumablesState(source.consumables);
   merged.affinities = asRecord(source.affinities);
@@ -88,6 +89,7 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   merged.summonHistory = arrayOrEmpty(source.summonHistory).slice(0, 12);
   merged.lastEnergyAt = Number.isFinite(Number(source.lastEnergyAt)) ? Number(source.lastEnergyAt) : now;
   normalizeMissionState(merged);
+  normalizeRelicState(merged);
 
   return merged;
 }
