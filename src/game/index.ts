@@ -7,3 +7,4 @@ export { parseImportedSaveText, validateImportedSaveData } from "./save/saveSche
 export * from "./heroes";
 export * from "./equipment";
 export * from "./consumables";
+export * from "./difficulty";

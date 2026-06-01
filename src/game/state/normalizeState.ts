@@ -1,6 +1,7 @@
 import { GAME_CONFIG } from "../config";
 import type { GameState, PartialGameState } from "../types";
 import { normalizeConsumablesState } from "../consumables";
+import { normalizeTowerDifficultyMode, normalizeTowerDifficultyStats } from "../difficulty";
 import { normalizeInventoryItems, removeMissingEquipmentFromHeroes } from "../equipment";
 import { normalizeHero } from "../heroes";
 import { createInitialState } from "./createInitialState";
@@ -74,11 +75,9 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   merged.consumables = normalizeConsumablesState(source.consumables);
   merged.affinities = asRecord(source.affinities);
   merged.library = source.library && typeof source.library === "object" ? source.library : null;
-  merged.towerDifficultyStats =
-    source.towerDifficultyStats && typeof source.towerDifficultyStats === "object"
-      ? (source.towerDifficultyStats as GameState["towerDifficultyStats"])
-      : null;
-  merged.pendingTowerDifficultyMode = typeof source.pendingTowerDifficultyMode === "string" ? source.pendingTowerDifficultyMode : null;
+  merged.towerDifficultyStats = normalizeTowerDifficultyStats(source.towerDifficultyStats);
+  merged.pendingTowerDifficultyMode =
+    typeof source.pendingTowerDifficultyMode === "string" ? normalizeTowerDifficultyMode(source.pendingTowerDifficultyMode) : null;
   merged.deadHeroes = arrayOrEmpty(source.deadHeroes);
   merged.summonHistory = arrayOrEmpty(source.summonHistory).slice(0, 12);
   merged.lastEnergyAt = Number.isFinite(Number(source.lastEnergyAt)) ? Number(source.lastEnergyAt) : now;

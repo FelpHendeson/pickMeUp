@@ -1,4 +1,5 @@
 import { GAME_CONFIG } from "../config";
+import { createTowerDifficultyStats } from "../difficulty";
 import type { GameState } from "../types";
 import { createTeamPresets } from "./teamPresets";
 
@@ -23,7 +24,7 @@ export function createInitialState(now = Date.now()): GameState {
     consumables: {},
     affinities: {},
     library: null,
-    towerDifficultyStats: null,
+    towerDifficultyStats: createTowerDifficultyStats(),
     pendingTowerDifficultyMode: null,
     deadHeroes: [],
     heroes: [],
