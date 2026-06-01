@@ -1,4 +1,5 @@
 import type { EquipmentSlots, Hero, HeroClassKey, StatKey, Stats } from "../types";
+import { normalizeHeroInjuries, normalizeHeroMorale } from "../hero-status";
 import { EPITHETS, GIVEN_NAMES, HERO_CLASSES, STAT_KEYS, TRAITS } from "./definitions";
 
 export type RandomSource = () => number;
@@ -167,6 +168,8 @@ export function normalizeHero(input: unknown): Hero {
   };
 
   recalculateHeroStats(hero);
+  normalizeHeroInjuries(hero);
+  normalizeHeroMorale(hero);
   hero.currentHp = Number.isFinite(hero.currentHp)
     ? Math.max(0, Math.min(hero.stats.hp, Math.round(Number(hero.currentHp))))
     : hero.stats.hp;

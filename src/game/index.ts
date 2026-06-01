@@ -13,3 +13,4 @@ export * from "./expeditions";
 export * from "./missions";
 export * from "./relics";
 export * from "./recruitment";
+export * from "./hero-status";

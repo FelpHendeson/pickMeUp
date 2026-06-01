@@ -10,6 +10,13 @@ export type HeroClassKey = "warrior" | "archer" | "mage" | "priest" | "rogue" | 
 export type Stats = Record<StatKey, number>;
 export type EquipmentSlots = Record<EquipmentSlot, string | null>;
 
+export type HeroInjury = {
+  id: string;
+  typeKey: string;
+  remainingBattles: number;
+  createdAt: string;
+};
+
 export type Hero = {
   id: string;
   name: string;
@@ -24,7 +31,7 @@ export type Hero = {
   traitKey: string;
   traitName: string;
   traitDescription: string;
-  injuries: unknown[];
+  injuries: HeroInjury[];
   currentHp: number | null;
   morale: number;
   battlesSinceLastUsed: number;

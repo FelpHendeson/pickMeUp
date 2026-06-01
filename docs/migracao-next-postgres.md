@@ -89,6 +89,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   veteranos por capitulo, normalizacao e selecao do heroi recrutado.
 - Aba React de recrutamento criada em `app/components/RecruitmentPanel.tsx`, exibindo contratos, escolha pendente
   e opcoes de heroi quando existirem no save.
+- Dominio inicial de ferimentos e moral migrado para `src/game/hero-status/`, incluindo normalizacao por heroi,
+  efeitos de atributos, tratamentos, estados de moral e chance de falha por moral baixa.
 
 ## Legado no Next
 

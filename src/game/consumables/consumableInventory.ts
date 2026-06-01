@@ -1,4 +1,4 @@
-import type { GameState, Hero } from "../types";
+import type { GameState, Hero, HeroInjury } from "../types";
 import { CONSUMABLE_DEFINITIONS, RANDOM_CONSUMABLE_POOL, type ConsumableDefinition } from "./definitions";
 
 export type ConsumableUseResult = {
@@ -15,10 +15,6 @@ type BattleEffect = {
   description: string;
   modifiers: Record<string, number>;
   createdAt: string;
-};
-
-type InjuryLike = {
-  remainingBattles?: number;
 };
 
 function nonNegativeInteger(value: unknown): number {
@@ -44,8 +40,8 @@ function normalizeHeroCurrentHp(hero: Hero): number {
   return hero.currentHp;
 }
 
-function getActiveInjuries(hero: Hero): InjuryLike[] {
-  return Array.isArray(hero.injuries) ? (hero.injuries as InjuryLike[]).filter((injury) => nonNegativeInteger(injury.remainingBattles) > 0) : [];
+function getActiveInjuries(hero: Hero): HeroInjury[] {
+  return Array.isArray(hero.injuries) ? hero.injuries.filter((injury) => nonNegativeInteger(injury.remainingBattles) > 0) : [];
 }
 
 function queueConsumableBattleEffect(state: GameState, effect: Omit<BattleEffect, "id" | "scope" | "createdAt">): void {
