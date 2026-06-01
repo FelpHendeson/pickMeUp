@@ -75,6 +75,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   Inventario e Roadmap.
 - Dominio inicial de expedicoes migrado para `src/game/expeditions/`, incluindo definicoes, normalizacao,
   duracao, poder, recompensa, inicio e coleta.
+- Aba React de expedicoes criada em `app/components/ExpeditionsPanel.tsx`, exibindo rotas, status, equipe,
+  tempo restante e recompensa prevista a partir do core.
 
 ## Legado no Next
 

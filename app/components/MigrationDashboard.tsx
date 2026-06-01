@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { ExpeditionsPanel } from "./ExpeditionsPanel";
 import { HeroRosterPanel } from "./HeroRosterPanel";
 import { InventoryPanel } from "./InventoryPanel";
 import { MigrationBridgePanel } from "./MigrationBridgePanel";
 import { TowerCampaignPanel } from "./TowerCampaignPanel";
 
-type DashboardTab = "base" | "tower" | "heroes" | "inventory" | "roadmap";
+type DashboardTab = "base" | "tower" | "heroes" | "inventory" | "expeditions" | "roadmap";
 
 const dashboardTabs: Array<{ id: DashboardTab; label: string }> = [
   { id: "base", label: "Base" },
   { id: "tower", label: "Torre" },
   { id: "heroes", label: "Herois" },
   { id: "inventory", label: "Inventario" },
+  { id: "expeditions", label: "Expedicoes" },
   { id: "roadmap", label: "Roadmap" },
 ];
 
@@ -118,6 +120,7 @@ export function MigrationDashboard() {
         {activeTab === "tower" ? <TowerCampaignPanel /> : null}
         {activeTab === "heroes" ? <HeroRosterPanel /> : null}
         {activeTab === "inventory" ? <InventoryPanel /> : null}
+        {activeTab === "expeditions" ? <ExpeditionsPanel /> : null}
         {activeTab === "roadmap" ? <RoadmapPanel /> : null}
       </div>
     </section>

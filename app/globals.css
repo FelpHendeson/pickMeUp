@@ -197,7 +197,8 @@ article,
 }
 
 .roster-panel,
-.inventory-panel {
+.inventory-panel,
+.expeditions-panel {
   border: 1px solid var(--line);
   background: var(--panel);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
@@ -489,6 +490,87 @@ article,
   margin-top: 0.3rem;
 }
 
+.expedition-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.expedition-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.expedition-card.active {
+  border-color: rgba(86, 199, 189, 0.35);
+}
+
+.expedition-card.ready {
+  border-color: rgba(232, 188, 88, 0.55);
+  background: rgba(232, 188, 88, 0.08);
+}
+
+.expedition-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.expedition-card-head span {
+  color: var(--teal);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.expedition-card-head h3 {
+  margin: 0.25rem 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.expedition-card-head strong {
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.expedition-progress i {
+  display: block;
+  height: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.24);
+  border-radius: 999px;
+  margin: 0.8rem 0;
+}
+
+.expedition-progress b {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+}
+
+.expedition-stats {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.expedition-stats span,
+.expedition-card small {
+  color: var(--muted);
+  display: block;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.expedition-card small {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+}
+
 .columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -507,7 +589,8 @@ code {
   .tower-summary,
   .floor-strip,
   .hero-roster-grid,
-  .inventory-columns {
+  .inventory-columns,
+  .expedition-grid {
     grid-template-columns: 1fr;
   }
 }
