@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  EQUIPMENT_SLOTS,
   getEquipmentBonusLabel,
   getEquipmentTypeName,
   getHeroActiveInjuries,
@@ -10,10 +11,13 @@ import {
   getHeroSpecialization,
   getHeroPower,
   getHeroXpForNextLevel,
+  getUnequippedInventory,
   type EquipmentItem,
+  type EquipmentSlot,
   type Hero,
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
+import { useState } from "react";
 
 function getRarityStars(rarity: number): string {
   return "\u2605".repeat(rarity) + "\u2606".repeat(Math.max(0, 5 - rarity));
@@ -33,12 +37,21 @@ function HeroCard({
   inventory,
   inFormation,
   state,
+  unequippedItems,
 }: {
   hero: Hero;
   inventory: EquipmentItem[];
   inFormation: boolean;
   state: Parameters<typeof getHeroAffinitySummaries>[0];
+  unequippedItems: EquipmentItem[];
 }) {
+  const addHeroToFormation = useGameStore((store) => store.addHeroToFormation);
+  const removeHeroFromFormation = useGameStore((store) => store.removeHeroFromFormation);
+  const equipItemOnHero = useGameStore((store) => store.equipItem);
+  const unequipItemFromHero = useGameStore((store) => store.unequipItem);
+  const [selectedBySlot, setSelectedBySlot] = useState<Partial<Record<EquipmentSlot, string>>>({});
+  const [feedback, setFeedback] = useState<string | null>(null);
+
   const xpNeeded = getHeroXpForNextLevel(hero.level);
   const xpPercent = Math.round((Math.min(hero.xp, xpNeeded) / xpNeeded) * 100);
   const currentHp = hero.currentHp ?? hero.stats.hp;
@@ -98,16 +111,90 @@ function HeroCard({
             Afinidade: {affinity.ally.name} ({affinity.label}, {affinity.nextXp ? `${affinity.xp}/${affinity.nextXp}` : "Max"})
           </span>
         ))}
-        {equippedItems.length > 0 ? (
-          equippedItems.map((item) => (
-            <span key={item.id}>
-              {getEquipmentTypeName(item.type)}: {item.name} ({getEquipmentBonusLabel(item)})
-            </span>
-          ))
+        {EQUIPMENT_SLOTS.map((slot) => {
+          const equipped = equippedItems.find((item) => item.type === slot);
+          const options = unequippedItems.filter((item) => item.type === slot);
+
+          return (
+            <div className="hero-equipment-row" key={slot}>
+              <span>
+                {getEquipmentTypeName(slot)}: {equipped ? `${equipped.name} (${getEquipmentBonusLabel(equipped)})` : "vazio"}
+              </span>
+              <div className="hero-equipment-actions">
+                {equipped ? (
+                  <button
+                    className="hero-inline-action"
+                    onClick={() => {
+                      const result = unequipItemFromHero(hero.id, slot);
+                      setFeedback(result.message);
+                    }}
+                    type="button"
+                  >
+                    Remover
+                  </button>
+                ) : null}
+                {options.length > 0 ? (
+                  <>
+                    <select
+                      className="hero-equipment-select"
+                      onChange={(event) => setSelectedBySlot((current) => ({ ...current, [slot]: event.target.value }))}
+                      value={selectedBySlot[slot] || ""}
+                    >
+                      <option value="">Escolher item</option>
+                      {options.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name} ({getEquipmentBonusLabel(item)})
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      className="hero-inline-action"
+                      disabled={!selectedBySlot[slot]}
+                      onClick={() => {
+                        const equipmentId = selectedBySlot[slot];
+                        if (!equipmentId) return;
+                        const result = equipItemOnHero(hero.id, equipmentId);
+                        setFeedback(result.message);
+                      }}
+                      type="button"
+                    >
+                      Equipar
+                    </button>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="hero-action-row">
+        {inFormation ? (
+          <button
+            className="hero-inline-action"
+            onClick={() => {
+              const result = removeHeroFromFormation(hero.id);
+              setFeedback(result.message);
+            }}
+            type="button"
+          >
+            Remover da formacao
+          </button>
         ) : (
-          <span>Nenhum item equipado</span>
+          <button
+            className="hero-inline-action primary"
+            onClick={() => {
+              const result = addHeroToFormation(hero.id);
+              setFeedback(result.message);
+            }}
+            type="button"
+          >
+            Adicionar a formacao
+          </button>
         )}
       </div>
+
+      {feedback ? <p className="hero-action-feedback">{feedback}</p> : null}
     </article>
   );
 }
@@ -115,6 +202,7 @@ function HeroCard({
 export function HeroRosterPanel() {
   const state = useGameStore((store) => store.state);
   const formationIds = new Set(state.formation.filter(Boolean));
+  const unequippedItems = getUnequippedInventory(state);
   const orderedHeroes = [...state.heroes].sort((a, b) => {
     const formationDelta = Number(formationIds.has(b.id)) - Number(formationIds.has(a.id));
     return formationDelta || getHeroPower(b) - getHeroPower(a);
@@ -126,7 +214,7 @@ export function HeroRosterPanel() {
       <div className="section-heading">
         <span>Elenco React</span>
         <h2>Herois</h2>
-        <p>Primeira leitura React do elenco normalizado pelo core TypeScript.</p>
+        <p>Gerencie formacao e equipamentos pelo core TypeScript com persistencia no save legado.</p>
       </div>
 
       <div className="tower-summary roster-summary">
@@ -147,7 +235,14 @@ export function HeroRosterPanel() {
       {orderedHeroes.length > 0 ? (
         <div className="hero-roster-grid">
           {orderedHeroes.slice(0, 6).map((hero) => (
-            <HeroCard hero={hero} inFormation={formationIds.has(hero.id)} inventory={state.inventory} key={hero.id} state={state} />
+            <HeroCard
+              hero={hero}
+              inFormation={formationIds.has(hero.id)}
+              inventory={state.inventory}
+              key={hero.id}
+              state={state}
+              unequippedItems={unequippedItems}
+            />
           ))}
         </div>
       ) : (

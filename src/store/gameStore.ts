@@ -3,15 +3,23 @@
 import { create } from "zustand";
 import {
   GAME_CONFIG,
+  addHeroToFormation,
   createInitialState,
   ensureStateShape,
+  equipItem,
+  removeHeroFromFormation,
   resolveTowerEventChoice,
   runTowerBattle,
+  unequipItem,
+  useConsumable,
+  type EquipmentSlot,
   type GameState,
   type PartialGameState,
   type RunTowerBattleOptions,
   type RunTowerBattleResult,
 } from "@/src/game";
+
+type ActionResult = { ok: boolean; message: string };
 
 type GameStore = {
   state: GameState;
@@ -20,8 +28,13 @@ type GameStore = {
   replaceState: (state: PartialGameState) => void;
   resetLocalState: () => void;
   persistLegacySave: () => void;
-  resolveTowerEventChoice: (choiceId: string) => { ok: boolean; message: string; startBattle?: boolean; battleStarted?: boolean };
+  resolveTowerEventChoice: (choiceId: string) => ActionResult & { startBattle?: boolean; battleStarted?: boolean };
   startTowerBattle: (options?: RunTowerBattleOptions) => RunTowerBattleResult;
+  addHeroToFormation: (heroId: string) => ActionResult;
+  removeHeroFromFormation: (heroId: string) => ActionResult;
+  equipItem: (heroId: string, equipmentId: string) => ActionResult;
+  unequipItem: (heroId: string, slot: EquipmentSlot) => ActionResult;
+  useConsumable: (consumableId: string, heroId?: string | null) => ActionResult;
 };
 
 function readLegacyLocalSave(): unknown {
@@ -41,10 +54,24 @@ function writeLegacyLocalSave(state: GameState): void {
   );
 }
 
-function commitState(state: GameState, source: GameStore["source"] = "manual"): GameState {
+function commitState(state: GameState): GameState {
   const normalized = ensureStateShape(state);
   writeLegacyLocalSave(normalized);
   return normalized;
+}
+
+function mutateState<T extends ActionResult>(
+  get: () => GameStore,
+  set: (partial: Pick<GameStore, "state" | "source">) => void,
+  action: (state: GameState) => T,
+): T {
+  const current = get().state;
+  const result = action(current);
+  if (result.ok) {
+    const nextState = commitState(current);
+    set({ state: nextState, source: "manual" });
+  }
+  return result;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -104,4 +131,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ state: nextState, source: "manual" });
     return result;
   },
+  addHeroToFormation: (heroId) => mutateState(get, set, (state) => addHeroToFormation(state, heroId)),
+  removeHeroFromFormation: (heroId) => mutateState(get, set, (state) => removeHeroFromFormation(state, heroId)),
+  equipItem: (heroId, equipmentId) => mutateState(get, set, (state) => equipItem(state, heroId, equipmentId)),
+  unequipItem: (heroId, slot) => mutateState(get, set, (state) => unequipItem(state, heroId, slot)),
+  useConsumable: (consumableId, heroId) => mutateState(get, set, (state) => useConsumable(state, consumableId, heroId)),
 }));

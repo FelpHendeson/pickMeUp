@@ -127,6 +127,10 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
 - Helpers de formacao migrados para `src/game/formation/`.
 - Painel React de combate criado em `app/components/TowerBattlePanel.tsx`, iniciando tentativas reais
   via core TypeScript e sincronizando com o save legado do navegador.
+- Acoes de equipamento migradas para `src/game/equipment/equipmentActions.ts` e acoes de formacao
+  para `src/game/formation/`.
+- Paineis React de herois e inventario passaram a equipar, desequipar, montar formacao e usar consumiveis
+  com persistencia no save legado.
 
 ## Legado no Next
 
