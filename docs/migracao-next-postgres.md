@@ -79,6 +79,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   tempo restante e recompensa prevista a partir do core.
 - Dominio inicial de missoes e conquistas migrado para `src/game/missions/`, incluindo definicoes, progresso,
   reset diario local, recompensas, normalizacao e contagem de itens coletaveis.
+- Aba React de missoes criada em `app/components/MissionsPanel.tsx`, exibindo diarias e conquistas com progresso,
+  estado de coleta e recompensas.
 
 ## Legado no Next
 
