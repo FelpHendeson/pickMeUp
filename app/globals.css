@@ -151,6 +151,121 @@ article,
   padding: 1.2rem;
 }
 
+.tower-panel {
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(21, 21, 33, 0.92), rgba(9, 9, 16, 0.88));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+  border-radius: 10px;
+  margin-top: 1rem;
+  padding: 1.2rem;
+}
+
+.section-heading h2,
+.current-floor-card h3 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.section-heading span,
+.current-floor-card span {
+  color: var(--teal);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tower-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.tower-summary div,
+.floor-chip,
+.current-floor-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+  padding: 0.8rem;
+}
+
+.tower-summary strong,
+.tower-summary span,
+.floor-chip strong,
+.floor-chip span,
+.current-floor-card small {
+  display: block;
+}
+
+.tower-summary strong {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.tower-summary span,
+.floor-chip strong {
+  color: var(--gold);
+  font-weight: 900;
+  margin-top: 0.25rem;
+}
+
+.progress-track {
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(232, 188, 88, 0.24);
+  background: rgba(0, 0, 0, 0.26);
+  border-radius: 999px;
+  margin: 1rem 0;
+}
+
+.progress-track div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+}
+
+.current-floor-card {
+  margin-bottom: 1rem;
+}
+
+.current-floor-card p {
+  margin: 0.55rem 0;
+}
+
+.current-floor-card small {
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 0.35rem;
+}
+
+.floor-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.floor-chip {
+  min-height: 78px;
+}
+
+.floor-chip span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  margin-top: 0.35rem;
+}
+
+.floor-chip.current {
+  border-color: rgba(232, 188, 88, 0.55);
+  background: rgba(232, 188, 88, 0.1);
+}
+
+.floor-chip.completed {
+  border-color: rgba(86, 199, 189, 0.35);
+}
+
 .columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -165,7 +280,9 @@ code {
 @media (max-width: 760px) {
   .grid,
   .columns,
-  .mini-grid {
+  .mini-grid,
+  .tower-summary,
+  .floor-strip {
     grid-template-columns: 1fr;
   }
 }

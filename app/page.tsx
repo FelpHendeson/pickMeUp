@@ -1,4 +1,5 @@
 import { MigrationBridgePanel } from "./components/MigrationBridgePanel";
+import { TowerCampaignPanel } from "./components/TowerCampaignPanel";
 
 const migrationMilestones = [
   "Extrair regras puras para game-core em TypeScript",
@@ -66,6 +67,8 @@ export default function HomePage() {
           </p>
         </article>
       </section>
+
+      <TowerCampaignPanel />
 
       <section className="columns">
         <div>

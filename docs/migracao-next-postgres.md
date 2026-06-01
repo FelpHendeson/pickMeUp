@@ -65,6 +65,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   `src/game/tower/floors.ts`.
 - Store Zustand inicial criada em `src/store/gameStore.ts`.
 - A home Next ja tenta ler o save legado do `localStorage` e normaliza pelo core TypeScript.
+- Primeiro painel React real da campanha da torre criado em `app/components/TowerCampaignPanel.tsx`, lendo o estado
+  normalizado e os dados do core.
 
 ## Legado no Next
 
