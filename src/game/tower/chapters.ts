@@ -1,6 +1,4 @@
-import type { GameState } from "../types";
-
-export type TowerEventPhase = "pre" | "post";
+import type { GameState, TowerEventPhase } from "../types";
 
 export type TowerModifierValues = {
   keys: string[];

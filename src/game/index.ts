@@ -19,3 +19,4 @@ export * from "./weekly-events";
 export * from "./affinity";
 export * from "./library";
 export * from "./summon";
+export * from "./tower-events";

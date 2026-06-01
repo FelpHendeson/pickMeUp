@@ -8,6 +8,7 @@ export {
   getEquipmentTypeName,
   normalizeEquipmentItem,
   normalizeInventoryItems,
+  addEquipmentToInventory,
   removeMissingEquipmentFromHeroes,
 } from "./equipmentFactory";
 export type { GenerateEquipmentOptions } from "./equipmentFactory";

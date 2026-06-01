@@ -17,6 +17,7 @@ export {
   MORALE_CONFIG,
   MORALE_STATES,
   adjustHeroMorale,
+  adjustFormationMorale,
   applyHeroMoraleModifiers,
   clampMorale,
   createStartingMorale,

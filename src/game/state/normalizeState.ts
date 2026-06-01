@@ -12,6 +12,7 @@ import { normalizeRelicState } from "../relics";
 import { normalizeRecruitmentState } from "../recruitment";
 import { normalizeSummonHistory } from "../summon";
 import { getCompletedTowerChapterIds } from "../tower";
+import { normalizeTowerEventInstance, normalizeTowerEventState } from "../tower-events";
 import { createInitialState } from "./createInitialState";
 import { normalizeTeamPresets } from "./teamPresets";
 
@@ -62,15 +63,14 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   merged.formation = merged.formation.map((heroId) => (heroId && validHeroIds.has(heroId) ? heroId : null));
   merged.teamPresets = normalizeTeamPresets(source.teamPresets, validHeroIds);
 
-  merged.pendingTowerEvent = source.pendingTowerEvent && typeof source.pendingTowerEvent === "object" ? source.pendingTowerEvent : null;
-  merged.plannedTowerPostEvent =
-    source.plannedTowerPostEvent && typeof source.plannedTowerPostEvent === "object" ? source.plannedTowerPostEvent : null;
+  merged.pendingTowerEvent = normalizeTowerEventInstance(source.pendingTowerEvent);
+  merged.plannedTowerPostEvent = normalizeTowerEventInstance(source.plannedTowerPostEvent);
   merged.pendingRecruitmentChoice =
     source.pendingRecruitmentChoice && typeof source.pendingRecruitmentChoice === "object"
       ? (source.pendingRecruitmentChoice as GameState["pendingRecruitmentChoice"])
       : null;
   merged.towerBattleEffects = arrayOrEmpty(source.towerBattleEffects);
-  merged.towerEventHistory = arrayOrEmpty(source.towerEventHistory).slice(0, 8);
+  merged.towerEventHistory = arrayOrEmpty(source.towerEventHistory);
   merged.completedTowerChapters = getCompletedTowerChapterIds({
     completedTowerChapters: arrayOrEmpty<string>(source.completedTowerChapters),
     towerFloor: merged.towerFloor,
@@ -99,6 +99,7 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   normalizeLibraryState(merged);
   normalizeRelicState(merged);
   normalizeRecruitmentState(merged);
+  normalizeTowerEventState(merged);
 
   return merged;
 }

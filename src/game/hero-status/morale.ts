@@ -108,3 +108,20 @@ export function updateUnusedHeroMorale(hero: Hero, now = Date.now()): number {
   hero.lastUsedAt = hero.lastUsedAt || now;
   return adjustHeroMorale(hero, -MORALE_CONFIG.unusedLoss);
 }
+
+export function adjustFormationMorale(
+  state: Pick<{ heroes: Hero[]; formation: Array<string | null> }, "heroes" | "formation">,
+  amount: number,
+  reason: string,
+): string {
+  const formationIds = new Set(state.formation.filter((heroId): heroId is string => Boolean(heroId)));
+  const heroes = state.heroes.filter((hero) => formationIds.has(hero.id));
+  const changed = heroes
+    .map((hero) => ({ hero, delta: adjustHeroMorale(hero, amount) }))
+    .filter((entry) => entry.delta !== 0);
+
+  if (changed.length === 0) return "";
+
+  const direction = amount > 0 ? "Moral +" : "Moral ";
+  return `${reason} ${direction}${amount} para a equipe ativa.`;
+}

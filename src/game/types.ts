@@ -238,6 +238,78 @@ export type TowerDifficultyStats = {
   hardcoreDeaths: number;
 };
 
+export type TowerEventPhase = "pre" | "post";
+export type TowerEventTone = "support" | "reward" | "merchant" | "danger" | "choice";
+export type TowerEventTypeKey =
+  | "healingFountain"
+  | "mysteryChest"
+  | "lostMerchant"
+  | "darkAltar"
+  | "prisoner"
+  | "trap";
+
+export type TowerEventChoiceCost = {
+  resource: "gold" | "crystals" | "essence" | "fragments" | "echoFragments" | "heroContracts" | "energy";
+  amount: number;
+};
+
+export type TowerEventChoice = {
+  id: string;
+  label: string;
+  description: string;
+  cost?: TowerEventChoiceCost;
+};
+
+export type TowerEventDefinition = {
+  title: string;
+  tone: TowerEventTone;
+  description: string;
+  choices: TowerEventChoice[];
+};
+
+export type TowerEventInstance = {
+  id: string;
+  typeKey: TowerEventTypeKey | string;
+  phase: TowerEventPhase;
+  floor: number;
+  floorTitle: string;
+  createdAt: string;
+};
+
+export type TowerBattleEffectModifiers = {
+  initialEnergyBonus?: number;
+  healingDoneMultiplier?: number;
+  atkMultiplier?: number;
+  defMultiplier?: number;
+  spdMultiplier?: number;
+  focusMultiplier?: number;
+  luckMultiplier?: number;
+  maxHpMultiplier?: number;
+  initialDamagePct?: number;
+  playerDamageTakenMultiplier?: number;
+  injuryChanceMultiplier?: number;
+};
+
+export type TowerBattleEffect = {
+  id: string;
+  scope: "nextBattle" | string;
+  label: string;
+  description: string;
+  modifiers: TowerBattleEffectModifiers;
+  createdAt: string;
+};
+
+export type TowerEventHistoryEntry = {
+  id: string;
+  typeKey: string;
+  title: string;
+  phase: TowerEventPhase;
+  floor: number;
+  choice: string;
+  message: string;
+  resolvedAt: string;
+};
+
 export type GameState = {
   schemaVersion: number;
   saveVersion: number;
@@ -262,11 +334,11 @@ export type GameState = {
   baseRooms: Record<string, number>;
   summonHistory: SummonHistoryEntry[];
   lastBattle: unknown | null;
-  pendingTowerEvent: unknown | null;
-  plannedTowerPostEvent: unknown | null;
+  pendingTowerEvent: TowerEventInstance | null;
+  plannedTowerPostEvent: TowerEventInstance | null;
   pendingRecruitmentChoice: RecruitmentChoice | null;
-  towerBattleEffects: unknown[];
-  towerEventHistory: unknown[];
+  towerBattleEffects: TowerBattleEffect[];
+  towerEventHistory: TowerEventHistoryEntry[];
   completedTowerChapters: string[];
   lastChapterCompletion: unknown | null;
   narrative: NarrativeState;

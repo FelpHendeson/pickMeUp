@@ -15,7 +15,6 @@ export { createEnemiesForFloor, describeReward, getFloorData, getFloorReward, is
 export type {
   TowerChapter,
   TowerChapterReward,
-  TowerEventPhase,
   TowerFloorLike,
   TowerModifierValues,
   TowerRegionalModifier,

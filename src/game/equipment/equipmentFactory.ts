@@ -117,6 +117,12 @@ export function normalizeInventoryItems(items: unknown): EquipmentItem[] {
   return Array.isArray(items) ? items.map(normalizeEquipmentItem) : [];
 }
 
+export function addEquipmentToInventory(state: Pick<{ inventory: EquipmentItem[] }, "inventory">, item: unknown): EquipmentItem {
+  const normalizedItem = normalizeEquipmentItem(item);
+  state.inventory.push(normalizedItem);
+  return normalizedItem;
+}
+
 export function removeMissingEquipmentFromHeroes(heroes: Hero[], inventory: EquipmentItem[]): Hero[] {
   const ownedItemIds = new Set(inventory.map((item) => item.id));
 
