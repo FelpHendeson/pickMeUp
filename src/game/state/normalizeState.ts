@@ -1,5 +1,6 @@
 import { GAME_CONFIG } from "../config";
 import type { GameState, PartialGameState } from "../types";
+import { normalizeConsumablesState } from "../consumables";
 import { normalizeInventoryItems, removeMissingEquipmentFromHeroes } from "../equipment";
 import { normalizeHero } from "../heroes";
 import { createInitialState } from "./createInitialState";
@@ -70,7 +71,7 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   merged.echoFragments = nonNegativeInteger(source.echoFragments);
   merged.relics = asRecord(source.relics);
   merged.heroContracts = nonNegativeInteger(source.heroContracts);
-  merged.consumables = asRecord(source.consumables) as Record<string, number>;
+  merged.consumables = normalizeConsumablesState(source.consumables);
   merged.affinities = asRecord(source.affinities);
   merged.library = source.library && typeof source.library === "object" ? source.library : null;
   merged.towerDifficultyStats =

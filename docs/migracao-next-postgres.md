@@ -53,6 +53,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   normalizacao, XP e calculo de poder.
 - Dominio inicial de equipamentos migrado para `src/game/equipment/`, incluindo definicoes, geracao, normalizacao
   de inventario e limpeza de equipamentos inexistentes nos herois.
+- Dominio inicial de consumiveis migrado para `src/game/consumables/`, incluindo definicoes, inventario normalizado,
+  ganho/gasto e uso fora de combate para preparacao da torre.
 - Store Zustand inicial criada em `src/store/gameStore.ts`.
 - A home Next ja tenta ler o save legado do `localStorage` e normaliza pelo core TypeScript.
 

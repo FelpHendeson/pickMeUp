@@ -6,3 +6,4 @@ export { addResource, canSpendResource, getResourceAmount, spendResource } from 
 export { parseImportedSaveText, validateImportedSaveData } from "./save/saveSchema";
 export * from "./heroes";
 export * from "./equipment";
+export * from "./consumables";
