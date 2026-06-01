@@ -116,6 +116,42 @@ li {
   margin-top: 1rem;
 }
 
+.dashboard-shell {
+  margin-top: 1rem;
+}
+
+.dashboard-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+}
+
+.dashboard-tabs button {
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  padding: 0.55rem 0.8rem;
+}
+
+.dashboard-tabs button[data-active="true"] {
+  border-color: rgba(232, 188, 88, 0.5);
+  background: linear-gradient(180deg, rgba(232, 188, 88, 0.2), rgba(86, 199, 189, 0.1));
+  color: var(--text);
+}
+
+.dashboard-content > .tower-panel,
+.dashboard-content > .roster-panel,
+.dashboard-content > .inventory-panel,
+.dashboard-content > .columns {
+  margin-top: 0;
+}
+
 .mini-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

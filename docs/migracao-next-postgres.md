@@ -71,6 +71,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   equipamentos, HP, XP, moral e poder pelo core TypeScript.
 - Primeiro painel React de inventario criado em `app/components/InventoryPanel.tsx`, lendo equipamentos e
   consumiveis normalizados pelo core.
+- Dashboard React com abas criado em `app/components/MigrationDashboard.tsx`, separando Base, Torre, Herois,
+  Inventario e Roadmap.
 
 ## Legado no Next
 
