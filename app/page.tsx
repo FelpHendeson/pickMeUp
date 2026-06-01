@@ -1,3 +1,4 @@
+import { HeroRosterPanel } from "./components/HeroRosterPanel";
 import { MigrationBridgePanel } from "./components/MigrationBridgePanel";
 import { TowerCampaignPanel } from "./components/TowerCampaignPanel";
 
@@ -69,6 +70,8 @@ export default function HomePage() {
       </section>
 
       <TowerCampaignPanel />
+
+      <HeroRosterPanel />
 
       <section className="columns">
         <div>
