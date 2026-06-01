@@ -49,6 +49,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
 - Snapshot legado publicado em `public/game/`.
 - Core TypeScript inicial criado em `src/game/`.
 - Estado inicial, recursos, presets, normalizacao de shape e validacao de save ja existem fora do legado.
+- Dominio inicial de herois migrado para `src/game/heroes/`, incluindo definicoes de classes, tracos, geracao,
+  normalizacao, XP e calculo de poder.
 - Store Zustand inicial criada em `src/store/gameStore.ts`.
 - A home Next ja tenta ler o save legado do `localStorage` e normaliza pelo core TypeScript.
 
