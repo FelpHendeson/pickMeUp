@@ -12,4 +12,11 @@ export {
   removeMissingEquipmentFromHeroes,
 } from "./equipmentFactory";
 export { findEquipment, getEquippedItems, getHeroEffectiveStats, getHeroPowerWithEquipment } from "./heroEffectiveStats";
+export {
+  equipItem,
+  findEquipmentOwner,
+  getUnequippedInventory,
+  unequipItem,
+  type EquipmentActionResult,
+} from "./equipmentActions";
 export type { GenerateEquipmentOptions } from "./equipmentFactory";
