@@ -4,6 +4,7 @@ import {
   getEquipmentBonusLabel,
   getEquipmentTypeName,
   getHeroActiveInjuries,
+  getHeroAffinitySummaries,
   getHeroInjurySummary,
   getHeroMoraleState,
   getHeroSpecialization,
@@ -31,10 +32,12 @@ function HeroCard({
   hero,
   inventory,
   inFormation,
+  state,
 }: {
   hero: Hero;
   inventory: EquipmentItem[];
   inFormation: boolean;
+  state: Parameters<typeof getHeroAffinitySummaries>[0];
 }) {
   const xpNeeded = getHeroXpForNextLevel(hero.level);
   const xpPercent = Math.round((Math.min(hero.xp, xpNeeded) / xpNeeded) * 100);
@@ -45,6 +48,7 @@ function HeroCard({
   const moraleState = getHeroMoraleState(hero);
   const injurySummary = getHeroInjurySummary(hero);
   const specialization = getHeroSpecialization(hero);
+  const affinities = getHeroAffinitySummaries(state, hero.id).slice(0, 2);
 
   return (
     <article className={`hero-card rarity-${hero.rarity}${inFormation ? " in-formation" : ""}${injuryCount > 0 ? " injured" : ""}`}>
@@ -89,6 +93,11 @@ function HeroCard({
 
       <div className="hero-equipment">
         <strong>{specialization ? `${specialization.passiveName} - ${specialization.description}` : injurySummary || "Equipamentos"}</strong>
+        {affinities.map((affinity) => (
+          <span key={affinity.key}>
+            Afinidade: {affinity.ally.name} ({affinity.label}, {affinity.nextXp ? `${affinity.xp}/${affinity.nextXp}` : "Max"})
+          </span>
+        ))}
         {equippedItems.length > 0 ? (
           equippedItems.map((item) => (
             <span key={item.id}>
@@ -138,7 +147,7 @@ export function HeroRosterPanel() {
       {orderedHeroes.length > 0 ? (
         <div className="hero-roster-grid">
           {orderedHeroes.slice(0, 6).map((hero) => (
-            <HeroCard hero={hero} inFormation={formationIds.has(hero.id)} inventory={state.inventory} key={hero.id} />
+            <HeroCard hero={hero} inFormation={formationIds.has(hero.id)} inventory={state.inventory} key={hero.id} state={state} />
           ))}
         </div>
       ) : (

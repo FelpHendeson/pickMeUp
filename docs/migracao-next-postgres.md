@@ -100,6 +100,9 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   modificadores de torre/invocacao/XP/drop e helpers para recompensa/inimigos.
 - Base React passou a exibir o evento semanal ativo, e a previsao de recompensa da Torre usa os modificadores
   semanais aplicaveis.
+- Dominio inicial de afinidade migrado para `src/game/affinity/`, incluindo normalizacao por par de herois, ganho
+  por grupo, resumos, bonus de inicio de batalha, XP e protecao leve.
+- Painel React de herois passou a listar as principais afinidades de cada heroi a partir do save normalizado.
 
 ## Legado no Next
 

@@ -42,6 +42,26 @@ export type ActiveWeeklyEvent = WeeklyEventDefinition & {
   weekNumber: number;
 };
 
+export type AffinityRecord = {
+  heroAId: string;
+  heroBId: string;
+  xp: number;
+};
+
+export type AffinityLevel = {
+  level: number;
+  label: string;
+  minXp: number;
+};
+
+export type AffinitySummary = AffinityRecord & {
+  key: string;
+  level: number;
+  label: string;
+  nextXp: number | null;
+  bonusText: string;
+};
+
 export type HeroInjury = {
   id: string;
   typeKey: string;
@@ -164,7 +184,7 @@ export type GameState = {
   relics: Record<string, RelicState>;
   heroContracts: number;
   consumables: Record<string, number>;
-  affinities: Record<string, unknown>;
+  affinities: Record<string, AffinityRecord>;
   library: unknown | null;
   towerDifficultyStats: TowerDifficultyStats | null;
   pendingTowerDifficultyMode: string | null;

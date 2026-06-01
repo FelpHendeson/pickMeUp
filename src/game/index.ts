@@ -16,3 +16,4 @@ export * from "./recruitment";
 export * from "./hero-status";
 export * from "./specializations";
 export * from "./weekly-events";
+export * from "./affinity";

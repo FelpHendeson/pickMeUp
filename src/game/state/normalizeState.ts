@@ -5,6 +5,7 @@ import { normalizeTowerDifficultyMode, normalizeTowerDifficultyStats } from "../
 import { normalizeInventoryItems, removeMissingEquipmentFromHeroes } from "../equipment";
 import { normalizeExpeditions } from "../expeditions";
 import { normalizeHero } from "../heroes";
+import { normalizeAffinitiesState } from "../affinity";
 import { normalizeMissionState } from "../missions";
 import { normalizeRelicState } from "../relics";
 import { normalizeRecruitmentState } from "../recruitment";
@@ -83,7 +84,7 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   merged.relics = asRecord(source.relics) as GameState["relics"];
   merged.heroContracts = nonNegativeInteger(source.heroContracts);
   merged.consumables = normalizeConsumablesState(source.consumables);
-  merged.affinities = asRecord(source.affinities);
+  merged.affinities = asRecord(source.affinities) as GameState["affinities"];
   merged.library = source.library && typeof source.library === "object" ? source.library : null;
   merged.towerDifficultyStats = normalizeTowerDifficultyStats(source.towerDifficultyStats);
   merged.pendingTowerDifficultyMode =
@@ -92,6 +93,7 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   merged.summonHistory = arrayOrEmpty(source.summonHistory).slice(0, 12);
   merged.lastEnergyAt = Number.isFinite(Number(source.lastEnergyAt)) ? Number(source.lastEnergyAt) : now;
   normalizeMissionState(merged);
+  normalizeAffinitiesState(merged);
   normalizeRelicState(merged);
   normalizeRecruitmentState(merged);
 
