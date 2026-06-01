@@ -10,22 +10,54 @@ import {
   getHeroInjurySummary,
   getHeroInjuryTreatmentCost,
   getHeroMoraleState,
-  getHeroSpecialization,
   getHeroPower,
+  getHeroSpecialization,
   getHeroXpForNextLevel,
   getInjuryDefinition,
   getUnequippedInventory,
+  hasHeroInjuries,
   INJURY_CONFIG,
+  isHeroInFormation,
+  isHeroOnExpedition,
   SPECIALIZATION_LEVEL,
   type EquipmentItem,
   type EquipmentSlot,
   type Hero,
+  type GameState,
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
 import { useState } from "react";
 
 function getRarityStars(rarity: number): string {
   return "\u2605".repeat(rarity) + "\u2606".repeat(Math.max(0, 5 - rarity));
+}
+
+type HeroSort = "power" | "name" | "class" | "level" | "rarity";
+type HeroStatusFilter = "all" | "available" | "formation" | "expedition" | "injured";
+
+function heroMatchesStatus(hero: Hero, state: GameState, status: HeroStatusFilter): boolean {
+  if (status === "all") return true;
+  if (status === "available") {
+    return !isHeroInFormation(state, hero.id) && !isHeroOnExpedition(state, hero.id) && !hasHeroInjuries(hero);
+  }
+  if (status === "formation") return isHeroInFormation(state, hero.id);
+  if (status === "expedition") return isHeroOnExpedition(state, hero.id);
+  if (status === "injured") return hasHeroInjuries(hero);
+  return true;
+}
+
+function sortHeroesForDisplay(heroes: Hero[], _state: GameState, sortBy: HeroSort): Hero[] {
+  return [...heroes].sort((a, b) => {
+    const powerDifference = getHeroPower(b) - getHeroPower(a);
+    const rarityDifference = b.rarity - a.rarity;
+    const levelDifference = b.level - a.level;
+
+    if (sortBy === "name") return a.name.localeCompare(b.name) || powerDifference;
+    if (sortBy === "class") return a.className.localeCompare(b.className) || powerDifference;
+    if (sortBy === "level") return levelDifference || rarityDifference || powerDifference;
+    if (sortBy === "rarity") return rarityDifference || levelDifference || powerDifference;
+    return powerDifference || rarityDifference || levelDifference;
+  });
 }
 
 function getActiveInjuryCount(hero: Hero): number {
@@ -275,13 +307,18 @@ function HeroCard({
 
 export function HeroRosterPanel() {
   const state = useGameStore((store) => store.state);
+  const [sortBy, setSortBy] = useState<HeroSort>("power");
+  const [classKey, setClassKey] = useState<string>("all");
+  const [status, setStatus] = useState<HeroStatusFilter>("all");
   const formationIds = new Set(state.formation.filter(Boolean));
   const unequippedItems = getUnequippedInventory(state);
-  const orderedHeroes = [...state.heroes].sort((a, b) => {
-    const formationDelta = Number(formationIds.has(b.id)) - Number(formationIds.has(a.id));
-    return formationDelta || getHeroPower(b) - getHeroPower(a);
-  });
-  const totalPower = orderedHeroes.reduce((sum, hero) => sum + getHeroPower(hero), 0);
+  const classOptions = Array.from(new Set(state.heroes.map((hero) => hero.classKey))).sort();
+  const filteredHeroes = sortHeroesForDisplay(
+    state.heroes.filter((hero) => (classKey === "all" || hero.classKey === classKey) && heroMatchesStatus(hero, state, status)),
+    state,
+    sortBy,
+  );
+  const totalPower = filteredHeroes.reduce((sum, hero) => sum + getHeroPower(hero), 0);
 
   return (
     <section className="roster-panel">
@@ -289,6 +326,43 @@ export function HeroRosterPanel() {
         <span>Elenco React</span>
         <h2>Herois</h2>
         <p>Gerencie formacao e equipamentos pelo core TypeScript com persistencia no save legado.</p>
+      </div>
+
+      <div className="hero-list-controls">
+        <label>
+          Ordenar
+          <select onChange={(event) => setSortBy(event.target.value as HeroSort)} value={sortBy}>
+            <option value="power">Poder</option>
+            <option value="name">Nome</option>
+            <option value="class">Classe</option>
+            <option value="level">Nivel</option>
+            <option value="rarity">Raridade</option>
+          </select>
+        </label>
+        <label>
+          Classe
+          <select onChange={(event) => setClassKey(event.target.value)} value={classKey}>
+            <option value="all">Todas</option>
+            {classOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Status
+          <select onChange={(event) => setStatus(event.target.value as HeroStatusFilter)} value={status}>
+            <option value="all">Todos</option>
+            <option value="available">Disponiveis</option>
+            <option value="formation">Na formacao</option>
+            <option value="expedition">Em expedicao</option>
+            <option value="injured">Feridos</option>
+          </select>
+        </label>
+        <strong>
+          {filteredHeroes.length}/{state.heroes.length} exibido(s)
+        </strong>
       </div>
 
       <div className="tower-summary roster-summary">
@@ -301,14 +375,14 @@ export function HeroRosterPanel() {
           <span>{formationIds.size}</span>
         </div>
         <div>
-          <strong>Poder total</strong>
+          <strong>Poder filtrado</strong>
           <span>{totalPower}</span>
         </div>
       </div>
 
-      {orderedHeroes.length > 0 ? (
+      {filteredHeroes.length > 0 ? (
         <div className="hero-roster-grid">
-          {orderedHeroes.slice(0, 6).map((hero) => (
+          {filteredHeroes.slice(0, 12).map((hero) => (
             <HeroCard
               hero={hero}
               inFormation={formationIds.has(hero.id)}
@@ -319,6 +393,12 @@ export function HeroRosterPanel() {
             />
           ))}
         </div>
+      ) : state.heroes.length > 0 ? (
+        <article className="empty-panel">
+          <span>Sem resultados</span>
+          <h3>Nenhum heroi corresponde aos filtros</h3>
+          <p>Ajuste ordenacao, classe ou status para ver o elenco.</p>
+        </article>
       ) : (
         <article className="empty-panel">
           <span>Sem herois</span>

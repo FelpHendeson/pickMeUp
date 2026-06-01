@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { EXPORT_FILE_NAME } from "@/src/game";
 import { getOrCreatePlayerId } from "@/src/lib/playerId";
 import { useGameStore } from "@/src/store/gameStore";
+import { useEffect, useRef, useState } from "react";
 
 export function MigrationBridgePanel() {
-  const { state, source, loadLegacyLocalSave, loadCloudSave, saveCloudSave } = useGameStore();
+  const { state, source, loadLegacyLocalSave, loadCloudSave, saveCloudSave, exportSave, importSave, resetLocalState, persistLegacySave } =
+    useGameStore();
   const [message, setMessage] = useState("Verificando save local...");
   const [playerId, setPlayerId] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const result = loadLegacyLocalSave();
@@ -40,13 +43,75 @@ export function MigrationBridgePanel() {
       </div>
 
       <div className="cloud-save-panel">
+        <div className="hero-action-row">
+          <button
+            className="hero-inline-action"
+            onClick={() => {
+              const result = loadLegacyLocalSave();
+              setMessage(result.ok ? "Save legado recarregado." : result.message);
+            }}
+            type="button"
+          >
+            Recarregar local
+          </button>
+          <button
+            className="hero-inline-action"
+            onClick={() => {
+              persistLegacySave();
+              setMessage("Save local persistido.");
+            }}
+            type="button"
+          >
+            Salvar local
+          </button>
+          <button
+            className="hero-inline-action"
+            onClick={() => {
+              const result = exportSave();
+              setMessage(result.message);
+            }}
+            type="button"
+          >
+            Exportar JSON
+          </button>
+          <button
+            className="hero-inline-action"
+            onClick={() => fileInputRef.current?.click()}
+            type="button"
+          >
+            Importar JSON
+          </button>
+          <button
+            className="hero-inline-action"
+            onClick={() => {
+              if (!window.confirm("Resetar o save local deste navegador?")) return;
+              resetLocalState();
+              setMessage("Save local resetado.");
+            }}
+            type="button"
+          >
+            Reset local
+          </button>
+        </div>
+        <input
+          accept="application/json,.json"
+          className="visually-hidden"
+          onChange={async (event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            const text = await file.text();
+            const result = importSave(text);
+            setMessage(result.message);
+            event.target.value = "";
+          }}
+          ref={fileInputRef}
+          type="file"
+        />
+        <small>Arquivo padrao: {EXPORT_FILE_NAME}</small>
+
         <label className="inventory-hero-picker">
           ID do jogador (PostgreSQL)
-          <input
-            className="cloud-save-input"
-            onChange={(event) => setPlayerId(event.target.value)}
-            value={playerId}
-          />
+          <input className="cloud-save-input" onChange={(event) => setPlayerId(event.target.value)} value={playerId} />
         </label>
         <div className="hero-action-row">
           <button

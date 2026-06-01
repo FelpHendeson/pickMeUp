@@ -2,20 +2,26 @@
 
 import { useState } from "react";
 import { getActiveWeeklyEvent } from "@/src/game";
+import { BattleResultPanel } from "./BattleResultPanel";
+import { ChapterCompletionPanel } from "./ChapterCompletionPanel";
 import { ExpeditionsPanel } from "./ExpeditionsPanel";
 import { HeroRosterPanel } from "./HeroRosterPanel";
 import { InventoryPanel } from "./InventoryPanel";
 import { LibraryPanel } from "./LibraryPanel";
+import { MemorialPanel } from "./MemorialPanel";
 import { MigrationBridgePanel } from "./MigrationBridgePanel";
 import { MissionsPanel } from "./MissionsPanel";
+import { NarrativeModal } from "./NarrativeModal";
+import { PreferencesPanel } from "./PreferencesPanel";
 import { RecruitmentPanel } from "./RecruitmentPanel";
 import { RelicsPanel } from "./RelicsPanel";
-import { BattleResultPanel } from "./BattleResultPanel";
+import { RepeatFloorsPanel } from "./RepeatFloorsPanel";
+import { ResourceHudPanel } from "./ResourceHudPanel";
+import { SummonPanel } from "./SummonPanel";
+import { TeamPresetsPanel } from "./TeamPresetsPanel";
 import { TowerBattlePanel } from "./TowerBattlePanel";
 import { TowerCampaignPanel } from "./TowerCampaignPanel";
 import { TowerEventsPanel } from "./TowerEventsPanel";
-import { TeamPresetsPanel } from "./TeamPresetsPanel";
-import { SummonPanel } from "./SummonPanel";
 
 type DashboardTab =
   | "base"
@@ -28,6 +34,7 @@ type DashboardTab =
   | "recruitment"
   | "summon"
   | "library"
+  | "settings"
   | "roadmap";
 
 const dashboardTabs: Array<{ id: DashboardTab; label: string }> = [
@@ -41,6 +48,7 @@ const dashboardTabs: Array<{ id: DashboardTab; label: string }> = [
   { id: "summon", label: "Invocacao" },
   { id: "recruitment", label: "Recrutamento" },
   { id: "library", label: "Biblioteca" },
+  { id: "settings", label: "Config" },
   { id: "roadmap", label: "Roadmap" },
 ];
 
@@ -58,6 +66,7 @@ const currentSystems = [
   "Herois, equipamentos, moral e ferimentos",
   "Reliquias, biblioteca, missoes e conquistas",
   "Consumiveis, afinidade e recrutamento alternativo",
+  "Narrativa, preferencias, HUD e export/import de save",
 ];
 
 function BasePanel() {
@@ -70,8 +79,8 @@ function BasePanel() {
           <span>Status atual</span>
           <h2>Legado preservado</h2>
           <p>
-            A implementacao em JavaScript puro continua em <code>game/</code>. A migracao deve trocar telas e regras
-            por partes, mantendo o jogo jogavel durante o processo.
+            A implementacao em JavaScript puro continua em <code>game/</code>. A migracao deve trocar telas e regras por
+            partes, mantendo o jogo jogavel durante o processo.
           </p>
         </article>
 
@@ -103,8 +112,8 @@ function BasePanel() {
           <span>Core TypeScript</span>
           <h2>Estado tipado</h2>
           <p>
-            O nucleo migrado ja possui estado, recursos, herois, equipamentos, consumiveis, dificuldade e dados da
-            torre sem dependencia de DOM.
+            O nucleo migrado ja possui estado, recursos, herois, equipamentos, consumiveis, dificuldade e dados da torre
+            sem dependencia de DOM.
           </p>
         </article>
       </section>
@@ -140,6 +149,9 @@ export function MigrationDashboard() {
 
   return (
     <section className="dashboard-shell">
+      <ResourceHudPanel />
+      <NarrativeModal />
+
       <nav className="dashboard-tabs" aria-label="Navegacao da migracao">
         {dashboardTabs.map((tab) => (
           <button
@@ -158,8 +170,10 @@ export function MigrationDashboard() {
         {activeTab === "base" ? <BasePanel /> : null}
         {activeTab === "tower" ? (
           <>
+            <ChapterCompletionPanel />
             <TowerCampaignPanel />
             <TowerBattlePanel />
+            <RepeatFloorsPanel />
             <TowerEventsPanel />
             <BattleResultPanel />
           </>
@@ -168,6 +182,7 @@ export function MigrationDashboard() {
           <>
             <TeamPresetsPanel />
             <HeroRosterPanel />
+            <MemorialPanel />
           </>
         ) : null}
         {activeTab === "inventory" ? <InventoryPanel /> : null}
@@ -177,6 +192,7 @@ export function MigrationDashboard() {
         {activeTab === "summon" ? <SummonPanel /> : null}
         {activeTab === "recruitment" ? <RecruitmentPanel /> : null}
         {activeTab === "library" ? <LibraryPanel /> : null}
+        {activeTab === "settings" ? <PreferencesPanel /> : null}
         {activeTab === "roadmap" ? <RoadmapPanel /> : null}
       </div>
     </section>

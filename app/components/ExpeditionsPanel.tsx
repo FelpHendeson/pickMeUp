@@ -50,12 +50,10 @@ function ExpeditionCard({
   );
   const reward = active ? getActiveExpeditionReward(state, active) || preview : preview;
   const complete = active ? isExpeditionComplete(active, now) : false;
-  const remaining = active ? getExpeditionRemainingMs(active, now) : getExpeditionDurationMs(definition);
+  const remaining = active ? getExpeditionRemainingMs(active, now) : getExpeditionDurationMs(state, definition);
+  const durationMs = getExpeditionDurationMs(state, definition);
   const progress = active
-    ? Math.round(
-        ((getExpeditionDurationMs(definition) - getExpeditionRemainingMs(active, now)) / Math.max(1, getExpeditionDurationMs(definition))) *
-          100,
-      )
+    ? Math.round(((durationMs - getExpeditionRemainingMs(active, now)) / Math.max(1, durationMs)) * 100)
     : 0;
   const availableHeroes = useMemo(
     () => state.heroes.filter((hero) => !isHeroOnExpedition(state, hero.id)),

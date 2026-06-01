@@ -1252,6 +1252,194 @@ article,
   font-style: normal;
 }
 
+.resource-hud-panel,
+.narrative-backdrop,
+.chapter-completion-panel,
+.repeat-floors-panel,
+.memorial-panel,
+.preferences-panel {
+  margin-bottom: 1rem;
+}
+
+.resource-primary,
+.resource-secondary {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.resource-primary {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-bottom: 0.55rem;
+}
+
+.resource-secondary {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.resource-pill {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+  padding: 0.55rem 0.65rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.resource-pill span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  margin: 0;
+}
+
+.resource-pill strong {
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.resource-pill.featured {
+  border-color: rgba(232, 188, 88, 0.28);
+}
+
+.resource-regen-note {
+  color: var(--muted);
+  display: block;
+  margin-top: 0.45rem;
+}
+
+.narrative-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.72);
+  padding: 1rem;
+}
+
+.narrative-card {
+  width: min(560px, 100%);
+  border: 1px solid rgba(232, 188, 88, 0.35);
+  background: rgba(18, 18, 28, 0.96);
+  border-radius: 12px;
+  padding: 1.2rem;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.narrative-card h2 {
+  margin: 0.35rem 0 0.75rem;
+}
+
+.repeat-floor-grid,
+.memorial-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.repeat-floor-card,
+.memorial-card,
+.preferences-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+  padding: 0.8rem;
+}
+
+.repeat-floor-card strong,
+.memorial-card strong {
+  display: block;
+  color: var(--gold);
+}
+
+.repeat-floor-card span,
+.memorial-card span,
+.memorial-card small {
+  display: block;
+  color: var(--muted);
+  margin-top: 0.35rem;
+  font-size: 0.82rem;
+}
+
+.preferences-card {
+  margin-top: 0.75rem;
+}
+
+.preferences-card h3 {
+  margin: 0 0 0.65rem;
+  font-size: 1rem;
+}
+
+.preferences-speed-row,
+.battle-speed-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+  margin: 0.75rem 0;
+}
+
+.preferences-toggle,
+.preferences-range {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.65rem;
+  color: var(--muted);
+}
+
+.hero-list-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+  margin: 0.75rem 0;
+}
+
+.hero-list-controls label {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.hero-list-controls select {
+  min-width: 9rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+}
+
+.team-preset-slots {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.55rem 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+body.pref-reduce-motion * {
+  animation: none !important;
+  transition: none !important;
+}
+
+body.pref-compact .hero-card,
+body.pref-compact .expedition-card,
+body.pref-compact .resource-pill {
+  padding: 0.45rem 0.55rem;
+}
+
 .columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1277,6 +1465,10 @@ code {
   .recruitment-options-grid,
   .library-grid-react,
   .library-grid-react.compact,
+  .resource-primary,
+  .resource-secondary,
+  .repeat-floor-grid,
+  .memorial-grid {
   .summon-grid-react {
     grid-template-columns: 1fr;
   }

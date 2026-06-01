@@ -16,6 +16,7 @@ const difficultyModes = ["normal", "challenge", "hardcore"] as const;
 
 function formatBattleMessage(result: RunTowerBattleResult): string {
   if (!result.ok) return result.message;
+  if ("narrative" in result && result.narrative) return result.message;
   if ("event" in result && result.event) return result.message;
   if ("battle" in result) {
     return result.battle.result === "victory"
