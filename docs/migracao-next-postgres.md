@@ -61,6 +61,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   conclusao, eventos por capitulo, modificadores regionais e capitulos concluidos derivados do andar salvo.
 - Arquetipos de inimigos e escala basica de unidades migrados para `src/game/tower/enemies.ts`, preparando a
   futura migracao de andares e combate sem depender de DOM.
+- Lista dos 40 andares, criacao de inimigos por andar e calculo/descricao de recompensas migrados para
+  `src/game/tower/floors.ts`.
 - Store Zustand inicial criada em `src/store/gameStore.ts`.
 - A home Next ja tenta ler o save legado do `localStorage` e normaliza pelo core TypeScript.
 
