@@ -121,6 +121,12 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
 - Helpers de stats efetivos migrados para `src/game/equipment/heroEffectiveStats.ts`.
 - Painel React de resultado criado em `app/components/BattleResultPanel.tsx`, exibindo ultimo combate,
   desempenho e eventos recentes a partir do save.
+- Orquestracao da tentativa na torre migrada para `src/game/tower/towerBattle.ts`, incluindo validacao,
+  eventos pre/pos combate, recompensas, ferimentos, moral, afinidade e persistencia de HP.
+- Modulo de recompensas da torre migrado para `src/game/rewards/`.
+- Helpers de formacao migrados para `src/game/formation/`.
+- Painel React de combate criado em `app/components/TowerBattlePanel.tsx`, iniciando tentativas reais
+  via core TypeScript e sincronizando com o save legado do navegador.
 
 ## Legado no Next
 

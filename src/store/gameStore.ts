@@ -1,7 +1,17 @@
 "use client";
 
 import { create } from "zustand";
-import { GAME_CONFIG, createInitialState, ensureStateShape, resolveTowerEventChoice, type GameState, type PartialGameState } from "@/src/game";
+import {
+  GAME_CONFIG,
+  createInitialState,
+  ensureStateShape,
+  resolveTowerEventChoice,
+  runTowerBattle,
+  type GameState,
+  type PartialGameState,
+  type RunTowerBattleOptions,
+  type RunTowerBattleResult,
+} from "@/src/game";
 
 type GameStore = {
   state: GameState;
@@ -9,7 +19,9 @@ type GameStore = {
   loadLegacyLocalSave: () => { ok: true; state: GameState } | { ok: false; message: string };
   replaceState: (state: PartialGameState) => void;
   resetLocalState: () => void;
-  resolveTowerEventChoice: (choiceId: string) => { ok: boolean; message: string; startBattle?: boolean };
+  persistLegacySave: () => void;
+  resolveTowerEventChoice: (choiceId: string) => { ok: boolean; message: string; startBattle?: boolean; battleStarted?: boolean };
+  startTowerBattle: (options?: RunTowerBattleOptions) => RunTowerBattleResult;
 };
 
 function readLegacyLocalSave(): unknown {
@@ -18,7 +30,24 @@ function readLegacyLocalSave(): unknown {
   return raw ? JSON.parse(raw) : null;
 }
 
-export const useGameStore = create<GameStore>((set) => ({
+function writeLegacyLocalSave(state: GameState): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(
+    GAME_CONFIG.saveKey,
+    JSON.stringify({
+      ...state,
+      lastSavedAt: new Date().toISOString(),
+    }),
+  );
+}
+
+function commitState(state: GameState, source: GameStore["source"] = "manual"): GameState {
+  const normalized = ensureStateShape(state);
+  writeLegacyLocalSave(normalized);
+  return normalized;
+}
+
+export const useGameStore = create<GameStore>((set, get) => ({
   state: createInitialState(),
   source: "initial",
   loadLegacyLocalSave: () => {
@@ -33,14 +62,46 @@ export const useGameStore = create<GameStore>((set) => ({
       return { ok: false, message: "Save legado existe, mas nao pode ser lido como JSON valido." };
     }
   },
-  replaceState: (state) => set({ state: ensureStateShape(state), source: "manual" }),
-  resetLocalState: () => set({ state: createInitialState(), source: "initial" }),
+  replaceState: (state) => set({ state: commitState(ensureStateShape(state)), source: "manual" }),
+  resetLocalState: () => {
+    const state = createInitialState();
+    writeLegacyLocalSave(state);
+    set({ state, source: "initial" });
+  },
+  persistLegacySave: () => {
+    const state = commitState(get().state);
+    set({ state, source: "manual" });
+  },
   resolveTowerEventChoice: (choiceId) => {
-    const current = useGameStore.getState().state;
+    const current = get().state;
     const result = resolveTowerEventChoice(current, choiceId);
-    if (result.ok) {
-      set({ state: ensureStateShape(current), source: "manual" });
+    if (!result.ok) return result;
+
+    let nextState = commitState(current);
+    set({ state: nextState, source: "manual" });
+
+    if (result.startBattle) {
+      const battleResult = runTowerBattle(nextState, {
+        skipEventRoll: true,
+        difficultyMode: nextState.pendingTowerDifficultyMode || "normal",
+      });
+      nextState = commitState(nextState);
+      set({ state: nextState, source: "manual" });
+      return {
+        ok: true,
+        message: `${result.message} ${battleResult.ok && "battle" in battleResult ? (battleResult.battle.result === "victory" ? "Combate vencido." : "Combate perdido.") : "event" in battleResult && battleResult.event ? battleResult.message : !battleResult.ok ? battleResult.message : "Combate concluido."}`,
+        startBattle: true,
+        battleStarted: true,
+      };
     }
+
+    return result;
+  },
+  startTowerBattle: (options) => {
+    const current = get().state;
+    const result = runTowerBattle(current, options);
+    const nextState = commitState(current);
+    set({ state: nextState, source: "manual" });
     return result;
   },
 }));

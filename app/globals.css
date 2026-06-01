@@ -146,6 +146,7 @@ li {
 }
 
 .dashboard-content > .tower-panel,
+.dashboard-content > .tower-battle-panel,
 .dashboard-content > .tower-events-panel,
 .dashboard-content > .battle-result-panel,
 .dashboard-content > .roster-panel,
@@ -228,6 +229,7 @@ article,
 .relics-panel,
 .recruitment-panel-react,
 .tower-events-panel,
+.tower-battle-panel,
 .battle-result-panel,
 .library-panel,
 .summon-panel-react {
@@ -464,6 +466,40 @@ article,
   color: var(--muted);
   font-size: 0.82rem;
   margin-top: 0.25rem;
+}
+
+.tower-battle-feedback {
+  color: var(--teal);
+  margin-top: 0.8rem;
+}
+
+.tower-difficulty-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.tower-event-choice.active {
+  border-color: rgba(232, 188, 88, 0.55);
+  background: rgba(232, 188, 88, 0.08);
+}
+
+.tower-start-battle-button {
+  border: 1px solid rgba(86, 199, 189, 0.45);
+  background: rgba(86, 199, 189, 0.12);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 700;
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  width: 100%;
+}
+
+.tower-start-battle-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .battle-performance-grid {
