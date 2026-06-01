@@ -69,6 +69,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   normalizado e os dados do core.
 - Primeiro painel React de herois criado em `app/components/HeroRosterPanel.tsx`, lendo elenco, formacao,
   equipamentos, HP, XP, moral e poder pelo core TypeScript.
+- Primeiro painel React de inventario criado em `app/components/InventoryPanel.tsx`, lendo equipamentos e
+  consumiveis normalizados pelo core.
 
 ## Legado no Next
 

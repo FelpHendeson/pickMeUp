@@ -160,7 +160,8 @@ article,
   padding: 1.2rem;
 }
 
-.roster-panel {
+.roster-panel,
+.inventory-panel {
   border: 1px solid var(--line);
   background: var(--panel);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
@@ -408,6 +409,50 @@ article,
   margin-top: 1rem;
 }
 
+.inventory-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.inventory-list-card h3 {
+  margin: 0.25rem 0 0.8rem;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.inventory-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.inventory-row {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+  padding: 0.7rem;
+}
+
+.inventory-row.available {
+  border-color: rgba(86, 199, 189, 0.3);
+}
+
+.inventory-row strong,
+.inventory-row span {
+  display: block;
+}
+
+.inventory-row strong {
+  color: var(--gold);
+  font-size: 0.88rem;
+}
+
+.inventory-row span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  margin-top: 0.3rem;
+}
+
 .columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -425,7 +470,8 @@ code {
   .mini-grid,
   .tower-summary,
   .floor-strip,
-  .hero-roster-grid {
+  .hero-roster-grid,
+  .inventory-columns {
     grid-template-columns: 1fr;
   }
 }
