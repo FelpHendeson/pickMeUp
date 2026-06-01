@@ -73,6 +73,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   consumiveis normalizados pelo core.
 - Dashboard React com abas criado em `app/components/MigrationDashboard.tsx`, separando Base, Torre, Herois,
   Inventario e Roadmap.
+- Dominio inicial de expedicoes migrado para `src/game/expeditions/`, incluindo definicoes, normalizacao,
+  duracao, poder, recompensa, inicio e coleta.
 
 ## Legado no Next
 

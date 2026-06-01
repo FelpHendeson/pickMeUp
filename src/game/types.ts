@@ -55,6 +55,25 @@ export type TeamPresets = Record<TeamPresetType, TeamPreset[]>;
 
 export type ResourceState = Record<ResourceKey, number>;
 
+export type ExpeditionRewardType = "xp" | "gold" | "crystals";
+
+export type ExpeditionReward = {
+  type: ExpeditionRewardType;
+  amount: number;
+  power?: number;
+  multiplier?: number;
+  baseAmount?: number;
+};
+
+export type ActiveExpedition = {
+  id: string;
+  expeditionId: string;
+  heroIds: string[];
+  startedAt: number;
+  endsAt: number;
+  reward: ExpeditionReward;
+};
+
 export type NarrativeState = {
   seenSceneIds: string[];
   pendingScenes: unknown[];
@@ -87,7 +106,7 @@ export type GameState = {
   deadHeroes: unknown[];
   heroes: Hero[];
   inventory: EquipmentItem[];
-  activeExpeditions: unknown[];
+  activeExpeditions: ActiveExpedition[];
   formation: Array<string | null>;
   teamPresets: TeamPresets;
   baseRooms: Record<string, number>;

@@ -3,6 +3,7 @@ import type { GameState, PartialGameState } from "../types";
 import { normalizeConsumablesState } from "../consumables";
 import { normalizeTowerDifficultyMode, normalizeTowerDifficultyStats } from "../difficulty";
 import { normalizeInventoryItems, removeMissingEquipmentFromHeroes } from "../equipment";
+import { normalizeExpeditions } from "../expeditions";
 import { normalizeHero } from "../heroes";
 import { getCompletedTowerChapterIds } from "../tower";
 import { createInitialState } from "./createInitialState";
@@ -43,7 +44,8 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   merged.heroes = arrayOrEmpty(source.heroes).map(normalizeHero);
   merged.inventory = normalizeInventoryItems(source.inventory);
   removeMissingEquipmentFromHeroes(merged.heroes, merged.inventory);
-  merged.activeExpeditions = arrayOrEmpty(source.activeExpeditions);
+  merged.activeExpeditions = arrayOrEmpty(source.activeExpeditions) as GameState["activeExpeditions"];
+  normalizeExpeditions(merged, now);
   merged.formation = arrayOrEmpty<string | null>(source.formation).slice(0, GAME_CONFIG.maxFormationSize);
 
   while (merged.formation.length < GAME_CONFIG.maxFormationSize) {
