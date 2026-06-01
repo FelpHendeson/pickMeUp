@@ -310,6 +310,104 @@ export type TowerEventHistoryEntry = {
   resolvedAt: string;
 };
 
+export type BattleSide = "player" | "enemy";
+export type BattleUnitPosition = "front" | "back";
+export type BattleResultOutcome = "victory" | "defeat";
+export type BattleUnitStatuses = Record<string, number>;
+
+export type BattleUnit = {
+  id: string;
+  sourceId?: string;
+  name: string;
+  side: BattleSide;
+  classKey?: string;
+  className?: string;
+  role?: string;
+  enemyKey?: string;
+  specializationKey?: string | null;
+  specializationName?: string;
+  rarity?: number;
+  level?: number;
+  stats: Stats;
+  maxHp: number;
+  hp: number;
+  energy: number;
+  morale?: number;
+  affinityLevels?: Record<string, number>;
+  statuses: BattleUnitStatuses;
+  position: BattleUnitPosition;
+};
+
+export type SerializedBattleUnit = {
+  id: string;
+  name: string;
+  side: BattleSide;
+  className: string;
+  role: string;
+  position: BattleUnitPosition;
+  hp: number;
+  maxHp: number;
+  energy: number;
+  maxEnergy: number;
+  alive: boolean;
+  statuses: BattleUnitStatuses;
+};
+
+export type BattlePerformanceEntry = {
+  id: string;
+  name: string;
+  className: string;
+  damageDealt: number;
+  healingDone: number;
+  damageTaken: number;
+  kills: number;
+  skillUses: number;
+  moraleFailures: number;
+  affinityProtections: number;
+};
+
+export type BattleEvent = {
+  type: string;
+  message: string;
+  round: number;
+  playerTeam: SerializedBattleUnit[];
+  enemyTeam: SerializedBattleUnit[];
+  actorId?: string;
+  targetId?: string;
+  skillName?: string;
+  amount?: number;
+  critical?: boolean;
+};
+
+export type BattleModifiers = {
+  healingDoneMultiplier?: number;
+  playerDamageTakenMultiplier?: number;
+  injuryChanceMultiplier?: number;
+};
+
+export type AutoBattleResult = {
+  result: BattleResultOutcome;
+  rounds: number;
+  playerTeam: BattleUnit[];
+  enemyTeam: BattleUnit[];
+  log: string[];
+  events: BattleEvent[];
+  performance: Record<string, BattlePerformanceEntry>;
+};
+
+export type BattleResult = {
+  ok: true;
+  id: string;
+  result: BattleResultOutcome;
+  floor: number;
+  rounds: number;
+  playerTeam: SerializedBattleUnit[];
+  enemyTeam: SerializedBattleUnit[];
+  log: string[];
+  events: BattleEvent[];
+  performance: Record<string, BattlePerformanceEntry>;
+};
+
 export type GameState = {
   schemaVersion: number;
   saveVersion: number;
@@ -333,7 +431,7 @@ export type GameState = {
   teamPresets: TeamPresets;
   baseRooms: Record<string, number>;
   summonHistory: SummonHistoryEntry[];
-  lastBattle: unknown | null;
+  lastBattle: BattleResult | null;
   pendingTowerEvent: TowerEventInstance | null;
   plannedTowerPostEvent: TowerEventInstance | null;
   pendingRecruitmentChoice: RecruitmentChoice | null;

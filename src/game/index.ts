@@ -20,3 +20,4 @@ export * from "./affinity";
 export * from "./library";
 export * from "./summon";
 export * from "./tower-events";
+export * from "./battle";

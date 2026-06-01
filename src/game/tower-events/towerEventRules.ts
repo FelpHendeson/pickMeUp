@@ -55,7 +55,7 @@ type TowerEventChoiceResult = {
   startBattle?: boolean;
 };
 
-type BattleUnit = {
+type TowerEffectBattleUnit = {
   maxHp: number;
   hp: number;
   energy?: number;
@@ -677,12 +677,12 @@ export function clearPlannedTowerPostEvent(state: Pick<GameState, "plannedTowerP
   state.plannedTowerPostEvent = null;
 }
 
-function multiplyStat(unit: BattleUnit, statKey: string, multiplier?: number): void {
+function multiplyStat(unit: TowerEffectBattleUnit, statKey: string, multiplier?: number): void {
   if (!multiplier || multiplier === 1) return;
   unit.stats[statKey] = Math.max(1, Math.round((unit.stats[statKey] || 1) * multiplier));
 }
 
-function applyEffectToTeam(effect: TowerBattleEffect, playerTeam: BattleUnit[], floorModifiers: FloorModifiers): void {
+function applyEffectToTeam(effect: TowerBattleEffect, playerTeam: TowerEffectBattleUnit[], floorModifiers: FloorModifiers): void {
   const modifiers = effect.modifiers || {};
 
   if (modifiers.healingDoneMultiplier) {
@@ -723,7 +723,7 @@ function applyEffectToTeam(effect: TowerBattleEffect, playerTeam: BattleUnit[], 
 
 export function applyAndConsumeTowerBattleEffects(
   state: Pick<GameState, "towerBattleEffects">,
-  playerTeam: BattleUnit[],
+  playerTeam: TowerEffectBattleUnit[],
   floorModifiers: FloorModifiers,
 ): string[] {
   ensureTowerEventState(state as GameState);
@@ -737,4 +737,4 @@ export function applyAndConsumeTowerBattleEffects(
   return effects.map((effect) => `Evento ativo: ${effect.label}. ${effect.description}`);
 }
 
-export type { TowerEventPlanContext, TowerEventChoiceResult, BattleUnit, FloorModifiers };
+export type { TowerEventPlanContext, TowerEventChoiceResult, TowerEffectBattleUnit, FloorModifiers };

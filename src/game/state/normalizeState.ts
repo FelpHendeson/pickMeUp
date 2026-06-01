@@ -13,6 +13,7 @@ import { normalizeRecruitmentState } from "../recruitment";
 import { normalizeSummonHistory } from "../summon";
 import { getCompletedTowerChapterIds } from "../tower";
 import { normalizeTowerEventInstance, normalizeTowerEventState } from "../tower-events";
+import { normalizeBattleResult } from "../battle";
 import { createInitialState } from "./createInitialState";
 import { normalizeTeamPresets } from "./teamPresets";
 
@@ -93,6 +94,7 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
     typeof source.pendingTowerDifficultyMode === "string" ? normalizeTowerDifficultyMode(source.pendingTowerDifficultyMode) : null;
   merged.deadHeroes = arrayOrEmpty(source.deadHeroes);
   merged.summonHistory = normalizeSummonHistory(source.summonHistory);
+  merged.lastBattle = normalizeBattleResult(source.lastBattle);
   merged.lastEnergyAt = Number.isFinite(Number(source.lastEnergyAt)) ? Number(source.lastEnergyAt) : now;
   normalizeMissionState(merged);
   normalizeAffinitiesState(merged);
