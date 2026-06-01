@@ -116,6 +116,11 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   recrutamento e afinidade.
 - Painel React de eventos da torre criado em `app/components/TowerEventsPanel.tsx`, exibindo evento pendente,
   efeitos ativos na proxima luta e historico recente a partir do save normalizado.
+- Dominio inicial de combate migrado para `src/game/battle/`, incluindo configuracao, criacao de equipe,
+  combate automatico, eventos, desempenho por heroi e normalizacao do ultimo combate salvo.
+- Helpers de stats efetivos migrados para `src/game/equipment/heroEffectiveStats.ts`.
+- Painel React de resultado criado em `app/components/BattleResultPanel.tsx`, exibindo ultimo combate,
+  desempenho e eventos recentes a partir do save.
 
 ## Legado no Next
 

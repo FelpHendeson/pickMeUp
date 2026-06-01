@@ -10,6 +10,7 @@ import { MigrationBridgePanel } from "./MigrationBridgePanel";
 import { MissionsPanel } from "./MissionsPanel";
 import { RecruitmentPanel } from "./RecruitmentPanel";
 import { RelicsPanel } from "./RelicsPanel";
+import { BattleResultPanel } from "./BattleResultPanel";
 import { TowerCampaignPanel } from "./TowerCampaignPanel";
 import { TowerEventsPanel } from "./TowerEventsPanel";
 import { SummonPanel } from "./SummonPanel";
@@ -157,6 +158,7 @@ export function MigrationDashboard() {
           <>
             <TowerCampaignPanel />
             <TowerEventsPanel />
+            <BattleResultPanel />
           </>
         ) : null}
         {activeTab === "heroes" ? <HeroRosterPanel /> : null}
