@@ -134,6 +134,9 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
 - Paineis React de expedicoes, missoes, reliquias, invocacao e recrutamento passaram a executar acoes
   reais pelo core TypeScript com persistencia no save legado.
 - Escolha de especializacao disponivel no painel React de herois.
+- Tratamento de ferimentos na Enfermaria disponivel no painel React de herois.
+- Presets de time migrados para `src/game/formation/teamPresets.ts` com painel React em
+  `app/components/TeamPresetsPanel.tsx`.
 - API inicial de save em PostgreSQL criada em `app/api/saves/[playerId]/route.ts`, com helpers em
   `src/lib/playerSave.ts` e sincronizacao na ponte de save da Base.
 

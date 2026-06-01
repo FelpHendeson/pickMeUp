@@ -8,11 +8,14 @@ import {
   getHeroActiveInjuries,
   getHeroAffinitySummaries,
   getHeroInjurySummary,
+  getHeroInjuryTreatmentCost,
   getHeroMoraleState,
   getHeroSpecialization,
   getHeroPower,
   getHeroXpForNextLevel,
+  getInjuryDefinition,
   getUnequippedInventory,
+  INJURY_CONFIG,
   SPECIALIZATION_LEVEL,
   type EquipmentItem,
   type EquipmentSlot,
@@ -52,6 +55,7 @@ function HeroCard({
   const equipItemOnHero = useGameStore((store) => store.equipItem);
   const unequipItemFromHero = useGameStore((store) => store.unequipItem);
   const chooseHeroSpecializationAction = useGameStore((store) => store.chooseHeroSpecialization);
+  const treatHeroInjuriesAction = useGameStore((store) => store.treatHeroInjuries);
   const [selectedBySlot, setSelectedBySlot] = useState<Partial<Record<EquipmentSlot, string>>>({});
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -66,6 +70,9 @@ function HeroCard({
   const specialization = getHeroSpecialization(hero);
   const specializationOptions = getClassSpecializations(hero.classKey);
   const canChooseSpecialization = hero.level >= SPECIALIZATION_LEVEL && !hero.specializationKey;
+  const activeInjuries = getHeroActiveInjuries(hero);
+  const goldTreatmentCost = getHeroInjuryTreatmentCost(hero, "gold");
+  const essenceTreatmentCost = getHeroInjuryTreatmentCost(hero, "essence");
   const affinities = getHeroAffinitySummaries(state, hero.id).slice(0, 2);
 
   return (
@@ -189,6 +196,49 @@ function HeroCard({
               {option.name}: {option.description}
             </button>
           ))}
+        </div>
+      ) : null}
+
+      {activeInjuries.length > 0 ? (
+        <div className="hero-injury-panel">
+          <strong>Enfermaria</strong>
+          {activeInjuries.map((injury) => {
+            const definition = getInjuryDefinition(injury.typeKey);
+            return (
+              <span key={injury.id}>
+                {definition?.name || injury.typeKey} ({definition?.description || "ferimento"}) — {injury.remainingBattles} batalha(s)
+              </span>
+            );
+          })}
+          <div className="hero-equipment-actions">
+            {goldTreatmentCost ? (
+              <button
+                className="hero-inline-action"
+                onClick={() => {
+                  const result = treatHeroInjuriesAction(hero.id, "gold");
+                  setFeedback(result.message);
+                }}
+                type="button"
+              >
+                Tratar com ouro ({goldTreatmentCost})
+              </button>
+            ) : null}
+            {essenceTreatmentCost ? (
+              <button
+                className="hero-inline-action"
+                onClick={() => {
+                  const result = treatHeroInjuriesAction(hero.id, "essence");
+                  setFeedback(result.message);
+                }}
+                type="button"
+              >
+                Tratar com essencia ({essenceTreatmentCost})
+              </button>
+            ) : null}
+          </div>
+          <small>
+            Custo por ferimento: {INJURY_CONFIG.treatmentCosts.gold} ouro ou {INJURY_CONFIG.treatmentCosts.essence} essencia.
+          </small>
         </div>
       ) : null}
 

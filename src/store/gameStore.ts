@@ -4,10 +4,12 @@ import { create } from "zustand";
 import {
   GAME_CONFIG,
   addHeroToFormation,
+  applyTowerPresetToFormation,
   chooseHeroSpecialization,
   chooseRecruitmentHero,
   claimAchievementReward,
   claimDailyMissionReward,
+  clearTeamPreset,
   collectExpedition,
   createInitialState,
   ensureStateShape,
@@ -15,9 +17,12 @@ import {
   removeHeroFromFormation,
   resolveTowerEventChoice,
   runTowerBattle,
+  saveExpeditionPresetFromFormation,
+  saveTowerPresetFromFormation,
   startContractRecruitment,
   startExpedition,
   summonHero,
+  treatHeroInjuries,
   unequipItem,
   upgradeRelic,
   useConsumable,
@@ -27,7 +32,10 @@ import {
   type RunTowerBattleOptions,
   type RunTowerBattleResult,
   type SummonType,
+  type TeamPresetType,
 } from "@/src/game";
+
+type InjuryTreatmentResource = keyof typeof import("@/src/game/hero-status/injuries").INJURY_CONFIG.treatmentCosts;
 
 type ActionResult = { ok: boolean; message: string };
 
@@ -54,6 +62,11 @@ type GameStore = {
   startContractRecruitment: () => ActionResult;
   chooseRecruitmentHero: (heroId: string) => ActionResult;
   chooseHeroSpecialization: (heroId: string, specializationKey: string) => ActionResult;
+  treatHeroInjuries: (heroId: string, resourceKey: InjuryTreatmentResource) => ActionResult;
+  saveTowerPresetFromFormation: (presetIndex: number) => ActionResult;
+  applyTowerPresetToFormation: (presetIndex: number) => ActionResult;
+  saveExpeditionPresetFromFormation: (presetIndex: number) => ActionResult;
+  clearTeamPreset: (type: TeamPresetType, presetIndex: number) => ActionResult;
   loadCloudSave: (playerId: string) => Promise<ActionResult>;
   saveCloudSave: (playerId: string) => Promise<ActionResult>;
 };
@@ -167,6 +180,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   chooseRecruitmentHero: (heroId) => mutateState(get, set, (state) => chooseRecruitmentHero(state, heroId)),
   chooseHeroSpecialization: (heroId, specializationKey) =>
     mutateState(get, set, (state) => chooseHeroSpecialization(state, heroId, specializationKey)),
+  treatHeroInjuries: (heroId, resourceKey) => mutateState(get, set, (state) => treatHeroInjuries(state, heroId, resourceKey)),
+  saveTowerPresetFromFormation: (presetIndex) => mutateState(get, set, (state) => saveTowerPresetFromFormation(state, presetIndex)),
+  applyTowerPresetToFormation: (presetIndex) => mutateState(get, set, (state) => applyTowerPresetToFormation(state, presetIndex)),
+  saveExpeditionPresetFromFormation: (presetIndex) =>
+    mutateState(get, set, (state) => saveExpeditionPresetFromFormation(state, presetIndex)),
+  clearTeamPreset: (type, presetIndex) => mutateState(get, set, (state) => clearTeamPreset(state, type, presetIndex)),
   loadCloudSave: async (playerId) => {
     try {
       const response = await fetch(`/api/saves/${encodeURIComponent(playerId)}`);

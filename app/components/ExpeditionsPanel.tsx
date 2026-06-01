@@ -3,6 +3,7 @@
 import {
   EXPEDITION_DEFINITIONS,
   GAME_CONFIG,
+  applyExpeditionPresetToExpeditionSelection,
   formatDuration,
   getActiveExpedition,
   getActiveExpeditionReward,
@@ -10,6 +11,7 @@ import {
   getExpeditionRemainingMs,
   getExpeditionRewardName,
   getExpeditionRewardPreview,
+  getTeamPresets,
   isExpeditionComplete,
   isHeroOnExpedition,
 } from "@/src/game";
@@ -117,6 +119,22 @@ function ExpeditionCard({
         </>
       ) : (
         <>
+          <div className="expedition-preset-row">
+            {getTeamPresets(state, "expedition").map((preset, index) => (
+              <button
+                className="hero-inline-action"
+                key={preset.id}
+                onClick={() => {
+                  const result = applyExpeditionPresetToExpeditionSelection(state, index);
+                  if (result.ok) setSelectedHeroIds(result.heroIds);
+                  setFeedback(result.message);
+                }}
+                type="button"
+              >
+                Carregar {preset.name}
+              </button>
+            ))}
+          </div>
           <div className="expedition-hero-picker">
             {availableHeroes.length > 0 ? (
               availableHeroes.slice(0, 8).map((hero) => (

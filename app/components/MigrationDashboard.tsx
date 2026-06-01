@@ -14,6 +14,7 @@ import { BattleResultPanel } from "./BattleResultPanel";
 import { TowerBattlePanel } from "./TowerBattlePanel";
 import { TowerCampaignPanel } from "./TowerCampaignPanel";
 import { TowerEventsPanel } from "./TowerEventsPanel";
+import { TeamPresetsPanel } from "./TeamPresetsPanel";
 import { SummonPanel } from "./SummonPanel";
 
 type DashboardTab =
@@ -163,7 +164,12 @@ export function MigrationDashboard() {
             <BattleResultPanel />
           </>
         ) : null}
-        {activeTab === "heroes" ? <HeroRosterPanel /> : null}
+        {activeTab === "heroes" ? (
+          <>
+            <TeamPresetsPanel />
+            <HeroRosterPanel />
+          </>
+        ) : null}
         {activeTab === "inventory" ? <InventoryPanel /> : null}
         {activeTab === "expeditions" ? <ExpeditionsPanel /> : null}
         {activeTab === "missions" ? <MissionsPanel /> : null}
