@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getActiveWeeklyEvent } from "@/src/game";
 import { ExpeditionsPanel } from "./ExpeditionsPanel";
 import { HeroRosterPanel } from "./HeroRosterPanel";
 import { InventoryPanel } from "./InventoryPanel";
@@ -41,6 +42,8 @@ const currentSystems = [
 ];
 
 function BasePanel() {
+  const weeklyEvent = getActiveWeeklyEvent();
+
   return (
     <>
       <section className="grid">
@@ -55,6 +58,17 @@ function BasePanel() {
 
         <MigrationBridgePanel />
       </section>
+
+      <article className={`weekly-event-card tone-${weeklyEvent.tone}`}>
+        <span>Evento semanal | Semana {weeklyEvent.weekNumber}</span>
+        <h2>{weeklyEvent.name}</h2>
+        <p>{weeklyEvent.summary}</p>
+        <div className="weekly-event-effects">
+          {weeklyEvent.effects.map((effect) => (
+            <small key={effect}>{effect}</small>
+          ))}
+        </div>
+      </article>
 
       <section className="grid">
         <article>

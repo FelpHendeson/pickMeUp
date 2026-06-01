@@ -96,6 +96,10 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   normalizacao, escolha permanente, modificadores de atributos e multiplicadores de combate.
 - Painel React de herois passou a mostrar especializacao/passiva quando o heroi ja escolheu um caminho ou quando
   chegou ao nivel minimo para escolher.
+- Dominio inicial de eventos semanais migrado para `src/game/weekly-events/`, incluindo calendario local, resumo,
+  modificadores de torre/invocacao/XP/drop e helpers para recompensa/inimigos.
+- Base React passou a exibir o evento semanal ativo, e a previsao de recompensa da Torre usa os modificadores
+  semanais aplicaveis.
 
 ## Legado no Next
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { describeReward, getFloorData, getFloorModifierSummary, getTowerChapterByFloor, TOWER_FLOORS } from "@/src/game";
+import { describeReward, getFloorData, getFloorModifierSummary, getTowerChapterByFloor, getWeeklyTowerRewardOptions, TOWER_FLOORS } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
 
 function clampFloor(floor: number): number {
@@ -13,6 +13,7 @@ export function TowerCampaignPanel() {
   const currentFloor = clampFloor(state.towerFloor);
   const currentChapter = getTowerChapterByFloor(currentFloor);
   const currentFloorData = getFloorData(currentFloor);
+  const weeklyRewardOptions = getWeeklyTowerRewardOptions();
   const visibleFloors = useMemo(
     () =>
       TOWER_FLOORS.filter((floor) => floor.floor >= currentChapter.startFloor && floor.floor <= currentChapter.endFloor).slice(0, 10),
@@ -59,7 +60,7 @@ export function TowerCampaignPanel() {
           </h3>
           <p>{currentFloorData.mechanic}</p>
           <small>{getFloorModifierSummary(currentFloorData) || "Sem modificador adicional alem da regiao."}</small>
-          <small>{describeReward(currentFloorData.floor)}</small>
+          <small>{describeReward(currentFloorData.floor, weeklyRewardOptions)}</small>
         </article>
       ) : null}
 

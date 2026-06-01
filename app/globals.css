@@ -148,8 +148,29 @@ li {
 .dashboard-content > .tower-panel,
 .dashboard-content > .roster-panel,
 .dashboard-content > .inventory-panel,
+.dashboard-content > .weekly-event-card,
 .dashboard-content > .columns {
   margin-top: 0;
+}
+
+.weekly-event-card {
+  margin-top: 1rem;
+}
+
+.weekly-event-effects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.weekly-event-effects small {
+  border: 1px solid rgba(232, 188, 88, 0.25);
+  background: rgba(232, 188, 88, 0.08);
+  border-radius: 8px;
+  color: var(--gold);
+  font-weight: 800;
+  padding: 0.45rem 0.6rem;
 }
 
 .mini-grid {

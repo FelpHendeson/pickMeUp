@@ -18,6 +18,30 @@ export type HeroSpecialization = {
   statMultipliers: Partial<Record<StatKey, number>>;
 };
 
+export type WeeklyEventModifiers = {
+  towerGoldMultiplier?: number;
+  enemyAtkMultiplier?: number;
+  superiorSummonCostMultiplier?: number;
+  superiorFourStarBonus?: number;
+  equipmentDropMultiplier?: number;
+  consumableDropMultiplier?: number;
+  dismantleFragmentMultiplier?: number;
+  heroXpMultiplier?: number;
+};
+
+export type WeeklyEventDefinition = {
+  id: string;
+  name: string;
+  tone: "danger" | "arcane" | "reward" | "support";
+  summary: string;
+  effects: string[];
+  modifiers: WeeklyEventModifiers;
+};
+
+export type ActiveWeeklyEvent = WeeklyEventDefinition & {
+  weekNumber: number;
+};
+
 export type HeroInjury = {
   id: string;
   typeKey: string;

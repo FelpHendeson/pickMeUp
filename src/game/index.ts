@@ -15,3 +15,4 @@ export * from "./relics";
 export * from "./recruitment";
 export * from "./hero-status";
 export * from "./specializations";
+export * from "./weekly-events";
