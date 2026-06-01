@@ -9,16 +9,26 @@ import {
   chooseRecruitmentHero,
   claimAchievementReward,
   claimDailyMissionReward,
+  clearChapterCompletion,
   clearTeamPreset,
   collectExpedition,
   createInitialState,
+  downloadGameStateExport,
   ensureStateShape,
   equipItem,
+  importGameStateFromText,
+  initializeNarrativeForSession,
+  markNarrativeSceneSeen,
+  prepareLoadedGameState,
+  queueBossBeforeNarrative,
+  regenerateEnergy,
   removeHeroFromFormation,
   resolveTowerEventChoice,
   runTowerBattle,
   saveExpeditionPresetFromFormation,
   saveTowerPresetFromFormation,
+  setTeamPresetHero,
+  skipNarrativeScene,
   startContractRecruitment,
   startExpedition,
   summonHero,
@@ -26,6 +36,9 @@ import {
   unequipItem,
   upgradeRelic,
   useConsumable,
+  applyPreferencesToDocument,
+  resetPreferences as resetStoredPreferences,
+  updatePreference as updateStoredPreference,
   type EquipmentSlot,
   type GameState,
   type PartialGameState,
@@ -46,8 +59,18 @@ type GameStore = {
   replaceState: (state: PartialGameState) => void;
   resetLocalState: () => void;
   persistLegacySave: () => void;
+  refreshSession: () => void;
+  continueNarrative: (sceneId: string) => ActionResult;
+  skipNarrative: (sceneId: string) => ActionResult;
+  clearChapterCompletion: () => ActionResult;
+  exportSave: () => ActionResult;
+  importSave: (text: string) => ActionResult;
+  updatePreference: (path: string, value: unknown) => ReturnType<typeof updateStoredPreference>;
+  resetPreferences: () => void;
+  applyPreferences: () => void;
   resolveTowerEventChoice: (choiceId: string) => ActionResult & { startBattle?: boolean; battleStarted?: boolean };
   startTowerBattle: (options?: RunTowerBattleOptions) => RunTowerBattleResult;
+  startRepeatTowerBattle: (floor: number, options?: Omit<RunTowerBattleOptions, "repeatFloor">) => RunTowerBattleResult;
   addHeroToFormation: (heroId: string) => ActionResult;
   removeHeroFromFormation: (heroId: string) => ActionResult;
   equipItem: (heroId: string, equipmentId: string) => ActionResult;
@@ -67,6 +90,7 @@ type GameStore = {
   applyTowerPresetToFormation: (presetIndex: number) => ActionResult;
   saveExpeditionPresetFromFormation: (presetIndex: number) => ActionResult;
   clearTeamPreset: (type: TeamPresetType, presetIndex: number) => ActionResult;
+  setTeamPresetHero: (type: TeamPresetType, presetIndex: number, slotIndex: number, heroId: string | null) => ActionResult;
   loadCloudSave: (playerId: string) => Promise<ActionResult>;
   saveCloudSave: (playerId: string) => Promise<ActionResult>;
 };
@@ -94,6 +118,12 @@ function commitState(state: GameState): GameState {
   return normalized;
 }
 
+function hydrateLoadedState(raw: PartialGameState): GameState {
+  const state = prepareLoadedGameState(raw);
+  initializeNarrativeForSession(state);
+  return state;
+}
+
 function mutateState<T extends ActionResult>(
   get: () => GameStore,
   set: (partial: Pick<GameStore, "state" | "source">) => void,
@@ -116,14 +146,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const raw = readLegacyLocalSave();
       if (!raw) return { ok: false, message: "Nenhum save legado encontrado neste navegador." };
 
-      const state = ensureStateShape(raw as PartialGameState);
+      const state = hydrateLoadedState(raw as PartialGameState);
       set({ state, source: "legacy-localstorage" });
+      applyPreferencesToDocument();
       return { ok: true, state };
     } catch {
       return { ok: false, message: "Save legado existe, mas nao pode ser lido como JSON valido." };
     }
   },
-  replaceState: (state) => set({ state: commitState(ensureStateShape(state)), source: "manual" }),
+  replaceState: (state) => {
+    const next = commitState(hydrateLoadedState(state));
+    set({ state: next, source: "manual" });
+  },
   resetLocalState: () => {
     const state = createInitialState();
     writeLegacyLocalSave(state);
@@ -132,6 +166,39 @@ export const useGameStore = create<GameStore>((set, get) => ({
   persistLegacySave: () => {
     const state = commitState(get().state);
     set({ state, source: "manual" });
+  },
+  refreshSession: () => {
+    const current = get().state;
+    regenerateEnergy(current);
+    const nextState = commitState(current);
+    set({ state: nextState, source: get().source === "initial" ? "initial" : "manual" });
+  },
+  continueNarrative: (sceneId) => mutateState(get, set, (state) => markNarrativeSceneSeen(state, sceneId)),
+  skipNarrative: (sceneId) => mutateState(get, set, (state) => skipNarrativeScene(state, sceneId)),
+  clearChapterCompletion: () => mutateState(get, set, (state) => clearChapterCompletion(state)),
+  exportSave: () => {
+    downloadGameStateExport(get().state);
+    return { ok: true, message: "Save exportado para download." };
+  },
+  importSave: (text) => {
+    const parsed = importGameStateFromText(text);
+    if (!parsed.ok) return parsed;
+    initializeNarrativeForSession(parsed.state);
+    const state = commitState(parsed.state);
+    set({ state, source: "manual" });
+    return { ok: true, message: "Save importado e normalizado." };
+  },
+  updatePreference: (path, value) => {
+    const result = updateStoredPreference(path, value);
+    if (result.preferences) applyPreferencesToDocument(result.preferences);
+    return result;
+  },
+  resetPreferences: () => {
+    resetStoredPreferences();
+    applyPreferencesToDocument();
+  },
+  applyPreferences: () => {
+    applyPreferencesToDocument();
   },
   resolveTowerEventChoice: (choiceId) => {
     const current = get().state;
@@ -160,11 +227,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   startTowerBattle: (options) => {
     const current = get().state;
+    const isRepeat = Number.isInteger(options?.repeatFloor);
+
+    if (!isRepeat && !options?.skipEventRoll) {
+      const queued = queueBossBeforeNarrative(current, current.towerFloor);
+      if (queued) {
+        const nextState = commitState(current);
+        set({ state: nextState, source: "manual" });
+        return { ok: true, narrative: true, message: "Uma cena apareceu antes do chefe." };
+      }
+    }
+
     const result = runTowerBattle(current, options);
     const nextState = commitState(current);
     set({ state: nextState, source: "manual" });
     return result;
   },
+  startRepeatTowerBattle: (floor, options) => get().startTowerBattle({ ...options, repeatFloor: floor }),
   addHeroToFormation: (heroId) => mutateState(get, set, (state) => addHeroToFormation(state, heroId)),
   removeHeroFromFormation: (heroId) => mutateState(get, set, (state) => removeHeroFromFormation(state, heroId)),
   equipItem: (heroId, equipmentId) => mutateState(get, set, (state) => equipItem(state, heroId, equipmentId)),
@@ -186,6 +265,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   saveExpeditionPresetFromFormation: (presetIndex) =>
     mutateState(get, set, (state) => saveExpeditionPresetFromFormation(state, presetIndex)),
   clearTeamPreset: (type, presetIndex) => mutateState(get, set, (state) => clearTeamPreset(state, type, presetIndex)),
+  setTeamPresetHero: (type, presetIndex, slotIndex, heroId) =>
+    mutateState(get, set, (state) => setTeamPresetHero(state, type, presetIndex, slotIndex, heroId)),
   loadCloudSave: async (playerId) => {
     try {
       const response = await fetch(`/api/saves/${encodeURIComponent(playerId)}`);
@@ -198,8 +279,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const body = (await response.json()) as { payload?: PartialGameState };
       if (!body.payload) return { ok: false, message: "Resposta da nuvem sem payload valido." };
 
-      const state = commitState(ensureStateShape(body.payload));
+      const state = commitState(hydrateLoadedState(body.payload));
       set({ state, source: "cloud-postgres" });
+      applyPreferencesToDocument();
       return { ok: true, message: "Save carregado do PostgreSQL e sincronizado com o navegador." };
     } catch {
       return { ok: false, message: "Nao foi possivel conectar a API de save." };
