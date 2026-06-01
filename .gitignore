@@ -24,9 +24,12 @@ pnpm-debug.log*
 
 # JavaScript dependencies and build output
 node_modules/
+.next/
+out/
 dist/
 build/
 coverage/
+*.tsbuildinfo
 .cache/
 .parcel-cache/
 .vite/

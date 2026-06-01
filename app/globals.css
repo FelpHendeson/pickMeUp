@@ -1,0 +1,140 @@
+:root {
+  color-scheme: dark;
+  --bg: #07070d;
+  --panel: rgba(18, 18, 28, 0.82);
+  --line: rgba(232, 188, 88, 0.2);
+  --text: #f4eee5;
+  --muted: #aaa1b8;
+  --gold: #e8bc58;
+  --teal: #56c7bd;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(155, 127, 232, 0.18), transparent 28rem),
+    radial-gradient(circle at 88% 12%, rgba(86, 199, 189, 0.12), transparent 24rem),
+    linear-gradient(145deg, #07070d, #11111c 52%, #050508);
+  color: var(--text);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+a {
+  color: inherit;
+}
+
+.shell {
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 4rem 0;
+}
+
+.hero,
+article,
+.columns {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+  border-radius: 10px;
+}
+
+.hero {
+  padding: clamp(1.4rem, 4vw, 3rem);
+}
+
+.eyebrow,
+article span {
+  color: var(--teal);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  margin: 0 0 0.7rem;
+  text-transform: uppercase;
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+h1 {
+  max-width: 780px;
+  font-size: clamp(2.4rem, 7vw, 5rem);
+}
+
+h2 {
+  font-size: 1.45rem;
+}
+
+p,
+li {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.hero p {
+  max-width: 760px;
+  font-size: 1.05rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.actions a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  border: 1px solid rgba(232, 188, 88, 0.45);
+  background: linear-gradient(180deg, #e8bc58, #a9762f);
+  color: #17120b;
+  border-radius: 8px;
+  font-weight: 900;
+  padding: 0.7rem 1rem;
+  text-decoration: none;
+}
+
+.actions a.secondary {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+article,
+.columns {
+  padding: 1.2rem;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+code {
+  color: var(--gold);
+}
+
+@media (max-width: 760px) {
+  .grid,
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}

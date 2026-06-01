@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Player {
+  id        String   @id @default(cuid())
+  email     String?  @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile PlayerProfile?
+  heroes  Hero[]
+  saves   SaveSnapshot[]
+}
+
+model PlayerProfile {
+  id             String   @id @default(cuid())
+  playerId       String   @unique
+  accountLevel   Int      @default(1)
+  accountXp      Int      @default(0)
+  towerFloor     Int      @default(1)
+  gold           Int      @default(0)
+  crystals       Int      @default(0)
+  essence        Int      @default(0)
+  fragments      Int      @default(0)
+  echoFragments  Int      @default(0)
+  heroContracts  Int      @default(0)
+  updatedAt      DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+}
+
+model Hero {
+  id                String   @id
+  playerId          String
+  name              String
+  classKey          String
+  rarity            Int
+  level             Int      @default(1)
+  xp                Int      @default(0)
+  moral             Int      @default(80)
+  currentHp         Int?
+  specializationKey String?
+  data              Json
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+}
+
+model SaveSnapshot {
+  id        String   @id @default(cuid())
+  playerId  String
+  version   Int
+  payload   Json
+  createdAt DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, createdAt])
+}

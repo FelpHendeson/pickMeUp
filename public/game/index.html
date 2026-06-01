@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ascensao dos Ecos</title>
+    <link rel="stylesheet" href="styles/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="command-header">
+        <div class="command-brand">
+          <p class="eyebrow">Hub de comando</p>
+          <h1>Ascensao dos Ecos</h1>
+        </div>
+        <div class="command-meta">
+          <div id="accountBadge" class="account-badge" aria-live="polite"></div>
+          <div id="saveStatus" class="save-status">Carregando...</div>
+        </div>
+      </header>
+
+      <section id="resourceBar" class="resource-bar" aria-live="polite"></section>
+
+      <nav class="command-nav" aria-label="Telas principais">
+        <div class="nav-group">
+          <span class="nav-group-label">Comando</span>
+          <div class="nav-group-tabs">
+            <button class="tab-button active" data-tab="base" type="button">
+              Base
+              <span class="tab-badge" hidden aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+        <div class="nav-group">
+          <span class="nav-group-label">Equipe</span>
+          <div class="nav-group-tabs">
+            <button class="tab-button" data-tab="heroes" type="button">Herois</button>
+            <button class="tab-button" data-tab="formation" type="button">Formacao</button>
+            <button class="tab-button" data-tab="inventory" type="button">Inventario</button>
+          </div>
+        </div>
+        <div class="nav-group">
+          <span class="nav-group-label">Operacao</span>
+          <div class="nav-group-tabs">
+            <button class="tab-button" data-tab="expeditions" type="button">
+              Expedicoes
+              <span class="tab-badge" hidden aria-hidden="true"></span>
+            </button>
+            <button class="tab-button" data-tab="missions" type="button">
+              Missoes
+              <span class="tab-badge" hidden aria-hidden="true"></span>
+            </button>
+            <button class="tab-button" data-tab="summon" type="button">Invocacao</button>
+          </div>
+        </div>
+        <div class="nav-group">
+          <span class="nav-group-label">Torre</span>
+          <div class="nav-group-tabs">
+            <button class="tab-button" data-tab="tower" type="button">Torre</button>
+            <button class="tab-button" data-tab="battle" type="button">Combate</button>
+            <button class="tab-button" data-tab="relics" type="button">Reliquias</button>
+            <button class="tab-button" data-tab="library" type="button">Biblioteca</button>
+          </div>
+        </div>
+        <div class="nav-group nav-group-system">
+          <span class="nav-group-label">Sistema</span>
+          <div class="nav-group-tabs">
+            <button class="tab-button" data-tab="settings" type="button">Config</button>
+          </div>
+        </div>
+      </nav>
+
+      <main id="app" class="content" aria-live="polite"></main>
+    </div>
+
+    <script defer src="src/state.js"></script>
+    <script defer src="src/preferences.js"></script>
+    <script defer src="src/weekly-events.js"></script>
+    <script defer src="src/relics.js"></script>
+    <script defer src="src/heroes.js"></script>
+    <script defer src="src/recruitment.js"></script>
+    <script defer src="src/injuries.js"></script>
+    <script defer src="src/consumables.js"></script>
+    <script defer src="src/morale.js"></script>
+    <script defer src="src/specializations.js"></script>
+    <script defer src="src/formation.js"></script>
+    <script defer src="src/affinity.js"></script>
+    <script defer src="src/difficulty.js"></script>
+    <script defer src="src/equipment.js"></script>
+    <script defer src="src/expeditions.js"></script>
+    <script defer src="src/battle.js"></script>
+    <script defer src="src/tower.js"></script>
+    <script defer src="src/narrative.js"></script>
+    <script defer src="src/tower-events.js"></script>
+    <script defer src="src/library.js"></script>
+    <script defer src="src/summon.js"></script>
+    <script defer src="src/rewards.js"></script>
+    <script defer src="src/missions.js"></script>
+    <script defer src="src/storage.js"></script>
+    <script defer src="src/view-utils.js"></script>
+    <script defer src="src/battle-view.js"></script>
+    <script defer src="src/ui.js"></script>
+    <script defer src="src/main.js"></script>
+  </body>
+</html>
