@@ -6,6 +6,7 @@ import {
   getHeroActiveInjuries,
   getHeroInjurySummary,
   getHeroMoraleState,
+  getHeroSpecialization,
   getHeroPower,
   getHeroXpForNextLevel,
   type EquipmentItem,
@@ -43,6 +44,7 @@ function HeroCard({
   const injuryCount = getActiveInjuryCount(hero);
   const moraleState = getHeroMoraleState(hero);
   const injurySummary = getHeroInjurySummary(hero);
+  const specialization = getHeroSpecialization(hero);
 
   return (
     <article className={`hero-card rarity-${hero.rarity}${inFormation ? " in-formation" : ""}${injuryCount > 0 ? " injured" : ""}`}>
@@ -57,6 +59,7 @@ function HeroCard({
       <div className="hero-tags">
         {inFormation ? <span>Formacao</span> : null}
         {injuryCount > 0 ? <span>{injuryCount} ferimento(s)</span> : null}
+        {specialization ? <span>{specialization.name}</span> : hero.level >= 10 ? <span>Especializacao disponivel</span> : null}
         <span>{moraleState.label}</span>
       </div>
 
@@ -85,7 +88,7 @@ function HeroCard({
       </div>
 
       <div className="hero-equipment">
-        <strong>{injurySummary || "Equipamentos"}</strong>
+        <strong>{specialization ? `${specialization.passiveName} - ${specialization.description}` : injurySummary || "Equipamentos"}</strong>
         {equippedItems.length > 0 ? (
           equippedItems.map((item) => (
             <span key={item.id}>

@@ -92,6 +92,10 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
 - Dominio inicial de ferimentos e moral migrado para `src/game/hero-status/`, incluindo normalizacao por heroi,
   efeitos de atributos, tratamentos, estados de moral e chance de falha por moral baixa.
 - Painel React de herois passou a usar os helpers do core para estados de moral e resumo de ferimentos.
+- Dominio inicial de especializacoes migrado para `src/game/specializations/`, incluindo definicoes por classe,
+  normalizacao, escolha permanente, modificadores de atributos e multiplicadores de combate.
+- Painel React de herois passou a mostrar especializacao/passiva quando o heroi ja escolheu um caminho ou quando
+  chegou ao nivel minimo para escolher.
 
 ## Legado no Next
 

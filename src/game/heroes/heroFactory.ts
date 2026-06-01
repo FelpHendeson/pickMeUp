@@ -1,5 +1,6 @@
 import type { EquipmentSlots, Hero, HeroClassKey, StatKey, Stats } from "../types";
 import { normalizeHeroInjuries, normalizeHeroMorale } from "../hero-status";
+import { applySpecializationStatModifiers, normalizeHeroSpecialization } from "../specializations";
 import { EPITHETS, GIVEN_NAMES, HERO_CLASSES, STAT_KEYS, TRAITS } from "./definitions";
 
 export type RandomSource = () => number;
@@ -99,6 +100,8 @@ export function recalculateHeroStats(hero: Hero): Hero {
     stats[statKey] = Math.max(1, Math.round(baseValue * rarityMultiplier * (statRolls[statKey] || 1) * traitMultiplier));
     return stats;
   }, {} as Stats);
+  normalizeHeroSpecialization(hero);
+  applySpecializationStatModifiers(hero.stats, hero);
   hero.maxLevel = getMaxLevelForRarity(hero.rarity);
 
   return hero;

@@ -10,6 +10,14 @@ export type HeroClassKey = "warrior" | "archer" | "mage" | "priest" | "rogue" | 
 export type Stats = Record<StatKey, number>;
 export type EquipmentSlots = Record<EquipmentSlot, string | null>;
 
+export type HeroSpecialization = {
+  key: string;
+  name: string;
+  passiveName: string;
+  description: string;
+  statMultipliers: Partial<Record<StatKey, number>>;
+};
+
 export type HeroInjury = {
   id: string;
   typeKey: string;
