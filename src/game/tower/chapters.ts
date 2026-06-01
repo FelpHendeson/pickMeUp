@@ -1,3 +1,4 @@
+import { GAME_CONFIG } from "../config";
 import type { GameState, TowerEventPhase } from "../types";
 
 export type TowerModifierValues = {
@@ -250,4 +251,17 @@ export function getFloorModifierValues(floorData: TowerFloorLike | null): TowerM
 export function getFloorModifierSummary(floorData: TowerFloorLike | null): string {
   const modifiers = getFloorModifierValues(floorData);
   return modifiers.descriptions.length > 0 ? modifiers.descriptions.join(" | ") : "";
+}
+
+export function isChapterFinalFloor(floorNumber: number): boolean {
+  const chapter = getTowerChapterByFloor(floorNumber);
+  return chapter.endFloor === floorNumber;
+}
+
+export function getHighestCompletedFloor(state: Pick<GameState, "towerFloor">): number {
+  return Math.min(GAME_CONFIG.towerMaxFloor, Math.max(0, (state.towerFloor || 1) - 1));
+}
+
+export function canRepeatTowerFloor(state: Pick<GameState, "towerFloor">, floorNumber: number): boolean {
+  return Number.isInteger(floorNumber) && floorNumber >= 1 && floorNumber <= getHighestCompletedFloor(state);
 }

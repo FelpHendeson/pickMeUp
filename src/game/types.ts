@@ -388,11 +388,43 @@ export type BattleModifiers = {
 export type AutoBattleResult = {
   result: BattleResultOutcome;
   rounds: number;
+  round?: number;
   playerTeam: BattleUnit[];
   enemyTeam: BattleUnit[];
   log: string[];
   events: BattleEvent[];
   performance: Record<string, BattlePerformanceEntry>;
+  rewards?: {
+    gold: number;
+    crystals: number;
+    essence: number;
+    fragments: number;
+    echoFragments: number;
+    energyRefund: number;
+    heroContracts: number;
+    equipment: EquipmentItem[];
+    consumables: Array<{ id: string; name: string; amount: number }>;
+  };
+  progression?: {
+    heroXp: Array<{ heroId: string; heroName: string; xp: number }>;
+    levelUps: Array<{ heroId: string; heroName: string; level: number; levels: number[] }>;
+    specializationsAvailable: Array<{ heroId: string; heroName: string }>;
+    missionUpdates: unknown[];
+    achievementsAvailable: unknown[];
+    libraryUpdates: unknown[];
+  };
+};
+
+export type BattleResultSummary = {
+  chapterId: string;
+  chapterName: string;
+  chapterNumber: number;
+  difficultyId: string;
+  difficultyName: string;
+  enemyNames: string[];
+  modifiers: string[];
+  weeklyEvent: string;
+  isBoss: boolean;
 };
 
 export type BattleResult = {
@@ -406,6 +438,9 @@ export type BattleResult = {
   log: string[];
   events: BattleEvent[];
   performance: Record<string, BattlePerformanceEntry>;
+  summary?: BattleResultSummary;
+  rewards?: AutoBattleResult["rewards"];
+  progression?: AutoBattleResult["progression"];
 };
 
 export type GameState = {

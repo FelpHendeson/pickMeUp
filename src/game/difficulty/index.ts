@@ -10,6 +10,7 @@ export {
   normalizeTowerDifficultyMode,
   normalizeTowerDifficultyState,
   normalizeTowerDifficultyStats,
+  resolveHardcoreDeaths,
   recordTowerDifficultyVictory,
 } from "./difficultyRules";
 export type { TowerDifficultyMode, TowerDifficultyModeId, TowerDifficultyTone } from "./definitions";

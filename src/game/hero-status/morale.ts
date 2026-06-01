@@ -1,4 +1,4 @@
-import type { Hero, Stats } from "../types";
+import type { GameState, Hero, Stats } from "../types";
 
 export const MORALE_CONFIG = {
   min: 0,
@@ -124,4 +124,55 @@ export function adjustFormationMorale(
 
   const direction = amount > 0 ? "Moral +" : "Moral ";
   return `${reason} ${direction}${amount} para a equipe ativa.`;
+}
+
+export function applyBattleMoraleChanges(
+  state: GameState,
+  playerTeam: Array<{ side?: string; sourceId?: string; hp: number }>,
+  battleResult: "victory" | "defeat" | string,
+  onMorale?: (message: string) => void,
+  now = Date.now(),
+): string[] {
+  const participatingHeroIds = new Set(
+    playerTeam.filter((unit) => unit.side === "player" && unit.sourceId).map((unit) => unit.sourceId as string),
+  );
+  const fallenHeroIds = new Set(
+    playerTeam.filter((unit) => unit.side === "player" && unit.sourceId && unit.hp <= 0).map((unit) => unit.sourceId as string),
+  );
+  const fallenCount = fallenHeroIds.size;
+  const messages: string[] = [];
+
+  state.heroes.forEach((hero) => {
+    if (participatingHeroIds.has(hero.id)) {
+      let delta = battleResult === "victory" ? MORALE_CONFIG.victoryGain : -MORALE_CONFIG.defeatLoss;
+      if (fallenHeroIds.has(hero.id)) delta -= MORALE_CONFIG.selfFallLoss;
+
+      const witnessedFalls = Math.max(0, fallenCount - (fallenHeroIds.has(hero.id) ? 1 : 0));
+      if (witnessedFalls > 0) delta -= Math.min(6, witnessedFalls * MORALE_CONFIG.allyFallLoss);
+
+      const actualDelta = adjustHeroMorale(hero, delta);
+      hero.battlesSinceLastUsed = 0;
+      hero.lastUsedAt = now;
+
+      if (actualDelta !== 0) {
+        const signal = actualDelta > 0 ? `ganhou ${actualDelta}` : `perdeu ${Math.abs(actualDelta)}`;
+        const message = `${hero.name} ${signal} de moral (${hero.morale}/100).`;
+        messages.push(message);
+        onMorale?.(message);
+      }
+      return;
+    }
+
+    hero.battlesSinceLastUsed += 1;
+    if (hero.battlesSinceLastUsed >= MORALE_CONFIG.unusedBattleLimit && hero.morale > 50) {
+      const delta = updateUnusedHeroMorale(hero, now);
+      if (delta < 0) {
+        const message = `${hero.name} perdeu ${Math.abs(delta)} de moral por ficar fora da torre por muito tempo.`;
+        messages.push(message);
+        onMorale?.(message);
+      }
+    }
+  });
+
+  return messages;
 }

@@ -135,3 +135,79 @@ export function recordTowerDifficultyVictory(state: GameState, modeId: unknown):
   const normalized = normalizeTowerDifficultyMode(modeId);
   stats.victories[normalized] += 1;
 }
+
+function clearHeroFromLists(state: GameState, heroId: string): void {
+  state.formation = state.formation.map((id) => (id === heroId ? null : id));
+
+  (["tower", "expedition"] as const).forEach((presetType) => {
+    const presets = Array.isArray(state.teamPresets[presetType]) ? state.teamPresets[presetType] : [];
+    presets.forEach((preset) => {
+      preset.heroIds = preset.heroIds.map((id) => (id === heroId ? null : id));
+    });
+  });
+}
+
+type FallenBattleUnit = {
+  side?: string;
+  sourceId?: string;
+  hp: number;
+};
+
+type HardcoreBattleLog = {
+  floor?: number;
+  log: string[];
+  events: unknown[];
+  playerTeam: FallenBattleUnit[];
+  enemyTeam: FallenBattleUnit[];
+  round?: number;
+  rounds?: number;
+};
+
+export function resolveHardcoreDeaths(
+  state: GameState,
+  playerTeam: FallenBattleUnit[],
+  battle: HardcoreBattleLog | null | undefined,
+  battleModifiers: { permanentDeathChance?: number } | null | undefined,
+  addEvent?: (message: string) => void,
+  random: () => number = Math.random,
+): Array<{ id: string; name: string }> {
+  const deathChance = battleModifiers && Number.isFinite(battleModifiers.permanentDeathChance)
+    ? Number(battleModifiers.permanentDeathChance)
+    : 0;
+  if (deathChance <= 0) return [];
+
+  normalizeTowerDifficultyState(state);
+  const fallenHeroIds = Array.from(
+    new Set(playerTeam.filter((unit) => unit.side === "player" && unit.sourceId && unit.hp <= 0).map((unit) => unit.sourceId as string)),
+  );
+  const deaths: Array<{ id: string; name: string }> = [];
+
+  fallenHeroIds.forEach((heroId) => {
+    const heroIndex = state.heroes.findIndex((hero) => hero.id === heroId);
+    if (heroIndex < 0 || random() >= deathChance) return;
+
+    const hero = state.heroes[heroIndex];
+    const memorialEntry = {
+      id: hero.id,
+      name: hero.name,
+      classKey: hero.classKey,
+      rarity: hero.rarity,
+      level: hero.level,
+      lostAtFloor: battle?.floor ?? null,
+      lostAt: new Date().toISOString(),
+      mode: "hardcore" as const,
+    };
+
+    state.heroes.splice(heroIndex, 1);
+    clearHeroFromLists(state, heroId);
+    state.deadHeroes.push(memorialEntry);
+    state.towerDifficultyStats!.hardcoreDeaths += 1;
+    deaths.push({ id: hero.id, name: hero.name });
+
+    if (addEvent) {
+      addEvent(`${hero.name} caiu definitivamente no modo Hardcore e foi registrado no memorial.`);
+    }
+  });
+
+  return deaths;
+}

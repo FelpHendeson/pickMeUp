@@ -172,6 +172,70 @@ export function treatHeroInjuries(state: GameState, heroId: string, resourceKey:
   return { ok: true, message: `${hero.name} recebeu tratamento na Enfermaria e removeu ${activeInjuries.length} ferimento(s).` };
 }
 
+export function decrementRosterInjuriesAfterBattle(
+  state: Pick<GameState, "heroes">,
+  onRecovery?: (message: string) => void,
+): string[] {
+  const recovered: string[] = [];
+
+  state.heroes.forEach((hero) => {
+    const before = getHeroActiveInjuries(hero);
+    if (before.length === 0) return;
+
+    hero.injuries = before
+      .map((injury) => ({ ...injury, remainingBattles: injury.remainingBattles - 1 }))
+      .filter((injury) => injury.remainingBattles > 0);
+
+    const afterTypeKeys = new Set(hero.injuries.map((injury) => injury.typeKey));
+    before.forEach((injury) => {
+      if (!afterTypeKeys.has(injury.typeKey)) {
+        const definition = getInjuryDefinition(injury.typeKey);
+        const message = `${hero.name} se recuperou de ${definition?.name || "um ferimento"}.`;
+        recovered.push(message);
+        onRecovery?.(message);
+      }
+    });
+  });
+
+  return recovered;
+}
+
+function pickRandomInjuryType(random: () => number = Math.random): string {
+  const keys = Object.keys(HERO_INJURY_TYPES);
+  return keys[Math.floor(random() * keys.length)] ?? keys[0];
+}
+
+export function resolveBattleInjuries(
+  state: GameState,
+  playerTeam: Array<{ side?: string; sourceId?: string; hp: number }>,
+  battleResult: "victory" | "defeat" | string,
+  onInjury?: (message: string) => void,
+  battleModifiers?: { injuryChanceMultiplier?: number },
+  random: () => number = Math.random,
+): void {
+  decrementRosterInjuriesAfterBattle(state, onInjury);
+
+  const fallenHeroIds = new Set(
+    playerTeam.filter((unit) => unit.side === "player" && unit.sourceId && unit.hp <= 0).map((unit) => unit.sourceId as string),
+  );
+  const injuryChanceMultiplier =
+    battleModifiers && Number.isFinite(battleModifiers.injuryChanceMultiplier) ? Number(battleModifiers.injuryChanceMultiplier) : 1;
+  const injuryChance = (battleResult === "defeat" ? INJURY_CONFIG.defeatChance : INJURY_CONFIG.victoryChance) * injuryChanceMultiplier;
+
+  fallenHeroIds.forEach((heroId) => {
+    const hero = state.heroes.find((item) => item.id === heroId);
+    if (!hero || random() >= injuryChance) return;
+
+    const typeKey = pickRandomInjuryType(random);
+    const result = addHeroInjury(hero, typeKey);
+    const definition = getInjuryDefinition(typeKey);
+    const verb = result.refreshed ? "agravou" : "recebeu";
+    onInjury?.(
+      `${hero.name} ${verb} um ferimento: ${definition?.name || typeKey} (${definition?.description || ""}, ${INJURY_CONFIG.durationBattles} batalhas).`,
+    );
+  });
+}
+
 export function getInjuredHeroes(state: GameState): Hero[] {
   return state.heroes.filter((hero) => hasHeroInjuries(hero));
 }

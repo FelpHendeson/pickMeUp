@@ -708,6 +708,7 @@ export function runAutoBattle(
   return {
     result,
     rounds: battle.round,
+    round: battle.round,
     playerTeam,
     enemyTeam,
     log: battle.log,
