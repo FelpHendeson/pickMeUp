@@ -5,13 +5,24 @@ import { getActiveWeeklyEvent } from "@/src/game";
 import { ExpeditionsPanel } from "./ExpeditionsPanel";
 import { HeroRosterPanel } from "./HeroRosterPanel";
 import { InventoryPanel } from "./InventoryPanel";
+import { LibraryPanel } from "./LibraryPanel";
 import { MigrationBridgePanel } from "./MigrationBridgePanel";
 import { MissionsPanel } from "./MissionsPanel";
 import { RecruitmentPanel } from "./RecruitmentPanel";
 import { RelicsPanel } from "./RelicsPanel";
 import { TowerCampaignPanel } from "./TowerCampaignPanel";
 
-type DashboardTab = "base" | "tower" | "heroes" | "inventory" | "expeditions" | "missions" | "relics" | "recruitment" | "roadmap";
+type DashboardTab =
+  | "base"
+  | "tower"
+  | "heroes"
+  | "inventory"
+  | "expeditions"
+  | "missions"
+  | "relics"
+  | "recruitment"
+  | "library"
+  | "roadmap";
 
 const dashboardTabs: Array<{ id: DashboardTab; label: string }> = [
   { id: "base", label: "Base" },
@@ -22,6 +33,7 @@ const dashboardTabs: Array<{ id: DashboardTab; label: string }> = [
   { id: "missions", label: "Missoes" },
   { id: "relics", label: "Reliquias" },
   { id: "recruitment", label: "Recrutamento" },
+  { id: "library", label: "Biblioteca" },
   { id: "roadmap", label: "Roadmap" },
 ];
 
@@ -144,6 +156,7 @@ export function MigrationDashboard() {
         {activeTab === "missions" ? <MissionsPanel /> : null}
         {activeTab === "relics" ? <RelicsPanel /> : null}
         {activeTab === "recruitment" ? <RecruitmentPanel /> : null}
+        {activeTab === "library" ? <LibraryPanel /> : null}
         {activeTab === "roadmap" ? <RoadmapPanel /> : null}
       </div>
     </section>

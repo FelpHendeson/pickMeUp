@@ -149,6 +149,7 @@ li {
 .dashboard-content > .roster-panel,
 .dashboard-content > .inventory-panel,
 .dashboard-content > .weekly-event-card,
+.dashboard-content > .library-panel,
 .dashboard-content > .columns {
   margin-top: 0;
 }
@@ -222,7 +223,8 @@ article,
 .expeditions-panel,
 .missions-panel,
 .relics-panel,
-.recruitment-panel-react {
+.recruitment-panel-react,
+.library-panel {
   border: 1px solid var(--line);
   background: var(--panel);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
@@ -739,6 +741,42 @@ article,
   margin-top: 1rem;
 }
 
+.library-section {
+  margin-top: 1.2rem;
+}
+
+.library-section h3 {
+  margin: 0 0 0.8rem;
+}
+
+.library-grid-react {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.library-grid-react.compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.library-entry {
+  min-height: 13rem;
+}
+
+.library-entry.locked {
+  opacity: 0.64;
+}
+
+.library-entry h4 {
+  margin: 0;
+}
+
+.library-entry small {
+  color: var(--muted);
+  display: block;
+  margin-top: 0.45rem;
+}
+
 .recruitment-option-card {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(0, 0, 0, 0.18);
@@ -793,7 +831,9 @@ code {
   .expedition-grid,
   .mission-columns,
   .relic-grid,
-  .recruitment-options-grid {
+  .recruitment-options-grid,
+  .library-grid-react,
+  .library-grid-react.compact {
     grid-template-columns: 1fr;
   }
 }

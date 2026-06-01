@@ -103,6 +103,10 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
 - Dominio inicial de afinidade migrado para `src/game/affinity/`, incluindo normalizacao por par de herois, ganho
   por grupo, resumos, bonus de inicio de batalha, XP e protecao leve.
 - Painel React de herois passou a listar as principais afinidades de cada heroi a partir do save normalizado.
+- Dominio inicial de biblioteca migrado para `src/game/library/`, incluindo normalizacao do save, registros de
+  inimigos, chefes, eventos, herois encontrados e views progressivas de bestiario.
+- Aba React de biblioteca criada em `app/components/LibraryPanel.tsx`, exibindo bestiario, chefes, eventos,
+  reliquias e descobertas de herois a partir do core.
 
 ## Legado no Next
 

@@ -62,6 +62,50 @@ export type AffinitySummary = AffinityRecord & {
   bonusText: string;
 };
 
+export type LibraryEnemyRecord = {
+  key: string;
+  encountered: number;
+  defeated: number;
+  firstFloor: number | null;
+  lastFloor: number | null;
+  region: string;
+};
+
+export type LibraryBossRecord = {
+  key: string;
+  chapterId: string;
+  chapterName: string;
+  attempts: number;
+  defeated: boolean;
+  bestResult: "victory" | "defeat" | "";
+  specialReward: string;
+};
+
+export type LibraryEventRecord = {
+  key: string;
+  encountered: number;
+  results: string[];
+};
+
+export type LibraryHeroDiscovery = {
+  key: string;
+  name: string;
+  description?: string;
+  count?: number;
+  discovered: boolean;
+};
+
+export type LibraryState = {
+  enemies: Record<string, LibraryEnemyRecord>;
+  bosses: Record<string, LibraryBossRecord>;
+  events: Record<string, LibraryEventRecord>;
+  heroes: {
+    classes: Record<string, LibraryHeroDiscovery>;
+    rarities: Record<string, LibraryHeroDiscovery>;
+    traits: Record<string, LibraryHeroDiscovery>;
+  };
+};
+
 export type HeroInjury = {
   id: string;
   typeKey: string;
@@ -185,7 +229,7 @@ export type GameState = {
   heroContracts: number;
   consumables: Record<string, number>;
   affinities: Record<string, AffinityRecord>;
-  library: unknown | null;
+  library: LibraryState;
   towerDifficultyStats: TowerDifficultyStats | null;
   pendingTowerDifficultyMode: string | null;
   deadHeroes: unknown[];

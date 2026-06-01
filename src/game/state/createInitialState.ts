@@ -1,5 +1,6 @@
 import { GAME_CONFIG } from "../config";
 import { createTowerDifficultyStats } from "../difficulty";
+import { createLibraryState } from "../library";
 import { createDailyMissionState, normalizeAchievements } from "../missions";
 import { RELIC_DEFINITIONS } from "../relics";
 import type { GameState } from "../types";
@@ -25,7 +26,7 @@ export function createInitialState(now = Date.now()): GameState {
     heroContracts: 0,
     consumables: {},
     affinities: {},
-    library: null,
+    library: createLibraryState(),
     towerDifficultyStats: createTowerDifficultyStats(),
     pendingTowerDifficultyMode: null,
     deadHeroes: [],
