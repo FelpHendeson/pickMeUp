@@ -6,12 +6,16 @@ export {
   getCompletedTowerChapterIds,
   getFloorModifierSummary,
   getFloorModifierValues,
+  getHighestCompletedFloor,
+  canRepeatTowerFloor,
+  isChapterFinalFloor,
   getTowerChapterByFloor,
   getTowerChapterById,
   isTowerChapterCompleted,
 } from "./chapters";
 export { createEnemyUnit, getEnemyArchetype, getEnemyStartingEnergy, scaleEnemyStats } from "./enemies";
 export { createEnemiesForFloor, describeReward, getFloorData, getFloorReward, isBossFloor } from "./floors";
+export { runTowerBattle, validateTowerBattleStart, type RunTowerBattleOptions, type RunTowerBattleResult } from "./towerBattle";
 export type {
   TowerChapter,
   TowerChapterReward,
