@@ -1,3 +1,5 @@
+import { MigrationBridgePanel } from "./components/MigrationBridgePanel";
+
 const migrationMilestones = [
   "Extrair regras puras para game-core em TypeScript",
   "Migrar estado local para store React/Zustand",
@@ -42,12 +44,25 @@ export default function HomePage() {
           </p>
         </article>
 
+        <MigrationBridgePanel />
+      </section>
+
+      <section className="grid">
         <article>
           <span>Stack alvo</span>
           <h2>Next + PostgreSQL</h2>
           <p>
             A branch prepara Next.js, TypeScript, Prisma, Zustand e TanStack Query para suportar login, cloud save e
             sincronizacao futura.
+          </p>
+        </article>
+
+        <article>
+          <span>Core TypeScript</span>
+          <h2>Estado tipado</h2>
+          <p>
+            O primeiro nucleo migrado ja possui contratos de estado, estado inicial, recursos e normalizacao de saves
+            antigos sem dependencia de DOM.
           </p>
         </article>
       </section>

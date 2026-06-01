@@ -116,6 +116,36 @@ li {
   margin-top: 1rem;
 }
 
+.mini-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.mini-grid div {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: 8px;
+  padding: 0.7rem;
+}
+
+.mini-grid strong,
+.mini-grid small {
+  display: block;
+}
+
+.mini-grid strong {
+  color: var(--gold);
+}
+
+.mini-grid small {
+  color: var(--muted);
+  font-size: 0.74rem;
+  margin-top: 0.2rem;
+  text-transform: uppercase;
+}
+
 article,
 .columns {
   padding: 1.2rem;
@@ -134,7 +164,8 @@ code {
 
 @media (max-width: 760px) {
   .grid,
-  .columns {
+  .columns,
+  .mini-grid {
     grid-template-columns: 1fr;
   }
 }

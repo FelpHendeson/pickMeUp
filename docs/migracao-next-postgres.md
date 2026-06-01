@@ -42,6 +42,16 @@ npm run prisma:generate
 
 Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
 
+## Progresso atual
+
+- Shell Next criada.
+- Prisma/PostgreSQL configurados.
+- Snapshot legado publicado em `public/game/`.
+- Core TypeScript inicial criado em `src/game/`.
+- Estado inicial, recursos, presets, normalizacao de shape e validacao de save ja existem fora do legado.
+- Store Zustand inicial criada em `src/store/gameStore.ts`.
+- A home Next ja tenta ler o save legado do `localStorage` e normaliza pelo core TypeScript.
+
 ## Legado no Next
 
 A pasta `public/game/` e uma snapshot do jogo atual para manter o fluxo jogavel quando a branch for executada com
