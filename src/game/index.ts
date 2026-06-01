@@ -1,4 +1,4 @@
-export { GAME_CONFIG } from "./config";
+export { GAME_CONFIG, type TeamPresetType } from "./config";
 export type * from "./types";
 export { createInitialState } from "./state/createInitialState";
 export { ensureStateShape } from "./state/normalizeState";

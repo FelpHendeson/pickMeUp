@@ -57,3 +57,19 @@ export function removeHeroFromFormation(state: GameState, heroId: string): Forma
   state.formation[slot] = null;
   return { ok: true, message: "Heroi removido da formacao.", slot };
 }
+
+export {
+  applyExpeditionPresetToExpeditionSelection,
+  applyTowerPresetToFormation,
+  clearTeamPreset,
+  getTeamPreset,
+  getTeamPresetBusyHeroes,
+  getTeamPresetHeroIds,
+  getTeamPresetHeroes,
+  getTeamPresetPower,
+  getTeamPresets,
+  saveExpeditionPresetFromFormation,
+  saveTowerPresetFromFormation,
+  setTeamPresetHero,
+  type TeamPresetActionResult,
+} from "./teamPresets";
