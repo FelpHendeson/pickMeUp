@@ -150,6 +150,7 @@ li {
 .dashboard-content > .inventory-panel,
 .dashboard-content > .weekly-event-card,
 .dashboard-content > .library-panel,
+.dashboard-content > .summon-panel-react,
 .dashboard-content > .columns {
   margin-top: 0;
 }
@@ -224,7 +225,8 @@ article,
 .missions-panel,
 .relics-panel,
 .recruitment-panel-react,
-.library-panel {
+.library-panel,
+.summon-panel-react {
   border: 1px solid var(--line);
   background: var(--panel);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
@@ -777,6 +779,43 @@ article,
   margin-top: 0.45rem;
 }
 
+.summon-grid-react {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.summon-card-react h3,
+.summon-history-react h3 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.summon-card-react.superior {
+  border-color: rgba(86, 199, 189, 0.35);
+}
+
+.summon-rates,
+.history-list-react {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+}
+
+.summon-rates span,
+.history-list-react small {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: 8px;
+  color: var(--muted);
+  padding: 0.45rem 0.55rem;
+}
+
+.summon-history-react {
+  margin-top: 1rem;
+}
+
 .recruitment-option-card {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(0, 0, 0, 0.18);
@@ -833,7 +872,8 @@ code {
   .relic-grid,
   .recruitment-options-grid,
   .library-grid-react,
-  .library-grid-react.compact {
+  .library-grid-react.compact,
+  .summon-grid-react {
     grid-template-columns: 1fr;
   }
 }

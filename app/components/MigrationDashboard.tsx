@@ -11,6 +11,7 @@ import { MissionsPanel } from "./MissionsPanel";
 import { RecruitmentPanel } from "./RecruitmentPanel";
 import { RelicsPanel } from "./RelicsPanel";
 import { TowerCampaignPanel } from "./TowerCampaignPanel";
+import { SummonPanel } from "./SummonPanel";
 
 type DashboardTab =
   | "base"
@@ -21,6 +22,7 @@ type DashboardTab =
   | "missions"
   | "relics"
   | "recruitment"
+  | "summon"
   | "library"
   | "roadmap";
 
@@ -32,6 +34,7 @@ const dashboardTabs: Array<{ id: DashboardTab; label: string }> = [
   { id: "expeditions", label: "Expedicoes" },
   { id: "missions", label: "Missoes" },
   { id: "relics", label: "Reliquias" },
+  { id: "summon", label: "Invocacao" },
   { id: "recruitment", label: "Recrutamento" },
   { id: "library", label: "Biblioteca" },
   { id: "roadmap", label: "Roadmap" },
@@ -155,6 +158,7 @@ export function MigrationDashboard() {
         {activeTab === "expeditions" ? <ExpeditionsPanel /> : null}
         {activeTab === "missions" ? <MissionsPanel /> : null}
         {activeTab === "relics" ? <RelicsPanel /> : null}
+        {activeTab === "summon" ? <SummonPanel /> : null}
         {activeTab === "recruitment" ? <RecruitmentPanel /> : null}
         {activeTab === "library" ? <LibraryPanel /> : null}
         {activeTab === "roadmap" ? <RoadmapPanel /> : null}

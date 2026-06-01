@@ -106,6 +106,27 @@ export type LibraryState = {
   };
 };
 
+export type SummonType = "common" | "superior";
+
+export type SummonRarityChance = {
+  rarity: number;
+  chance: number;
+};
+
+export type SummonCost = {
+  resource: "gold" | "crystals";
+  amount: number;
+};
+
+export type SummonHistoryEntry = {
+  id: string;
+  name: string;
+  rarity: number;
+  className: string;
+  type: SummonType;
+  at: string;
+};
+
 export type HeroInjury = {
   id: string;
   typeKey: string;
@@ -239,7 +260,7 @@ export type GameState = {
   formation: Array<string | null>;
   teamPresets: TeamPresets;
   baseRooms: Record<string, number>;
-  summonHistory: unknown[];
+  summonHistory: SummonHistoryEntry[];
   lastBattle: unknown | null;
   pendingTowerEvent: unknown | null;
   plannedTowerPostEvent: unknown | null;

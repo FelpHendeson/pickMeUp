@@ -107,6 +107,10 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   inimigos, chefes, eventos, herois encontrados e views progressivas de bestiario.
 - Aba React de biblioteca criada em `app/components/LibraryPanel.tsx`, exibindo bestiario, chefes, eventos,
   reliquias e descobertas de herois a partir do core.
+- Dominio inicial de invocacao migrado para `src/game/summon/`, incluindo tabelas de raridade, custos com reliquias
+  e evento semanal, historico normalizado e chamada de heroi.
+- Aba React de invocacao criada em `app/components/SummonPanel.tsx`, exibindo custos, chances ajustadas e historico
+  recente do save.
 
 ## Legado no Next
 
