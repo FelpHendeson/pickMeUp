@@ -11,6 +11,7 @@ import { MissionsPanel } from "./MissionsPanel";
 import { RecruitmentPanel } from "./RecruitmentPanel";
 import { RelicsPanel } from "./RelicsPanel";
 import { TowerCampaignPanel } from "./TowerCampaignPanel";
+import { TowerEventsPanel } from "./TowerEventsPanel";
 import { SummonPanel } from "./SummonPanel";
 
 type DashboardTab =
@@ -152,7 +153,12 @@ export function MigrationDashboard() {
 
       <div className="dashboard-content">
         {activeTab === "base" ? <BasePanel /> : null}
-        {activeTab === "tower" ? <TowerCampaignPanel /> : null}
+        {activeTab === "tower" ? (
+          <>
+            <TowerCampaignPanel />
+            <TowerEventsPanel />
+          </>
+        ) : null}
         {activeTab === "heroes" ? <HeroRosterPanel /> : null}
         {activeTab === "inventory" ? <InventoryPanel /> : null}
         {activeTab === "expeditions" ? <ExpeditionsPanel /> : null}

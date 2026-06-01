@@ -111,6 +111,11 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   e evento semanal, historico normalizado e chamada de heroi.
 - Aba React de invocacao criada em `app/components/SummonPanel.tsx`, exibindo custos, chances ajustadas e historico
   recente do save.
+- Dominio inicial de eventos da torre migrado para `src/game/tower-events/`, incluindo definicoes, chance de evento,
+  criacao, validacao de escolha, resolucao de efeitos, historico e integracao com biblioteca, consumiveis,
+  recrutamento e afinidade.
+- Painel React de eventos da torre criado em `app/components/TowerEventsPanel.tsx`, exibindo evento pendente,
+  efeitos ativos na proxima luta e historico recente a partir do save normalizado.
 
 ## Legado no Next
 

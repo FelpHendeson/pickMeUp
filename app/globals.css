@@ -146,6 +146,7 @@ li {
 }
 
 .dashboard-content > .tower-panel,
+.dashboard-content > .tower-events-panel,
 .dashboard-content > .roster-panel,
 .dashboard-content > .inventory-panel,
 .dashboard-content > .weekly-event-card,
@@ -225,6 +226,7 @@ article,
 .missions-panel,
 .relics-panel,
 .recruitment-panel-react,
+.tower-events-panel,
 .library-panel,
 .summon-panel-react {
   border: 1px solid var(--line);
@@ -339,6 +341,127 @@ article,
 
 .floor-chip.completed {
   border-color: rgba(86, 199, 189, 0.35);
+}
+
+.tower-event-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.tower-event-card.tone-danger {
+  border-color: rgba(198, 74, 74, 0.45);
+}
+
+.tower-event-card.tone-reward {
+  border-color: rgba(232, 188, 88, 0.45);
+}
+
+.tower-event-card.tone-support {
+  border-color: rgba(86, 199, 189, 0.45);
+}
+
+.tower-event-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.tower-event-head span {
+  color: var(--teal);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.tower-event-head h3 {
+  margin: 0.2rem 0 0;
+}
+
+.tower-event-next-step {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.tower-event-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.tower-event-choice {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.24);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 0.85rem;
+  text-align: left;
+}
+
+.tower-event-choice:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.tower-event-choice strong,
+.tower-event-choice span,
+.tower-event-choice em {
+  display: block;
+}
+
+.tower-event-choice strong {
+  margin-bottom: 0.35rem;
+}
+
+.tower-event-choice span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.tower-event-choice em {
+  color: #d88;
+  font-size: 0.78rem;
+  margin-top: 0.35rem;
+}
+
+.tower-effect-list,
+.tower-event-history {
+  margin-top: 1rem;
+}
+
+.tower-effect-list h3,
+.tower-event-history h3 {
+  font-size: 0.95rem;
+  margin: 0 0 0.6rem;
+}
+
+.tower-effect-item,
+.tower-history-item {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: 8px;
+  margin-bottom: 0.55rem;
+  padding: 0.75rem;
+}
+
+.tower-effect-item strong,
+.tower-history-item strong,
+.tower-effect-item span,
+.tower-history-item span {
+  display: block;
+}
+
+.tower-effect-item span,
+.tower-history-item span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-top: 0.25rem;
 }
 
 .roster-summary {

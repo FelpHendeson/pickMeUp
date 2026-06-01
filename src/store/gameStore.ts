@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { GAME_CONFIG, createInitialState, ensureStateShape, type GameState, type PartialGameState } from "@/src/game";
+import { GAME_CONFIG, createInitialState, ensureStateShape, resolveTowerEventChoice, type GameState, type PartialGameState } from "@/src/game";
 
 type GameStore = {
   state: GameState;
@@ -9,6 +9,7 @@ type GameStore = {
   loadLegacyLocalSave: () => { ok: true; state: GameState } | { ok: false; message: string };
   replaceState: (state: PartialGameState) => void;
   resetLocalState: () => void;
+  resolveTowerEventChoice: (choiceId: string) => { ok: boolean; message: string; startBattle?: boolean };
 };
 
 function readLegacyLocalSave(): unknown {
@@ -34,4 +35,12 @@ export const useGameStore = create<GameStore>((set) => ({
   },
   replaceState: (state) => set({ state: ensureStateShape(state), source: "manual" }),
   resetLocalState: () => set({ state: createInitialState(), source: "initial" }),
+  resolveTowerEventChoice: (choiceId) => {
+    const current = useGameStore.getState().state;
+    const result = resolveTowerEventChoice(current, choiceId);
+    if (result.ok) {
+      set({ state: ensureStateShape(current), source: "manual" });
+    }
+    return result;
+  },
 }));
