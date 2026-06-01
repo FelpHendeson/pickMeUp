@@ -8,3 +8,4 @@ export * from "./heroes";
 export * from "./equipment";
 export * from "./consumables";
 export * from "./difficulty";
+export * from "./tower";

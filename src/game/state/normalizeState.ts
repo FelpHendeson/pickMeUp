@@ -4,6 +4,7 @@ import { normalizeConsumablesState } from "../consumables";
 import { normalizeTowerDifficultyMode, normalizeTowerDifficultyStats } from "../difficulty";
 import { normalizeInventoryItems, removeMissingEquipmentFromHeroes } from "../equipment";
 import { normalizeHero } from "../heroes";
+import { getCompletedTowerChapterIds } from "../tower";
 import { createInitialState } from "./createInitialState";
 import { normalizeTeamPresets } from "./teamPresets";
 
@@ -60,7 +61,10 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
     source.pendingRecruitmentChoice && typeof source.pendingRecruitmentChoice === "object" ? source.pendingRecruitmentChoice : null;
   merged.towerBattleEffects = arrayOrEmpty(source.towerBattleEffects);
   merged.towerEventHistory = arrayOrEmpty(source.towerEventHistory).slice(0, 8);
-  merged.completedTowerChapters = arrayOrEmpty<string>(source.completedTowerChapters);
+  merged.completedTowerChapters = getCompletedTowerChapterIds({
+    completedTowerChapters: arrayOrEmpty<string>(source.completedTowerChapters),
+    towerFloor: merged.towerFloor,
+  });
   merged.lastChapterCompletion =
     source.lastChapterCompletion && typeof source.lastChapterCompletion === "object" ? source.lastChapterCompletion : null;
   merged.narrative = {

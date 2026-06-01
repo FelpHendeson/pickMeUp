@@ -57,6 +57,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   ganho/gasto e uso fora de combate para preparacao da torre.
 - Dominio inicial de dificuldade da torre migrado para `src/game/difficulty/`, incluindo modos, resumos,
   modificadores, estatisticas e normalizacao do save.
+- Dominio inicial de capitulos da torre migrado para `src/game/tower/`, incluindo regioes, recompensas de
+  conclusao, eventos por capitulo, modificadores regionais e capitulos concluidos derivados do andar salvo.
 - Store Zustand inicial criada em `src/store/gameStore.ts`.
 - A home Next ja tenta ler o save legado do `localStorage` e normaliza pelo core TypeScript.
 
