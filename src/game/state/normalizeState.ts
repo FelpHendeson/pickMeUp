@@ -5,6 +5,7 @@ import { normalizeTowerDifficultyMode, normalizeTowerDifficultyStats } from "../
 import { normalizeInventoryItems, removeMissingEquipmentFromHeroes } from "../equipment";
 import { normalizeExpeditions } from "../expeditions";
 import { normalizeHero } from "../heroes";
+import { normalizeMissionState } from "../missions";
 import { getCompletedTowerChapterIds } from "../tower";
 import { createInitialState } from "./createInitialState";
 import { normalizeTeamPresets } from "./teamPresets";
@@ -74,7 +75,6 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
     pendingScenes: arrayOrEmpty(narrative.pendingScenes),
   };
   merged.missionStats = asRecord(source.missionStats) as Record<string, number>;
-  merged.achievements = asRecord(source.achievements);
   merged.echoFragments = nonNegativeInteger(source.echoFragments);
   merged.relics = asRecord(source.relics);
   merged.heroContracts = nonNegativeInteger(source.heroContracts);
@@ -87,6 +87,7 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   merged.deadHeroes = arrayOrEmpty(source.deadHeroes);
   merged.summonHistory = arrayOrEmpty(source.summonHistory).slice(0, 12);
   merged.lastEnergyAt = Number.isFinite(Number(source.lastEnergyAt)) ? Number(source.lastEnergyAt) : now;
+  normalizeMissionState(merged);
 
   return merged;
 }

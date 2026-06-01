@@ -1,5 +1,6 @@
 import { GAME_CONFIG } from "../config";
 import { createTowerDifficultyStats } from "../difficulty";
+import { createDailyMissionState, normalizeAchievements } from "../missions";
 import type { GameState } from "../types";
 import { createTeamPresets } from "./teamPresets";
 
@@ -54,8 +55,8 @@ export function createInitialState(now = Date.now()): GameState {
       pendingScenes: [],
     },
     missionStats: {},
-    dailyMissions: null,
-    achievements: {},
+    dailyMissions: createDailyMissionState(),
+    achievements: normalizeAchievements({}),
     lastSavedAt: null,
     lastEnergyAt: now,
   };

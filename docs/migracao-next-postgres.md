@@ -77,6 +77,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   duracao, poder, recompensa, inicio e coleta.
 - Aba React de expedicoes criada em `app/components/ExpeditionsPanel.tsx`, exibindo rotas, status, equipe,
   tempo restante e recompensa prevista a partir do core.
+- Dominio inicial de missoes e conquistas migrado para `src/game/missions/`, incluindo definicoes, progresso,
+  reset diario local, recompensas, normalizacao e contagem de itens coletaveis.
 
 ## Legado no Next
 

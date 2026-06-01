@@ -10,3 +10,4 @@ export * from "./consumables";
 export * from "./difficulty";
 export * from "./tower";
 export * from "./expeditions";
+export * from "./missions";

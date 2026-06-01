@@ -65,6 +65,18 @@ export type ExpeditionReward = {
   baseAmount?: number;
 };
 
+export type MissionReward = Partial<Record<AccountResourceKey, number>> & {
+  consumables?: Record<string, number>;
+};
+
+export type DailyMissionState = {
+  dateKey: string;
+  progress: Record<string, number>;
+  claimed: Record<string, boolean>;
+};
+
+export type AchievementState = Record<string, { claimed: boolean }>;
+
 export type ActiveExpedition = {
   id: string;
   expeditionId: string;
@@ -121,8 +133,8 @@ export type GameState = {
   lastChapterCompletion: unknown | null;
   narrative: NarrativeState;
   missionStats: Record<string, number>;
-  dailyMissions: unknown | null;
-  achievements: Record<string, unknown>;
+  dailyMissions: DailyMissionState;
+  achievements: AchievementState;
   lastSavedAt: string | null;
   lastEnergyAt: number;
 };
