@@ -8,3 +8,10 @@ export {
   normalizeBattleResult,
   runAutoBattle,
 } from "./autoBattle";
+export {
+  advanceBattlePlayback,
+  createBattlePlaybackState,
+  getBattlePlaybackId,
+  getCurrentBattleSnapshot,
+  setBattlePlaybackSpeed,
+} from "./battlePlayback";

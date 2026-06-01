@@ -226,7 +226,7 @@ export type ActiveExpedition = {
 
 export type NarrativeState = {
   seenSceneIds: string[];
-  pendingScenes: unknown[];
+  pendingScenes: string[];
 };
 
 export type TowerDifficultyStats = {

@@ -50,6 +50,7 @@ export type RunTowerBattleOptions = {
 export type RunTowerBattleResult =
   | { ok: false; message: string }
   | { ok: true; event: true; phase: "pre" | "post"; message: string }
+  | { ok: true; narrative: true; message: string }
   | { ok: true; battle: BattleResult; rawBattle: AutoBattleResult };
 
 function toBattleUnits(enemies: EnemyUnit[]): BattleUnit[] {

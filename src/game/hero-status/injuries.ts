@@ -1,3 +1,4 @@
+import { queueFirstSevereInjuryNarrative } from "../narrative";
 import { canSpendResource, spendResource } from "../state/resources";
 import type { GameState, Hero, HeroInjury, StatKey, Stats } from "../types";
 
@@ -233,6 +234,7 @@ export function resolveBattleInjuries(
     onInjury?.(
       `${hero.name} ${verb} um ferimento: ${definition?.name || typeKey} (${definition?.description || ""}, ${INJURY_CONFIG.durationBattles} batalhas).`,
     );
+    queueFirstSevereInjuryNarrative(state);
   });
 }
 

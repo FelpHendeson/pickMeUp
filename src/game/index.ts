@@ -3,8 +3,21 @@ export type * from "./types";
 export { createInitialState } from "./state/createInitialState";
 export { ensureStateShape } from "./state/normalizeState";
 export { addResource, canSpendResource, getResourceAmount, spendResource } from "./state/resources";
+export { regenerateEnergy, getEnergyRegenProgress } from "./state/energy";
 export { addAccountXp, getAccountXpForNextLevel } from "./state/account";
 export { parseImportedSaveText, validateImportedSaveData } from "./save/saveSchema";
+export {
+  EXPORT_FILE_NAME,
+  createExportBlob,
+  downloadGameStateExport,
+  importGameStateFromText,
+  normalizeGameState,
+  prepareLoadedGameState,
+  serializeGameStateForExport,
+} from "./save/gamePersistence";
+export * from "./narrative";
+export * from "./preferences";
+export * from "./chapter/completion";
 export * from "./heroes";
 export * from "./equipment";
 export * from "./consumables";

@@ -1,5 +1,7 @@
+import { recordExpeditionAffinity } from "../affinity";
 import { GAME_CONFIG } from "../config";
 import { addHeroXp, getHeroPower } from "../heroes";
+import { getRelicAdjustedExpeditionDuration } from "../relics";
 import { addResource } from "../state/resources";
 import type { ActiveExpedition, ExpeditionReward, ExpeditionRewardType, GameState, Hero } from "../types";
 import { EXPEDITION_DEFINITIONS, type ExpeditionDefinition } from "./definitions";
@@ -124,8 +126,9 @@ export function getActiveExpeditionReward(state: Pick<GameState, "heroes">, acti
   return getExpeditionRewardPreview(state, definition, activeExpedition.heroIds);
 }
 
-export function getExpeditionDurationMs(definition: ExpeditionDefinition, durationMultiplier = 1): number {
-  return Math.max(30 * 1000, Math.round(definition.durationMs * durationMultiplier));
+export function getExpeditionDurationMs(state: GameState, definition: ExpeditionDefinition, durationMultiplier = 1): number {
+  const base = getRelicAdjustedExpeditionDuration(state, definition.durationMs);
+  return Math.max(30 * 1000, Math.round(base * durationMultiplier));
 }
 
 export function getExpeditionRemainingMs(activeExpedition: ActiveExpedition, now = Date.now()): number {
@@ -148,7 +151,7 @@ export function startExpedition(state: GameState, expeditionId: string, heroIds:
   if (uniqueHeroIds.some((heroId) => !findHero(state, heroId))) return { ok: false, message: "Heroi invalido selecionado." };
   if (uniqueHeroIds.some((heroId) => isHeroOnExpedition(state, heroId))) return { ok: false, message: "Um dos herois selecionados ja esta em expedicao." };
 
-  const durationMs = getExpeditionDurationMs(definition, durationMultiplier);
+  const durationMs = getExpeditionDurationMs(state, definition, durationMultiplier);
   const expedition: ActiveExpedition = {
     id: createExpeditionId(expeditionId),
     expeditionId,
@@ -159,6 +162,7 @@ export function startExpedition(state: GameState, expeditionId: string, heroIds:
   };
 
   state.activeExpeditions.push(expedition);
+  recordExpeditionAffinity(state, uniqueHeroIds);
   return { ok: true, expedition, message: `${definition.name} iniciada com ${uniqueHeroIds.length} heroi(s).` };
 }
 

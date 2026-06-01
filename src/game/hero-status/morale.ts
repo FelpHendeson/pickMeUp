@@ -1,3 +1,4 @@
+import { queueFirstCriticalMoraleNarrative } from "../narrative";
 import type { GameState, Hero, Stats } from "../types";
 
 export const MORALE_CONFIG = {
@@ -147,10 +148,12 @@ export function applyBattleMoraleChanges(
       let delta = battleResult === "victory" ? MORALE_CONFIG.victoryGain : -MORALE_CONFIG.defeatLoss;
       if (fallenHeroIds.has(hero.id)) delta -= MORALE_CONFIG.selfFallLoss;
 
+      const moraleBefore = hero.morale;
       const witnessedFalls = Math.max(0, fallenCount - (fallenHeroIds.has(hero.id) ? 1 : 0));
       if (witnessedFalls > 0) delta -= Math.min(6, witnessedFalls * MORALE_CONFIG.allyFallLoss);
 
       const actualDelta = adjustHeroMorale(hero, delta);
+      if (moraleBefore >= 20 && hero.morale < 20) queueFirstCriticalMoraleNarrative(state);
       hero.battlesSinceLastUsed = 0;
       hero.lastUsedAt = now;
 

@@ -7,6 +7,7 @@ import { addAccountXp } from "../state/account";
 import { addResource } from "../state/resources";
 import { getFloorReward, isBossFloor, type TowerReward } from "../tower/floors";
 import { getTowerChapterByFloor, isChapterFinalFloor, TOWER_CHAPTERS } from "../tower/chapters";
+import { queueBossAfterNarrative, queueChapterStartNarrative } from "../narrative";
 import { startVeteranRecruitment } from "../recruitment";
 import { getWeeklyEventModifier } from "../weekly-events";
 import type { AutoBattleResult, EquipmentItem, GameState } from "../types";
@@ -271,5 +272,7 @@ export function grantTowerVictoryRewards(
     unlockFloorMilestones(state, floorNumber, log, battle, onEvent);
     grantChapterCompletionReward(state, floorNumber, log, battle, onEvent, random);
     state.towerFloor = Math.max(state.towerFloor, Math.min(GAME_CONFIG.towerMaxFloor + 1, floorNumber + 1));
+    queueBossAfterNarrative(state, floorNumber);
+    queueChapterStartNarrative(state, state.towerFloor);
   }
 }
