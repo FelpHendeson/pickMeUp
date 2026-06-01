@@ -83,6 +83,8 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   estado de coleta e recompensas.
 - Dominio inicial de reliquias migrado para `src/game/relics/`, incluindo definicoes, normalizacao, desbloqueio,
   custos, upgrade, textos de efeito e multiplicadores globais.
+- Aba React de reliquias criada em `app/components/RelicsPanel.tsx`, exibindo fragmentos de eco, bloqueios,
+  niveis, custos e efeitos atuais/proximos.
 
 ## Legado no Next
 
