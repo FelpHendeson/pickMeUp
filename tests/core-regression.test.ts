@@ -2,22 +2,30 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  addConsumable,
+  addEquipmentToInventory,
   addHeroToFormation,
   applyExpeditionPresetToExpeditionSelection,
   applyTowerPresetToFormation,
+  claimDailyMissionReward,
   collectExpedition,
   createInitialState,
   ensureStateShape,
+  equipItem,
   generateHero,
+  generateEquipment,
   getExpeditionDefinition,
+  importGameStateFromText,
   initializeNarrativeForSession,
   markNarrativeSceneSeen,
   queueNarrativeScene,
   runTowerBattle,
   saveTowerPresetFromFormation,
+  serializeGameStateForExport,
   setTeamPresetHero,
   startExpedition,
   summonHero,
+  useConsumable,
 } from "../src/game/index.ts";
 import type { GameState, Hero } from "../src/game/index.ts";
 
@@ -194,4 +202,57 @@ test("narrativa inicial entra na fila uma unica vez e cenas vistas nao retornam"
   assert.equal(queuedAgain, false);
   assert.deepEqual(state.narrative.seenSceneIds, ["intro"]);
   assert.deepEqual(state.narrative.pendingScenes, ["chapter_awakening_ruins_start"]);
+});
+
+test("fluxo alpha registra missoes, aplica acoes principais e preserva export/import", () => {
+  const now = 1_780_000_000_000;
+  const state = createInitialState(now);
+  const heroes = addHeroes(state, 5);
+  heroes.forEach(empowerHero);
+  heroes.forEach((hero) => {
+    assert.equal(addHeroToFormation(state, hero.id).ok, true);
+  });
+
+  const summoned = summonHero(state, "common", { random: () => 0, dateInput: "2026-06-01T00:00:00.000Z" });
+  assert.equal(summoned.ok, true);
+  assert.equal(claimDailyMissionReward(state, "summon_1").ok, true);
+
+  const weapon = addEquipmentToInventory(
+    state,
+    generateEquipment({
+      id: "alpha_weapon",
+      name: "Lamina de Smoke",
+      type: "weapon",
+      rarity: 2,
+      bonusStat: "atk",
+      floorNumber: 4,
+      random: () => 0.5,
+    }),
+  );
+  assert.equal(equipItem(state, heroes[0].id, weapon.id).ok, true);
+  assert.equal(claimDailyMissionReward(state, "equip_item_1").ok, true);
+
+  heroes[0].currentHp = Math.floor(heroes[0].stats.hp / 2);
+  addConsumable(state, "small_healing_potion", 1);
+  assert.equal(useConsumable(state, "small_healing_potion", heroes[0].id).ok, true);
+  assert.ok((heroes[0].currentHp || 0) > Math.floor(heroes[0].stats.hp / 2));
+
+  const started = startExpedition(state, "training_field", heroes.slice(0, 3).map((hero) => hero.id), now, 0.01);
+  assert.equal(started.ok, true);
+  assert.equal(claimDailyMissionReward(state, "start_expedition_1").ok, true);
+  if (!started.ok) return;
+  assert.equal(collectExpedition(state, "training_field", started.expedition.endsAt + 1).ok, true);
+  assert.equal(claimDailyMissionReward(state, "collect_expedition_1").ok, true);
+
+  const battle = runTowerBattle(state, { skipEventRoll: true, difficultyMode: "normal" });
+  assert.equal(battle.ok, true);
+  assert.ok(state.lastBattle);
+
+  const exported = serializeGameStateForExport(state);
+  const imported = importGameStateFromText(exported, now + 10_000);
+  assert.equal(imported.ok, true);
+  if (!imported.ok) return;
+  assert.equal(imported.state.heroes.length, state.heroes.length);
+  assert.equal(imported.state.inventory[0]?.id, weapon.id);
+  assert.equal(imported.state.dailyMissions.claimed.summon_1, true);
 });

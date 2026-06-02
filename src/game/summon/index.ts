@@ -1,6 +1,7 @@
 import { GAME_CONFIG } from "../config";
 import { generateHero } from "../heroes";
 import { recordHeroDiscovery } from "../library";
+import { recordMissionProgress } from "../missions";
 import { getRelicSummonCostMultiplier } from "../relics";
 import { spendResource } from "../state/resources";
 import { getWeeklyEventBonus, getWeeklyEventModifier } from "../weekly-events";
@@ -139,6 +140,7 @@ export function summonHero(
   state.heroes.push(hero);
   recordHeroDiscovery(state, hero);
   addSummonHistory(state, hero, summonType);
+  recordMissionProgress(state, "summons", 1);
 
   return {
     ok: true,

@@ -1,4 +1,5 @@
 import { normalizeEquipmentSlots } from "../heroes";
+import { recordMissionProgress } from "../missions";
 import type { EquipmentItem, EquipmentSlot, GameState, Hero } from "../types";
 import { EQUIPMENT_TYPES } from "./definitions";
 import { findEquipment } from "./heroEffectiveStats";
@@ -25,6 +26,7 @@ export function equipItem(state: GameState, heroId: string, equipmentId: string)
   }
 
   hero.equipment[item.type] = item.id;
+  recordMissionProgress(state, "itemsEquipped", 1);
   return { ok: true, message: `${item.name} equipado em ${hero.name}.` };
 }
 

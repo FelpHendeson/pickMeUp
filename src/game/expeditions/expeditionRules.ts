@@ -1,6 +1,7 @@
 import { recordExpeditionAffinity } from "../affinity";
 import { GAME_CONFIG } from "../config";
 import { addHeroXp, getHeroPower } from "../heroes";
+import { recordMissionProgress } from "../missions";
 import { getRelicAdjustedExpeditionDuration } from "../relics";
 import { addResource } from "../state/resources";
 import type { ActiveExpedition, ExpeditionReward, ExpeditionRewardType, GameState, Hero } from "../types";
@@ -163,6 +164,7 @@ export function startExpedition(state: GameState, expeditionId: string, heroIds:
 
   state.activeExpeditions.push(expedition);
   recordExpeditionAffinity(state, uniqueHeroIds);
+  recordMissionProgress(state, "expeditionsStarted", 1);
   return { ok: true, expedition, message: `${definition.name} iniciada com ${uniqueHeroIds.length} heroi(s).` };
 }
 
@@ -183,6 +185,7 @@ export function collectExpedition(state: GameState, expeditionId: string, now = 
   }
 
   state.activeExpeditions = state.activeExpeditions.filter((expedition) => expedition.id !== activeExpedition.id);
+  recordMissionProgress(state, "expeditionsCollected", 1);
   return { ok: true, reward, message: `${definition.name} concluida: +${reward.amount} ${getExpeditionRewardName(reward.type)}.` };
 }
 
