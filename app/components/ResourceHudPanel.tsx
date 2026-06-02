@@ -45,53 +45,54 @@ export function ResourceHudPanel() {
             {state.resources.energy}/{state.resources.maxEnergy}
           </strong>
         </div>
-        <div className="resource-pill featured tone-gold">
-          <span>Poder da equipe</span>
-          <strong>{formatNumber(getFormationPower(state))}</strong>
-        </div>
-        <div className="resource-pill featured tone-cyan">
-          <span>Andar da torre</span>
-          <strong>{floorLabel}</strong>
-        </div>
       </div>
-      <div className="resource-secondary">
-        <div className="resource-pill">
-          <span>Essencia</span>
-          <strong>{formatNumber(state.resources.essence)}</strong>
-        </div>
-        <div className="resource-pill">
-          <span>Fragmentos</span>
-          <strong>{formatNumber(state.resources.fragments)}</strong>
-        </div>
-        <div className="resource-pill">
-          <span>Frag. Eco</span>
-          <strong>{formatNumber(state.echoFragments)}</strong>
-        </div>
-        <div className="resource-pill">
-          <span>Contratos</span>
-          <strong>{formatNumber(state.heroContracts)}</strong>
-        </div>
-        <div className="resource-pill">
-          <span>Consum.</span>
-          <strong>{formatNumber(consumableTotal)}</strong>
-        </div>
-        <div className="resource-pill">
-          <span>Equip.</span>
-          <strong>{state.inventory.length}</strong>
-        </div>
-        <div className="resource-pill">
-          <span>Exped.</span>
-          <strong>{state.activeExpeditions.length}</strong>
-        </div>
-        <div className="resource-pill">
-          <span>Feridos</span>
-          <strong>{injuredCount}</strong>
-        </div>
-        <div className="resource-pill">
-          <span>Missoes</span>
-          <strong>{claimableMissions}</strong>
-        </div>
+      <div className="resource-context-row">
+        <span>Andar {floorLabel}</span>
+        <span>Poder {formatNumber(getFormationPower(state))}</span>
+        {claimableMissions > 0 ? <span>{claimableMissions} missao(oes) prontas</span> : null}
+        {injuredCount > 0 ? <span>{injuredCount} ferido(s)</span> : null}
       </div>
+      <details className="resource-secondary-details">
+        <summary>Recursos e status secundarios</summary>
+        <div className="resource-secondary">
+          <div className="resource-pill">
+            <span>Essencia</span>
+            <strong>{formatNumber(state.resources.essence)}</strong>
+          </div>
+          <div className="resource-pill">
+            <span>Fragmentos</span>
+            <strong>{formatNumber(state.resources.fragments)}</strong>
+          </div>
+          <div className="resource-pill">
+            <span>Frag. Eco</span>
+            <strong>{formatNumber(state.echoFragments)}</strong>
+          </div>
+          <div className="resource-pill">
+            <span>Contratos</span>
+            <strong>{formatNumber(state.heroContracts)}</strong>
+          </div>
+          <div className="resource-pill">
+            <span>Consum.</span>
+            <strong>{formatNumber(consumableTotal)}</strong>
+          </div>
+          <div className="resource-pill">
+            <span>Equip.</span>
+            <strong>{state.inventory.length}</strong>
+          </div>
+          <div className="resource-pill">
+            <span>Exped.</span>
+            <strong>{state.activeExpeditions.length}</strong>
+          </div>
+          <div className="resource-pill">
+            <span>Feridos</span>
+            <strong>{injuredCount}</strong>
+          </div>
+          <div className="resource-pill">
+            <span>Missoes</span>
+            <strong>{claimableMissions}</strong>
+          </div>
+        </div>
+      </details>
       {regen.msRemaining > 0 ? <small className="resource-regen-note">Proxima energia em ~{Math.ceil(regen.msRemaining / 1000)}s</small> : null}
     </section>
   );

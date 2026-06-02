@@ -3,12 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 import {
   GAME_CONFIG,
+  RELIC_DEFINITIONS,
   getActiveWeeklyEvent,
   getClaimableMissionCount,
+  getFormationHeroes,
   getFormationHeroCount,
+  getFormationPower,
   getInjuredHeroes,
+  getRelicState,
+  getRelicUpgradeCost,
+  getHeroMoraleState,
   getTowerChapterByFloor,
+  isExpeditionComplete,
+  isRelicUnlocked,
   type GameState,
+  type Hero,
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
 import { BattleResultPanel } from "./BattleResultPanel";
@@ -94,11 +103,35 @@ function SaveBootstrap() {
   return null;
 }
 
-function getBaseNextAction(state: GameState, formationCount: number): { title: string; description: string } {
+function getRelicUpgradeableCount(state: GameState): number {
+  return RELIC_DEFINITIONS.filter((relic) => {
+    const relicState = getRelicState(state, relic.id);
+    if (!isRelicUnlocked(state, relic)) return false;
+    if (relicState.level >= relic.maxLevel) return false;
+    return state.echoFragments >= getRelicUpgradeCost(relic, relicState.level);
+  }).length;
+}
+
+function getBaseNextAction(
+  state: GameState,
+  formationCount: number,
+  completeExpeditions: number,
+): { title: string; description: string; cta: string; tab: DashboardTab } {
+  if (completeExpeditions > 0) {
+    return {
+      title: "Colete expedicoes prontas",
+      description: `${completeExpeditions} expedicao(oes) aguardam coleta. Pegue as recompensas antes do proximo combate.`,
+      cta: "Coletar Expedicao",
+      tab: "expeditions",
+    };
+  }
+
   if (state.heroes.length === 0) {
     return {
       title: "Recrute seu primeiro heroi",
       description: "Use invocacao ou contrato para formar uma equipe antes de desafiar a torre.",
+      cta: state.heroContracts > 0 ? "Usar Contrato" : "Invocar Heroi",
+      tab: state.heroContracts > 0 ? "recruitment" : "summon",
     };
   }
 
@@ -106,6 +139,8 @@ function getBaseNextAction(state: GameState, formationCount: number): { title: s
     return {
       title: "Monte uma formacao",
       description: "Escolha ate cinco herois para liberar o proximo combate da torre.",
+      cta: "Montar Formacao",
+      tab: "formation",
     };
   }
 
@@ -113,6 +148,8 @@ function getBaseNextAction(state: GameState, formationCount: number): { title: s
     return {
       title: "Resolva o evento pendente",
       description: `Um evento aguarda no andar ${state.pendingTowerEvent.floor}. Va para Torre e escolha como prosseguir.`,
+      cta: "Resolver Evento",
+      tab: "tower",
     };
   }
 
@@ -120,94 +157,127 @@ function getBaseNextAction(state: GameState, formationCount: number): { title: s
     return {
       title: "Conclua a transicao do capitulo",
       description: "Colete a recompensa especial para registrar o avancao da campanha.",
+      cta: "Ir para Torre",
+      tab: "tower",
     };
   }
 
   return {
     title: "Avance na torre",
     description: `Prepare a equipe e inicie o combate do andar ${Math.min(state.towerFloor, GAME_CONFIG.towerMaxFloor)}.`,
+    cta: "Ir para Torre",
+    tab: "tower",
   };
 }
 
-function BasePanel() {
+function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) {
   const state = useGameStore((store) => store.state);
   const weeklyEvent = getActiveWeeklyEvent();
   const chapter = getTowerChapterByFloor(state.towerFloor);
   const formationCount = getFormationHeroCount(state);
+  const formationHeroes = getFormationHeroes(state).filter((hero): hero is Hero => Boolean(hero));
+  const formationPower = getFormationPower(state);
   const injuredCount = getInjuredHeroes(state).length;
   const claimableMissions = getClaimableMissionCount(state);
-  const nextAction = getBaseNextAction(state, formationCount);
+  const completeExpeditions = state.activeExpeditions.filter((expedition) => isExpeditionComplete(expedition)).length;
+  const criticalMoraleCount = state.heroes.filter((hero) => getHeroMoraleState(hero).tone === "collapse").length;
+  const upgradeableRelics = getRelicUpgradeableCount(state);
+  const nextAction = getBaseNextAction(state, formationCount, completeExpeditions);
   const floorProgress = `${Math.min(state.towerFloor, GAME_CONFIG.towerMaxFloor)}/${GAME_CONFIG.towerMaxFloor}`;
+  const alerts = [
+    completeExpeditions > 0 ? `${completeExpeditions} expedicao(oes) concluida(s)` : null,
+    injuredCount > 0 ? `${injuredCount} heroi(s) ferido(s)` : null,
+    criticalMoraleCount > 0 ? `${criticalMoraleCount} heroi(s) com moral critica` : null,
+    claimableMissions > 0 ? `${claimableMissions} missao(oes) pronta(s)` : null,
+    upgradeableRelics > 0 ? `${upgradeableRelics} reliquia(s) aprimoravel(is)` : null,
+    state.heroContracts > 0 ? `${state.heroContracts} contrato(s) disponivel(is)` : null,
+  ].filter((alert): alert is string => Boolean(alert));
 
   return (
-    <>
-      <section className="grid">
-        <article>
-          <span>Proximo passo</span>
-          <h2>{nextAction.title}</h2>
-          <p>{nextAction.description}</p>
-          <div className="mini-grid">
-            <div>
-              <strong>{formationCount}/{GAME_CONFIG.maxFormationSize}</strong>
-              <small>Formacao</small>
-            </div>
-            <div>
-              <strong>{claimableMissions}</strong>
-              <small>Missoes</small>
-            </div>
-            <div>
-              <strong>{injuredCount}</strong>
-              <small>Feridos</small>
-            </div>
-            <div>
-              <strong>{state.activeExpeditions.length}</strong>
-              <small>Exped.</small>
-            </div>
-          </div>
-        </article>
-
-        <article>
-          <span>Campanha</span>
-          <h2>{chapter.name}</h2>
-          <p>{chapter.description}</p>
-          <div className="mini-grid">
-            <div>
-              <strong>{floorProgress}</strong>
-              <small>Torre</small>
-            </div>
-            <div>
-              <strong>{chapter.finalBoss}</strong>
-              <small>Chefe</small>
-            </div>
-            <div>
-              <strong>{state.echoFragments}</strong>
-              <small>Frag. eco</small>
-            </div>
-            <div>
-              <strong>{state.heroContracts}</strong>
-              <small>Contratos</small>
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <article className={`weekly-event-card tone-${weeklyEvent.tone}`}>
-        <span>Evento semanal | Semana {weeklyEvent.weekNumber}</span>
-        <h2>{weeklyEvent.name}</h2>
-        <p>{weeklyEvent.summary}</p>
-        <div className="weekly-event-effects">
-          {weeklyEvent.effects.map((effect) => (
-            <small key={effect}>{effect}</small>
-          ))}
-        </div>
+    <section className="command-center-panel">
+      <article className="command-next-card">
+        <span>Central de Comando</span>
+        <h2>{nextAction.title}</h2>
+        <p>{nextAction.description}</p>
+        <button className="hero-inline-action primary command-cta" onClick={() => onNavigate(nextAction.tab)} type="button">
+          {nextAction.cta}
+        </button>
       </article>
-    </>
+
+      <div className="command-grid">
+        <article className="command-card">
+          <span>Campanha</span>
+          <h3>{chapter.name}</h3>
+          <p>{chapter.description}</p>
+          <div className="command-progress-bar" aria-label={`Progresso da torre ${floorProgress}`}>
+            <i style={{ width: `${Math.min(100, (Math.min(state.towerFloor, GAME_CONFIG.towerMaxFloor) / GAME_CONFIG.towerMaxFloor) * 100)}%` }} />
+          </div>
+          <div className="command-metrics">
+            <span>Andar {floorProgress}</span>
+            <span>Chefe: {chapter.finalBoss}</span>
+          </div>
+        </article>
+
+        <article className={`command-card weekly tone-${weeklyEvent.tone}`}>
+          <span>Evento semanal | Semana {weeklyEvent.weekNumber}</span>
+          <h3>{weeklyEvent.name}</h3>
+          <p>{weeklyEvent.summary}</p>
+          <div className="weekly-event-effects compact">
+            {weeklyEvent.effects.slice(0, 2).map((effect) => (
+              <small key={effect}>{effect}</small>
+            ))}
+          </div>
+        </article>
+
+        <article className="command-card">
+          <span>Equipe principal</span>
+          <h3>{formationCount}/{GAME_CONFIG.maxFormationSize} herois</h3>
+          <p>Poder total {formationPower}. Revise ferimentos e moral antes de desafios mais arriscados.</p>
+          <div className="command-team-list">
+            {formationHeroes.length > 0 ? (
+              formationHeroes.slice(0, 5).map((hero) => (
+                <span key={hero.id}>
+                  {hero.name} | Lv. {hero.level} | {getHeroMoraleState(hero).label}
+                </span>
+              ))
+            ) : (
+              <span>Nenhum heroi em formacao.</span>
+            )}
+          </div>
+        </article>
+
+        <article className="command-card">
+          <span>Alertas</span>
+          <h3>{alerts.length > 0 ? `${alerts.length} ponto(s) de atencao` : "Tudo sob controle"}</h3>
+          <div className="command-alert-list">
+            {alerts.length > 0 ? alerts.map((alert) => <span key={alert}>{alert}</span>) : <span>Nenhum alerta urgente no momento.</span>}
+          </div>
+          <div className="command-alert-actions">
+            {completeExpeditions > 0 ? (
+              <button className="hero-inline-action" onClick={() => onNavigate("expeditions")} type="button">
+                Expedicoes
+              </button>
+            ) : null}
+            {claimableMissions > 0 ? (
+              <button className="hero-inline-action" onClick={() => onNavigate("missions")} type="button">
+                Missoes
+              </button>
+            ) : null}
+            {upgradeableRelics > 0 ? (
+              <button className="hero-inline-action" onClick={() => onNavigate("relics")} type="button">
+                Reliquias
+              </button>
+            ) : null}
+          </div>
+        </article>
+      </div>
+    </section>
   );
 }
 
 function SettingsPanel() {
   return (
-    <section className="grid">
+    <section className="settings-panel">
       <SaveManagementPanel />
       <PreferencesPanel />
     </section>
@@ -267,7 +337,7 @@ export function MigrationDashboard() {
       </nav>
 
       <div className="dashboard-content">
-        {activeTab === "base" ? <BasePanel /> : null}
+        {activeTab === "base" ? <BasePanel onNavigate={setActiveTab} /> : null}
         {activeTab === "tower" ? (
           <>
             <ChapterCompletionPanel />

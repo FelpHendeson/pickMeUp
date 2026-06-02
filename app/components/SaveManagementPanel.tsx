@@ -56,13 +56,13 @@ export function SaveManagementPanel() {
       <span>Save</span>
       <h2>Save e backup</h2>
       <p>{message}</p>
-      <small className="save-source-note">Save principal: localStorage | Fonte atual: {getSourceLabel(source)}</small>
+      <small className="save-source-note">Save principal: navegador local | Fonte atual: {getSourceLabel(source)}</small>
 
       <div className="save-management-stack">
         <section className="save-panel-section">
           <div className="save-section">
             <strong>Save Local</strong>
-            <small>O progresso fica neste navegador via localStorage. Banco de dados nao e necessario para jogar.</small>
+            <small>O progresso fica salvo neste navegador. Voce pode jogar normalmente sem banco de dados.</small>
           </div>
           <div className="hero-action-row">
             <button
@@ -141,29 +141,24 @@ export function SaveManagementPanel() {
           <small>Arquivo padrao: {EXPORT_FILE_NAME}</small>
         </section>
 
-        <section className="save-panel-section">
+        <details className="save-panel-section save-advanced-section">
+          <summary>Avancado / Experimental</summary>
           <div className="save-section">
             <strong>Cloud Save Experimental</strong>
-            <small>
-              Opcional e voltado a testes com PostgreSQL. Ative `NEXT_PUBLIC_ENABLE_CLOUD_SAVE=true` e configure `DATABASE_URL` para usar.
-            </small>
+            <small>Opcional para testes. Se nao estiver disponivel, o save local continua funcionando normalmente.</small>
           </div>
           {cloudStatus === "disabled" ? (
-            <p className="save-disabled-note">
-              Cloud save esta desativado neste ambiente. O save local continua ativo e o jogo funciona normalmente sem banco.
-            </p>
+            <p className="save-disabled-note">Cloud save esta desativado neste ambiente. Nada muda para o progresso local.</p>
           ) : null}
-          {cloudStatus === "checking" ? <p className="save-disabled-note">Verificando disponibilidade da API de cloud save...</p> : null}
+          {cloudStatus === "checking" ? <p className="save-disabled-note">Verificando disponibilidade do cloud save...</p> : null}
           {cloudStatus === "unavailable" ? (
-            <p className="save-disabled-note">
-              Cloud save nao esta disponivel agora. Confira `DATABASE_URL` e o PostgreSQL local. O save local nao foi afetado.
-            </p>
+            <p className="save-disabled-note">Cloud save nao esta disponivel agora. O save local nao foi afetado.</p>
           ) : null}
           {cloudStatus === "available" ? (
-            <p className="save-ready-note">API de cloud save disponivel para testes. O save local continua sendo a fonte principal.</p>
+            <p className="save-ready-note">Cloud save disponivel para testes. O save local continua sendo a fonte principal.</p>
           ) : null}
           <label className="inventory-hero-picker">
-            ID do jogador para nuvem
+            Identificador do jogador
             <input
               className="cloud-save-input"
               disabled={!cloudAvailable}
@@ -181,7 +176,7 @@ export function SaveManagementPanel() {
               }}
               type="button"
             >
-              Carregar da nuvem
+              Carregar cloud save
             </button>
             <button
               className="hero-inline-action primary"
@@ -192,10 +187,10 @@ export function SaveManagementPanel() {
               }}
               type="button"
             >
-              Salvar na nuvem
+              Salvar cloud save
             </button>
           </div>
-        </section>
+        </details>
       </div>
     </article>
   );
