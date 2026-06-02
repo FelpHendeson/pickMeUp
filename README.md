@@ -34,6 +34,8 @@ npm install
 
 Este e o fluxo principal por enquanto. O jogo usa `localStorage` do navegador para salvar o progresso.
 
+Nao e obrigatorio criar `.env` para jogar localmente sem banco.
+
 ```bash
 npm run dev
 ```
@@ -55,6 +57,18 @@ Sem `DATABASE_URL`, a tela principal continua funcionando. Apenas as acoes de cl
 ## Rodar Local Com PostgreSQL
 
 Use este fluxo quando quiser testar save em nuvem/local via API e PostgreSQL.
+
+Copie o exemplo de ambiente para `.env`:
+
+```bash
+cp .env.example .env
+```
+
+No PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
 
 Suba o banco:
 
@@ -84,15 +98,35 @@ O Docker Compose usa a porta local `5433` para evitar conflito com PostgreSQL ja
 
 ## Variaveis de Ambiente
 
-Crie um `.env` a partir de `.env.example` apenas se for testar PostgreSQL/cloud save:
+O `.env` so e obrigatorio quando voce quiser usar Prisma/PostgreSQL, Prisma Studio, `validate:db` ou cloud save pela API. Para jogar usando apenas `localStorage`, ele pode ficar ausente.
+
+Para criar:
+
+```bash
+cp .env.example .env
+```
+
+No PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Valores de exemplo:
 
 ```bash
 DATABASE_URL="postgresql://postgres:postgres@localhost:5433/ascensao_dos_ecos?schema=public"
+NEXT_PUBLIC_APP_ENV="local"
+NEXT_PUBLIC_ENABLE_CLOUD_SAVE="false"
 ```
 
-Variavel:
+Variaveis:
 
 - `DATABASE_URL`: opcional para jogar localmente; necessaria para `db:migrate`, `db:studio`, `validate:db` e rotas de cloud save.
+- `NEXT_PUBLIC_APP_ENV`: flag publica informativa para ambiente local/futuro deploy.
+- `NEXT_PUBLIC_ENABLE_CLOUD_SAVE`: flag publica reservada para controle futuro do cloud save; o save local por `localStorage` continua sendo o caminho principal.
+
+Nao commite `.env` real. O repositorio versiona apenas `.env.example`.
 
 ## Comandos Uteis
 
