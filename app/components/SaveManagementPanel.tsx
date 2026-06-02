@@ -80,7 +80,8 @@ export function SaveManagementPanel() {
           <button
             className="hero-inline-action"
             onClick={() => {
-              if (!window.confirm("Resetar o save local deste navegador?")) return;
+              if (!window.confirm("Resetar o save local deste navegador? Esta acao apaga o progresso salvo neste dispositivo.")) return;
+              if (!window.confirm("Confirmacao final: o reset local e irreversivel sem um export JSON ou save na nuvem.")) return;
               resetLocalState();
               setMessage("Save local resetado.");
             }}
@@ -95,6 +96,10 @@ export function SaveManagementPanel() {
           onChange={async (event) => {
             const file = event.target.files?.[0];
             if (!file) return;
+            if (!window.confirm("Importar este JSON vai sobrescrever o progresso local atual. Continuar?")) {
+              event.target.value = "";
+              return;
+            }
             const text = await file.text();
             const result = importSave(text);
             setMessage(result.message);
