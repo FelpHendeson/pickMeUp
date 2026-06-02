@@ -1,516 +1,171 @@
 # Ascensao dos Ecos
 
-**Ascensao dos Ecos** e um jogo web single-player de estrategia, idle RPG, gacha e progressao por torre. O jogador atua como um comandante que invoca herois, monta uma formacao, equipa personagens e avanca por andares com combates automaticos.
-
-O projeto foi pensado para rodar diretamente no navegador e ser publicado no GitHub Pages, sem backend e sem etapa de build obrigatoria.
-
-## Jogar
-
-- Menu inicial: `index.html`
-- Jogo: `game/index.html`
-- Caminho do botao principal: `./game/index.html`
-
-Quando publicado no GitHub Pages, a raiz do repositorio abre a tela inicial e o botao **Jogar Agora** leva para o jogo.
-
-## Conceito
-
-A fantasia central e gerenciar uma equipe de herois em uma torre dimensional instavel. O jogador nao controla cada acao em tempo real; a estrategia esta em preparar a equipe antes do combate:
-
-- escolher herois;
-- ajustar a formacao;
-- equipar personagens;
-- administrar recursos;
-- lidar com eventos, ferimentos e moral;
-- subir andares cada vez mais perigosos.
-
-O tom visual e mecanico segue uma linha dark fantasy, anime, tower progression e gacha tatico.
-
-## Sistemas implementados
-
-### Menu inicial
-
-A raiz do projeto possui uma landing/menu com arte de fundo, apresentacao do jogo, painel "Sobre" e acesso direto ao jogo.
-
-Arquivos principais:
-
-- `index.html`
-- `styles/menu.css`
-- `src/menu.js`
-- `ArtPickMeUp.png`
-
-### Save local
-
-O progresso e salvo no navegador usando `localStorage`.
-
-A chave de save fica em `Echoes.CONFIG.saveKey`, definida em `game/src/state.js`.
-
-O jogo tambem possui uma aba de Configuracoes para:
-
-- exportar o save como `ascensao-dos-ecos-save.json`;
-- importar um save JSON valido;
-- resetar o save local com confirmacao dupla.
-
-Saves exportados incluem `saveVersion` para validar compatibilidade futura.
-
-### Base e recursos
-
-O estado inicial inclui recursos como:
-
-- ouro;
-- cristais;
-- essencia;
-- fragmentos;
-- fragmentos de eco;
-- energia.
-
-A energia regenera com o tempo, e a torre consome energia para iniciar batalhas.
-
-### Reliquias permanentes
-
-Reliquias sao aprimoramentos globais da conta comprados com Fragmentos de Eco. Elas ficam salvas no progresso local, entram no export/import de save e funcionam como progressao permanente sem depender de um heroi especifico.
-
-Reliquias iniciais:
-
-- Nucleo da Torre: aumenta HP maximo global;
-- Chama do Comandante: aumenta ATK global;
-- Escudo dos Sobreviventes: aumenta DEF global;
-- Olho do Destino: aumenta LUCK global;
-- Selo do Portal: reduz custo de invocacoes;
-- Ampulheta Arcana: reduz duracao de expedicoes.
-
-Fragmentos de Eco podem vir de chefes de capitulo, conquistas importantes, eventos especiais e drops raros da torre.
-
-Arquivo principal:
-
-- `game/src/relics.js`
-
-### Biblioteca e bestiario
-
-A Biblioteca registra descobertas do jogador e funciona como colecao de mundo.
-
-Secoes atuais:
-
-- Bestiario: inimigos encontrados, derrotas, regioes, detalhes liberados por vitorias;
-- Chefes: tentativas, melhor resultado, capitulo e recompensa especial;
-- Eventos da Torre: eventos encontrados e resultados ja vistos;
-- Reliquias: reliquias bloqueadas e desbloqueadas;
-- Herois Encontrados: classes, raridades e tracos ja obtidos.
-
-Inimigos aparecem como desconhecidos ate serem enfrentados. Depois de algumas derrotas, a entrada libera atributos aproximados, habilidades e drops.
-
-Arquivo principal:
-
-- `game/src/library.js`
-
-### Herois
-
-Herois possuem:
-
-- nivel e XP;
-- raridade;
-- classe;
-- atributos principais;
-- moral;
-- ferimentos;
-- especializacao;
-- equipamentos.
-
-Atributos principais:
-
-- `HP`
-- `ATK`
-- `DEF`
-- `SPD`
-- `FOCUS`
-- `LUCK`
-
-Classes iniciais:
-
-- Guerreiro
-- Arqueiro
-- Mago
-- Sacerdote
-- Ladino
-- Guardiao
-
-### Invocacao
-
-O jogo possui invocacao de herois com custos em recursos, historico de invocacao e geracao de personagens por classe e raridade.
-
-Arquivo principal:
-
-- `game/src/summon.js`
-
-### Recrutamento fora do gacha
-
-O jogador tambem pode obter herois por Contratos de Heroi, eventos da torre e marcos de progresso. Um contrato abre uma escolha entre 3 herois gerados, mostrando classe, raridade, traco, atributos e possiveis especializacoes futuras. Apenas um candidato e recrutado; os outros sao descartados.
-
-Contratos podem ser obtidos por:
-
-- chefes de capitulo;
-- conquistas importantes;
-- eventos raros da torre;
-- recompensas especiais.
-
-Chefes de capitulo tambem podem revelar um veterano tematico, com raridade minima 3 estrelas e ligacao com a regiao vencida.
-
-Arquivo principal:
-
-- `game/src/recruitment.js`
-
-### Formacao
-
-A equipe ativa usa ate 5 herois, com linhas de frente e retaguarda. A posicao influencia a escolha de alvos durante o combate.
-
-Arquivo principal:
-
-- `game/src/formation.js`
-
-### Equipamentos
-
-O inventario comporta equipamentos que modificam atributos dos herois. Os atributos efetivos sao calculados considerando equipamento, especializacao, ferimentos e moral.
-
-Arquivo principal:
-
-- `game/src/equipment.js`
-
-### Consumiveis
-
-O Inventario possui uma secao de consumiveis para preparacao e recuperacao fora de combate.
-
-Consumiveis iniciais:
-
-- Pocao pequena de cura: recupera HP atual de um heroi;
-- Pocao de vigor: recupera moral;
-- Kit medico: reduz a duracao de um ferimento;
-- Pergaminho de foco: aumenta FOCUS da formacao na proxima batalha;
-- Amuleto de protecao: reduz chance de ferimento na proxima batalha;
-- Pedra de retorno: cancela com seguranca Armadilha ou Altar sombrio pendente.
-
-Consumiveis podem vir de baus, mercador perdido, missoes, conquistas, eventos semanais e recompensas raras da torre.
-
-Arquivo principal:
-
-- `game/src/consumables.js`
-
-### Torre
-
-A torre e o modo principal de progressao. Cada andar define inimigos, recomendacao de nivel, mecanicas e recompensas.
-
-A campanha atual possui 40 andares divididos em capitulos:
-
-- Capitulo 1: Ruinas do Despertar, andares 1 a 10;
-- Capitulo 2: Floresta Bestial, andares 11 a 20;
-- Capitulo 3: Cripta Espectral, andares 21 a 30;
-- Capitulo 4: Abismo Infernal, andares 31 a 40.
-
-Cada capitulo possui tema, inimigos predominantes, eventos especificos, chefe final, modificador regional e recompensa especial ao derrotar o chefe do capitulo.
-
-Arquivos principais:
-
-- `game/src/tower.js`
-- `game/src/rewards.js`
-- `game/src/difficulty.js`
-
-### Modos de dificuldade da torre
-
-Antes de iniciar um andar, o jogador escolhe o risco da tentativa:
-
-- Normal: regras atuais, recompensas padrao e sem morte permanente;
-- Desafio: inimigos 125%, recompensas 150%, mais ferimentos e maior chance de eventos;
-- Hardcore: inimigos 150%, recompensas 220%, risco real de morte permanente para herois que caem.
-
-O modo escolhido afeta forca inimiga, recompensas, chance de consumiveis/equipamentos, ferimentos e estatisticas por modo. Morte permanente so existe quando o modificador Hardcore esta ativo.
-
-### Eventos aleatorios da torre
-
-Eventos podem aparecer antes ou depois de combates, sem ocorrer em todo andar. Eles trazem decisoes com efeitos sobre equipe, recursos ou proxima batalha.
-
-Tipos existentes:
-
-- fonte de cura;
-- bau misterioso;
-- mercador perdido;
-- altar sombrio;
-- prisioneiro;
-- armadilha.
-
-Arquivo principal:
-
-- `game/src/tower-events.js`
-
-### Eventos semanais locais
-
-O jogo possui eventos temporarios simulados pelo calendario local do navegador. O evento ativo e determinado pela semana do ano e aparece como banner na Base.
-
-Eventos atuais:
-
-- Semana da Torre Instavel;
-- Festival de Invocacao;
-- Cacada aos Fragmentos;
-- Treinamento Intensivo.
-
-Esses eventos podem alterar recompensas da torre, atributos de inimigos, custos e chances de invocacao, chance de equipamento e ganho de XP dos herois.
-
-Arquivo principal:
-
-- `game/src/weekly-events.js`
-
-### Combate automatico
-
-O combate e simulado em turnos rapidos. Unidades agem conforme seus atributos, escolhem alvos, causam dano, curam, aplicam efeitos e acumulam energia.
-
-Depois de cada batalha da torre, a tela de resultado 2.0 resume vitoria/derrota, andar, capitulo, dificuldade, inimigos, modificadores, recompensas, progressao, consequencias e desempenho individual dos herois. O replay completo e o log antigo continuam disponiveis pela aba Combate.
-
-Estatisticas por heroi registradas no combate:
-
-- dano causado;
-- cura realizada;
-- dano recebido;
-- inimigos abatidos;
-- habilidades usadas;
-- falhas por moral;
-- protecoes por afinidade.
-
-Arquivos principais:
-
-- `game/src/battle.js`
-- `game/src/battle-view.js`
-
-### Ferimentos
-
-Herois que chegam a 0 HP podem voltar feridos ao final da batalha. Ferimentos duram por combates e podem ser tratados na Enfermaria usando recursos.
-
-Tipos:
-
-- braco machucado;
-- costela quebrada;
-- trauma arcano;
-- exaustao severa.
-
-Arquivo principal:
-
-- `game/src/injuries.js`
-
-### Moral
-
-Cada heroi possui moral de 0 a 100. Vitorias, derrotas, aliados caidos, tempo sem uso e eventos podem alterar esse valor.
-
-Estados exibidos:
-
-- Inspirado;
-- Estavel;
-- Abalado;
-- Em colapso.
-
-A moral influencia levemente o desempenho em combate.
-
-Arquivo principal:
-
-- `game/src/morale.js`
-
-### Afinidade entre herois
-
-Pares de herois acumulam afinidade quando atuam juntos. A afinidade e salva por par de IDs e aumenta em combates vencidos, chefes derrotados, expedicoes, eventos perigosos e quando ambos terminam uma batalha vivos.
-
-Niveis:
-
-- Desconhecidos;
-- Companheiros;
-- Confiaveis;
-- Irmandade;
-- Lenda Viva.
-
-Bonus leves podem conceder moral e energia inicial na batalha, pequena chance de protecao entre aliados e bonus pequeno de XP quando lutam juntos.
-
-Arquivo principal:
-
-- `game/src/affinity.js`
-
-### Especializacoes de classe
-
-Ao atingir nivel 10, cada heroi pode escolher uma especializacao permanente. A especializacao altera levemente atributos e adiciona uma passiva de combate.
-
-Especializacoes atuais:
-
-- Guerreiro: Berserker ou Cavaleiro
-- Arqueiro: Atirador ou Cacador
-- Mago: Elementalista ou Arcanista
-- Sacerdote: Curandeiro ou Exorcista
-- Ladino: Assassino ou Duelista
-- Guardiao: Sentinela ou Colosso
-
-Arquivo principal:
-
-- `game/src/specializations.js`
-
-### Missoes e conquistas
-
-O jogo possui uma aba de objetivos com missoes diarias simuladas e conquistas permanentes.
-
-Missoes diarias usam reset por data local do navegador e recompensam acoes como vencer combates, invocar herois, enviar expedicoes, equipar itens e coletar expedicoes.
-
-Conquistas permanentes recompensam marcos como chegar a andares importantes, invocar varios herois, obter herois raros, vencer chefes sem baixas, equipar itens e completar expedicoes.
-
-Arquivo principal:
-
-- `game/src/missions.js`
-
-### Expedicoes
-
-Herois podem ser enviados para expedicoes automaticas em troca de recompensas.
-
-Arquivo principal:
-
-- `game/src/expeditions.js`
-
-## Estrutura do projeto
-
-```text
-.
-+-- index.html
-+-- ArtPickMeUp.png
-+-- gdd_web_tower_gacha_mvp.md
-+-- src/
-|   +-- menu.js
-+-- styles/
-|   +-- menu.css
-+-- game/
-|   +-- index.html
-|   +-- styles/
-|   |   +-- style.css
-|   +-- src/
-|       +-- state.js
-|       +-- weekly-events.js
-|       +-- relics.js
-|       +-- storage.js
-|       +-- heroes.js
-|       +-- recruitment.js
-|       +-- formation.js
-|       +-- affinity.js
-|       +-- equipment.js
-|       +-- consumables.js
-|       +-- expeditions.js
-|       +-- battle.js
-|       +-- battle-view.js
-|       +-- tower.js
-|       +-- tower-events.js
-|       +-- library.js
-|       +-- difficulty.js
-|       +-- summon.js
-|       +-- rewards.js
-|       +-- injuries.js
-|       +-- morale.js
-|       +-- specializations.js
-|       +-- missions.js
-|       +-- view-utils.js
-|       +-- ui.js
-|       +-- main.js
-+-- agentsRules/
-    +-- contexto.md
-    +-- pre-analise.md
-    +-- padroes-codigo-projeto.md
-    +-- padrao-commit.md
-```
-
-## Como rodar localmente
-
-Como o projeto e estatico, basta abrir o `index.html` no navegador.
-
-Opcionalmente, rode um servidor local simples na raiz:
-
-```bash
-python -m http.server 8000
-```
-
-Depois acesse:
-
-```text
-http://localhost:8000/
-```
-
-## Arquitetura tecnica
-
-O jogo usa HTML, CSS e JavaScript puro.
-
-Nao ha framework, bundler ou backend no MVP atual. Os scripts usam IIFE e registram funcoes e constantes em `window.Echoes`.
-
-Padrao usado nos modulos:
-
-```js
-(function (global) {
-  "use strict";
-
-  const Echoes = (global.Echoes = global.Echoes || {});
-
-  Echoes.minhaFuncao = minhaFuncao;
-})(window);
-```
-
-Responsabilidades principais:
-
-- `state.js`: estado inicial, recursos e normalizacao de save;
-- `weekly-events.js`: eventos semanais locais e modificadores temporarios;
-- `relics.js`: reliquias permanentes, Fragmentos de Eco e bonus globais;
-- `storage.js`: carregar, salvar e resetar progresso;
-- `heroes.js`: criacao, atributos e progressao de herois;
-- `recruitment.js`: contratos, escolha entre 3 herois e veteranos de capitulo;
-- `formation.js`: equipe ativa;
-- `affinity.js`: vinculos entre pares de herois e bonus leves de equipe;
-- `equipment.js`: inventario e atributos efetivos;
-- `consumables.js`: consumiveis, validacao de uso, recuperacao e efeitos de proxima batalha;
-- `tower.js`: andares, inimigos e inicio de batalhas;
-- `tower-events.js`: eventos aleatorios;
-- `library.js`: biblioteca, bestiario e registros de descoberta;
-- `difficulty.js`: modos de dificuldade da torre, risco hardcore e estatisticas por modo;
-- `battle.js`: simulacao de combate e estatisticas de desempenho;
-- `rewards.js`: recompensas;
-- `missions.js`: missoes diarias, conquistas e recompensas de objetivos;
-- `ui.js`: renderizacao das telas;
-- `main.js`: handlers de interface e orquestracao.
-
-## Desenvolvimento
-
-Regras praticas do projeto:
-
-- manter compatibilidade com GitHub Pages;
-- usar caminhos relativos;
-- nao depender de backend no MVP;
-- manter JavaScript em modulos IIFE;
-- expor apenas o necessario em `window.Echoes`;
-- escapar textos dinamicos na UI;
-- salvar mudancas persistentes via fluxo de `saveGameState`;
-- normalizar saves antigos ao adicionar campos novos;
-- separar commits por feature ou responsabilidade.
-
-Antes de finalizar alteracoes em JavaScript, rode:
-
-```bash
-node --check game/src/arquivo-alterado.js
-```
-
-## GDD e documentacao interna
-
-O documento de design principal esta em:
-
-- `gdd_web_tower_gacha_mvp.md`
-
-As regras de contexto, pre-analise, padroes de codigo e padrao de commit ficam em:
-
-- `agentsRules/`
+**Ascensao dos Ecos** e um jogo web single-player de estrategia, idle RPG, gacha e progressao por torre. A branch atual opera a experiencia principal em **Next.js, React, TypeScript e PostgreSQL**, com regras de jogo concentradas em um core TypeScript e persistencia em duas camadas.
 
 ## Status
 
-MVP em desenvolvimento ativo.
+Alpha estavel em fechamento na branch `migration/next-postgres`.
 
-O foco atual e consolidar o loop principal:
+- UI principal em React/Next.
+- Core de gameplay em `src/game/`.
+- Save local no navegador como fallback imediato.
+- Save em nuvem por snapshot JSON explicito no PostgreSQL.
+- O runtime antigo em JavaScript puro nao faz mais parte operacional desta branch.
 
-1. invocar herois;
-2. recrutar herois por contratos e eventos;
-3. montar formacao;
-4. equipar personagens;
-5. enfrentar andares da torre;
-6. lidar com eventos, moral e ferimentos;
-7. cumprir missoes e conquistas;
-8. evoluir herois e desbloquear especializacoes;
-9. aprimorar reliquias permanentes da conta.
+## Stack
+
+- Next.js e React para UI.
+- TypeScript para regras, estado e contratos.
+- Zustand como ponte unica de mutacoes da UI.
+- Prisma e PostgreSQL para snapshots de save.
+- Docker Compose para banco local.
+
+## Como Rodar
+
+Instale dependencias:
+
+```bash
+npm install
+```
+
+Rode a aplicacao:
+
+```bash
+npm run dev
+```
+
+Abra o endereco informado pelo Next, normalmente:
+
+```text
+http://localhost:3000
+```
+
+Se a porta 3000 ja estiver ocupada, o Next pode oferecer outra porta.
+
+## Banco Local
+
+O projeto usa PostgreSQL via Docker Compose.
+
+Suba o banco:
+
+```bash
+npm run db:up
+```
+
+Esse comando cria o volume, sobe o container e aguarda o healthcheck do PostgreSQL.
+
+Aplique migrations:
+
+```bash
+npm run db:migrate
+```
+
+DSN local padrao:
+
+```text
+postgresql://postgres:postgres@localhost:5432/ascensao_dos_ecos?schema=public
+```
+
+Configure `.env` a partir de `.env.example`:
+
+```bash
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ascensao_dos_ecos?schema=public"
+```
+
+O volume Docker `ecos_postgres_data` preserva os dados locais do banco.
+
+## Validacao
+
+Comandos principais:
+
+```bash
+npm run typecheck
+npm test
+npm run build
+npm run validate
+npm run validate:db
+```
+
+O que cada comando cobre:
+
+- `npm run typecheck`: contratos TypeScript.
+- `npm test`: regressao do core e fixtures estaveis.
+- `npm run build`: build Next de producao.
+- `npm run validate`: Prisma generate, typecheck, testes e build.
+- `npm run validate:db`: Docker Compose, migrations e smoke test do PostgreSQL.
+
+## Persistencia
+
+O save local usa `localStorage` pela chave definida em `GAME_CONFIG.saveKey`.
+
+O save em nuvem e explicito pelo jogador e usa:
+
+- `GET /api/saves/[playerId]`
+- `PUT /api/saves/[playerId]` com `{ payload: GameState }`
+
+No PostgreSQL, `SaveSnapshot.payload` continua sendo a fonte completa do save. `PlayerProfile` e `Hero` sao tabelas auxiliares sincronizadas para preparar evolucoes futuras sem expandir o schema nesta etapa.
+
+## Sistemas de Jogo
+
+O core TypeScript em `src/game/` cobre:
+
+- herois, classes, tracos, raridade, XP e poder;
+- formacao e presets de equipe;
+- equipamentos e atributos efetivos;
+- consumiveis;
+- moral e ferimentos;
+- enfermaria;
+- especializacoes;
+- afinidade entre herois;
+- invocacao e historico;
+- recrutamento por contratos;
+- reliquias permanentes;
+- missoes e conquistas;
+- expedicoes;
+- capitulos, andares, inimigos e recompensas da torre;
+- eventos aleatorios da torre;
+- eventos semanais locais;
+- dificuldades da torre;
+- combate automatico, replay e resultado;
+- conclusao de capitulos;
+- biblioteca/bestiario;
+- narrativa;
+- preferencias;
+- export/import de save.
+
+## UI Principal
+
+Os componentes React ficam em `app/components/` e incluem paineis para:
+
+- recursos e gerenciamento de save;
+- torre, combate, eventos e resultados;
+- herois, formacao, presets e memorial;
+- inventario, consumiveis e equipamentos;
+- expedicoes;
+- missoes;
+- reliquias;
+- invocacao;
+- recrutamento;
+- biblioteca;
+- preferencias;
+- narrativa.
+
+## Fluxo de Desenvolvimento
+
+Regras praticas:
+
+- trabalhar na branch `migration/next-postgres`;
+- manter `master` preservada;
+- fazer commits pequenos por responsabilidade;
+- chamar mutacoes de UI por `src/store/gameStore.ts`;
+- manter regras puras em `src/game/`;
+- normalizar saves antigos antes de usar;
+- manter textos em PT-BR;
+- rodar validacoes antes de commitar.
+
+## Documentacao Interna
+
+- `docs/migracao-next-postgres.md`: status da migracao, banco e comandos.
+- `docs/especificacao-funcional.md`: especificacao funcional do jogo.
+- `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md`: referencia de design.
+- `agentsRules/`: contexto, pre-analise, padroes de codigo e padrao de commit.

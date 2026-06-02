@@ -10,6 +10,18 @@ Manter o jogo jogavel pela UI React, com regras puras em TypeScript e persistenc
 - save local no navegador como fallback imediato;
 - snapshot de nuvem em PostgreSQL por acao explicita do jogador.
 
+## Status de fechamento
+
+Meta atual: **Alpha estavel**.
+
+Esta etapa considera a migracao concluida quando:
+
+- `npm run validate` passa em ambiente local com dependencias instaladas;
+- `npm run validate:db` passa com PostgreSQL local via Docker Compose;
+- o fluxo principal React permite jogar, salvar, exportar/importar, resolver eventos, combater, progredir e carregar snapshot da nuvem;
+- nenhum caminho operacional depende do codigo JavaScript puro removido desta branch;
+- o banco permanece no escopo de snapshot JSON completo, com `PlayerProfile` e `Hero` apenas como tabelas auxiliares sincronizadas.
+
 ## Arquitetura
 
 - `app/`: UI React, rotas Next e API de save.
@@ -47,6 +59,9 @@ npm run db:up
 npm run db:migrate
 npm run dev
 ```
+
+`npm run db:up` aguarda o healthcheck do PostgreSQL antes de retornar, para evitar que `prisma migrate dev`
+rode enquanto o container ainda esta inicializando.
 
 Use `npm run validate:db` para subir o banco, aplicar migrations e rodar o smoke test de persistencia na nuvem.
 O arquivo `.env` deve ficar local e seguir `.env.example`.
@@ -92,6 +107,10 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
 - API `GET`/`PUT /api/saves/[playerId]` valida e normaliza payloads antes de criar snapshots.
 - PostgreSQL local versionado com Docker Compose, migrations Prisma e teste de banco.
 - Testes de paridade com a implementacao removida foram substituidos por fixtures TypeScript estaveis.
+- Acoes criticas de save na UI exigem confirmacao antes de sobrescrever ou resetar progresso local.
+- A API de save possui cobertura de smoke test para snapshot valido, payload invalido e jogador sem snapshot.
+- O core possui smoke test do fluxo Alpha para invocacao, formacao, equipamento, consumivel, expedicao, combate,
+  missao diaria e export/import de save.
 
 ## Historico
 
