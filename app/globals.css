@@ -766,6 +766,24 @@ article,
   padding-top: 1rem;
 }
 
+.save-management-stack {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.save-panel-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: grid;
+  gap: 0.7rem;
+  padding-top: 1rem;
+}
+
+.save-panel-section:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
 .save-source-note {
   color: var(--teal);
   display: block;
@@ -784,6 +802,28 @@ article,
 
 .save-section small {
   color: var(--muted);
+}
+
+.save-disabled-note {
+  border: 1px solid rgba(86, 199, 189, 0.24);
+  background: rgba(86, 199, 189, 0.08);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+}
+
+.save-ready-note {
+  border: 1px solid rgba(232, 188, 88, 0.26);
+  background: rgba(232, 188, 88, 0.08);
+  border-radius: 8px;
+  color: var(--gold);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  margin: 0;
+  padding: 0.65rem 0.75rem;
 }
 
 .cloud-save-input {

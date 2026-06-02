@@ -124,7 +124,7 @@ Variaveis:
 
 - `DATABASE_URL`: opcional para jogar localmente; necessaria para `db:migrate`, `db:studio`, `validate:db` e rotas de cloud save.
 - `NEXT_PUBLIC_APP_ENV`: flag publica informativa para ambiente local/futuro deploy.
-- `NEXT_PUBLIC_ENABLE_CLOUD_SAVE`: flag publica reservada para controle futuro do cloud save; o save local por `localStorage` continua sendo o caminho principal.
+- `NEXT_PUBLIC_ENABLE_CLOUD_SAVE`: controla a interface de Cloud Save Experimental. Use `"false"` para desenvolvimento local sem banco e `"true"` apenas quando `DATABASE_URL` estiver configurada.
 
 Nao commite `.env` real. O repositorio versiona apenas `.env.example`.
 
@@ -203,6 +203,14 @@ Esse caminho e suficiente para:
 ### Save em nuvem/local experimental
 
 O PostgreSQL e usado como camada opcional para testar cloud save local. O jogador aciona esse fluxo manualmente na tela de Config.
+
+Por padrao, a interface de cloud save fica desativada com:
+
+```bash
+NEXT_PUBLIC_ENABLE_CLOUD_SAVE="false"
+```
+
+Para testar o recurso experimental, configure `DATABASE_URL`, altere `NEXT_PUBLIC_ENABLE_CLOUD_SAVE` para `"true"` e reinicie o servidor Next.
 
 Rotas atuais:
 
