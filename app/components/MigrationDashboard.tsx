@@ -14,6 +14,7 @@ import { useGameStore } from "@/src/store/gameStore";
 import { BattleResultPanel } from "./BattleResultPanel";
 import { ChapterCompletionPanel } from "./ChapterCompletionPanel";
 import { ExpeditionsPanel } from "./ExpeditionsPanel";
+import { FormationPanel } from "./FormationPanel";
 import { HeroRosterPanel } from "./HeroRosterPanel";
 import { InventoryPanel } from "./InventoryPanel";
 import { LibraryPanel } from "./LibraryPanel";
@@ -27,7 +28,6 @@ import { RepeatFloorsPanel } from "./RepeatFloorsPanel";
 import { ResourceHudPanel } from "./ResourceHudPanel";
 import { SaveManagementPanel } from "./SaveManagementPanel";
 import { SummonPanel } from "./SummonPanel";
-import { TeamPresetsPanel } from "./TeamPresetsPanel";
 import { TowerBattlePanel } from "./TowerBattlePanel";
 import { TowerCampaignPanel } from "./TowerCampaignPanel";
 import { TowerEventsPanel } from "./TowerEventsPanel";
@@ -36,6 +36,7 @@ type DashboardTab =
   | "base"
   | "tower"
   | "heroes"
+  | "formation"
   | "inventory"
   | "expeditions"
   | "missions"
@@ -50,6 +51,7 @@ const dashboardTabs: Array<{ id: DashboardTab; label: string }> = [
   { id: "base", label: "Base" },
   { id: "tower", label: "Torre" },
   { id: "heroes", label: "Herois" },
+  { id: "formation", label: "Formacao" },
   { id: "inventory", label: "Inventario" },
   { id: "expeditions", label: "Expedicoes" },
   { id: "missions", label: "Missoes" },
@@ -282,11 +284,11 @@ export function MigrationDashboard() {
         ) : null}
         {activeTab === "heroes" ? (
           <>
-            <TeamPresetsPanel />
             <HeroRosterPanel />
             <MemorialPanel />
           </>
         ) : null}
+        {activeTab === "formation" ? <FormationPanel /> : null}
         {activeTab === "inventory" ? <InventoryPanel /> : null}
         {activeTab === "expeditions" ? <ExpeditionsPanel /> : null}
         {activeTab === "missions" ? <MissionsPanel /> : null}

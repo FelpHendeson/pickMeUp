@@ -91,9 +91,9 @@ function PresetGroup({ type, label }: { type: TeamPresetType; label: string }) {
   );
 }
 
-export function TeamPresetsPanel() {
+export function TeamPresetsPanel({ compact = false }: { compact?: boolean }) {
   return (
-    <section className="team-presets-panel">
+    <section className={`team-presets-panel${compact ? " compact" : ""}`}>
       <div className="section-heading">
         <span>Formacao React</span>
         <h2>Times salvos</h2>

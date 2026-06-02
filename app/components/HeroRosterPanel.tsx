@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CONSUMABLE_DEFINITIONS,
   EQUIPMENT_SLOTS,
   getClassSpecializations,
   getEquipmentBonusLabel,
@@ -22,11 +23,11 @@ import {
   SPECIALIZATION_LEVEL,
   type EquipmentItem,
   type EquipmentSlot,
-  type Hero,
   type GameState,
+  type Hero,
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 function getRarityStars(rarity: number): string {
   return "\u2605".repeat(rarity) + "\u2606".repeat(Math.max(0, 5 - rarity));
@@ -46,7 +47,7 @@ function heroMatchesStatus(hero: Hero, state: GameState, status: HeroStatusFilte
   return true;
 }
 
-function sortHeroesForDisplay(heroes: Hero[], _state: GameState, sortBy: HeroSort): Hero[] {
+function sortHeroesForDisplay(heroes: Hero[], sortBy: HeroSort): Hero[] {
   return [...heroes].sort((a, b) => {
     const powerDifference = getHeroPower(b) - getHeroPower(a);
     const rarityDifference = b.rarity - a.rarity;
@@ -69,34 +70,77 @@ function getEquippedItems(hero: Hero, inventory: EquipmentItem[]): EquipmentItem
   return inventory.filter((item) => ids.has(item.id));
 }
 
-function HeroCard({
+function HeroCompactCard({
   hero,
-  inventory,
-  inFormation,
+  selected,
   state,
-  unequippedItems,
+  onSelect,
 }: {
   hero: Hero;
-  inventory: EquipmentItem[];
-  inFormation: boolean;
-  state: Parameters<typeof getHeroAffinitySummaries>[0];
-  unequippedItems: EquipmentItem[];
+  selected: boolean;
+  state: GameState;
+  onSelect: () => void;
 }) {
+  const currentHp = hero.currentHp ?? hero.stats.hp;
+  const hpPercent = Math.round((Math.max(0, currentHp) / Math.max(1, hero.stats.hp)) * 100);
+  const moraleState = getHeroMoraleState(hero);
+  const injuryCount = getActiveInjuryCount(hero);
+  const specialization = getHeroSpecialization(hero);
+  const affinity = getHeroAffinitySummaries(state, hero.id)[0];
+  const inFormation = isHeroInFormation(state, hero.id);
+  const onExpedition = isHeroOnExpedition(state, hero.id);
+  const specializationAvailable = hero.level >= SPECIALIZATION_LEVEL && !hero.specializationKey;
+
+  return (
+    <button className={`hero-compact-card rarity-${hero.rarity}${selected ? " selected" : ""}`} onClick={onSelect} type="button">
+      <div className="hero-compact-head">
+        <div>
+          <span>{hero.className}</span>
+          <strong>{hero.name}</strong>
+        </div>
+        <em>{getRarityStars(hero.rarity)}</em>
+      </div>
+
+      <div className="hero-compact-stats">
+        <span>Lv. {hero.level}</span>
+        <span>Poder {getHeroPower(hero)}</span>
+        <span>
+          HP {currentHp}/{hero.stats.hp}
+        </span>
+      </div>
+
+      <div className="hero-compact-life" aria-label={`HP em ${hpPercent}%`}>
+        <i style={{ width: `${hpPercent}%` }} />
+      </div>
+
+      <div className="hero-tags">
+        <span>{moraleState.label}</span>
+        {inFormation ? <span>Formacao</span> : null}
+        {onExpedition ? <span>Expedicao</span> : null}
+        {injuryCount > 0 ? <span>{injuryCount} ferimento(s)</span> : null}
+        {specialization ? <span>{specialization.name}</span> : null}
+        {specializationAvailable ? <span>Especializacao</span> : null}
+        {affinity ? <span>{affinity.ally.name}: {affinity.label}</span> : null}
+      </div>
+    </button>
+  );
+}
+
+function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameState; inventory: EquipmentItem[] }) {
   const addHeroToFormation = useGameStore((store) => store.addHeroToFormation);
   const removeHeroFromFormation = useGameStore((store) => store.removeHeroFromFormation);
   const equipItemOnHero = useGameStore((store) => store.equipItem);
   const unequipItemFromHero = useGameStore((store) => store.unequipItem);
   const chooseHeroSpecializationAction = useGameStore((store) => store.chooseHeroSpecialization);
   const treatHeroInjuriesAction = useGameStore((store) => store.treatHeroInjuries);
+  const useConsumableAction = useGameStore((store) => store.useConsumable);
   const [selectedBySlot, setSelectedBySlot] = useState<Partial<Record<EquipmentSlot, string>>>({});
+  const [selectedConsumableId, setSelectedConsumableId] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const xpNeeded = getHeroXpForNextLevel(hero.level);
-  const xpPercent = Math.round((Math.min(hero.xp, xpNeeded) / xpNeeded) * 100);
-  const currentHp = hero.currentHp ?? hero.stats.hp;
-  const hpPercent = Math.round((Math.max(0, currentHp) / Math.max(1, hero.stats.hp)) * 100);
   const equippedItems = getEquippedItems(hero, inventory);
-  const injuryCount = getActiveInjuryCount(hero);
+  const unequippedItems = getUnequippedInventory(state);
   const moraleState = getHeroMoraleState(hero);
   const injurySummary = getHeroInjurySummary(hero);
   const specialization = getHeroSpecialization(hero);
@@ -105,56 +149,46 @@ function HeroCard({
   const activeInjuries = getHeroActiveInjuries(hero);
   const goldTreatmentCost = getHeroInjuryTreatmentCost(hero, "gold");
   const essenceTreatmentCost = getHeroInjuryTreatmentCost(hero, "essence");
-  const affinities = getHeroAffinitySummaries(state, hero.id).slice(0, 2);
+  const affinities = getHeroAffinitySummaries(state, hero.id).slice(0, 4);
+  const inFormation = isHeroInFormation(state, hero.id);
+  const consumables = Object.values(CONSUMABLE_DEFINITIONS).filter(
+    (definition) => definition.target === "hero" && (state.consumables[definition.id] || 0) > 0,
+  );
 
   return (
-    <article className={`hero-card rarity-${hero.rarity}${inFormation ? " in-formation" : ""}${injuryCount > 0 ? " injured" : ""}`}>
-      <div className="hero-card-head">
+    <aside className="hero-detail-panel">
+      <div className="hero-detail-head">
         <div>
           <span>{hero.className}</span>
           <h3>{hero.name}</h3>
+          <small>{getRarityStars(hero.rarity)} | {moraleState.label}</small>
         </div>
-        <strong>{getRarityStars(hero.rarity)}</strong>
-      </div>
-
-      <div className="hero-tags">
-        {inFormation ? <span>Formacao</span> : null}
-        {injuryCount > 0 ? <span>{injuryCount} ferimento(s)</span> : null}
-        {specialization ? <span>{specialization.name}</span> : hero.level >= 10 ? <span>Especializacao disponivel</span> : null}
-        <span>{moraleState.label}</span>
-      </div>
-
-      <div className="hero-bars">
-        <label>
-          HP {currentHp}/{hero.stats.hp}
-          <i>
-            <b style={{ width: `${hpPercent}%` }} />
-          </i>
-        </label>
-        <label>
-          XP {hero.xp}/{xpNeeded}
-          <i>
-            <b style={{ width: `${xpPercent}%` }} />
-          </i>
-        </label>
+        <button
+          className={inFormation ? "hero-inline-action" : "hero-inline-action primary"}
+          onClick={() => {
+            const result = inFormation ? removeHeroFromFormation(hero.id) : addHeroToFormation(hero.id);
+            setFeedback(result.message);
+          }}
+          type="button"
+        >
+          {inFormation ? "Remover da formacao" : "Adicionar a formacao"}
+        </button>
       </div>
 
       <div className="hero-stat-grid">
         <span>Lv. {hero.level}</span>
+        <span>XP {hero.xp}/{xpNeeded}</span>
         <span>Poder {getHeroPower(hero)}</span>
+        <span>HP {hero.currentHp ?? hero.stats.hp}/{hero.stats.hp}</span>
         <span>ATK {hero.stats.atk}</span>
         <span>DEF {hero.stats.def}</span>
         <span>SPD {hero.stats.spd}</span>
         <span>FOCUS {hero.stats.focus}</span>
+        <span>Moral {hero.morale}</span>
       </div>
 
-      <div className="hero-equipment">
-        <strong>{specialization ? `${specialization.passiveName} - ${specialization.description}` : injurySummary || "Equipamentos"}</strong>
-        {affinities.map((affinity) => (
-          <span key={affinity.key}>
-            Afinidade: {affinity.ally.name} ({affinity.label}, {affinity.nextXp ? `${affinity.xp}/${affinity.nextXp}` : "Max"})
-          </span>
-        ))}
+      <div className="hero-detail-section">
+        <strong>Equipamentos</strong>
         {EQUIPMENT_SLOTS.map((slot) => {
           const equipped = equippedItems.find((item) => item.type === slot);
           const options = unequippedItems.filter((item) => item.type === slot);
@@ -166,14 +200,7 @@ function HeroCard({
               </span>
               <div className="hero-equipment-actions">
                 {equipped ? (
-                  <button
-                    className="hero-inline-action"
-                    onClick={() => {
-                      const result = unequipItemFromHero(hero.id, slot);
-                      setFeedback(result.message);
-                    }}
-                    type="button"
-                  >
+                  <button className="hero-inline-action" onClick={() => setFeedback(unequipItemFromHero(hero.id, slot).message)} type="button">
                     Remover
                   </button>
                 ) : null}
@@ -197,8 +224,7 @@ function HeroCard({
                       onClick={() => {
                         const equipmentId = selectedBySlot[slot];
                         if (!equipmentId) return;
-                        const result = equipItemOnHero(hero.id, equipmentId);
-                        setFeedback(result.message);
+                        setFeedback(equipItemOnHero(hero.id, equipmentId).message);
                       }}
                       type="button"
                     >
@@ -212,96 +238,100 @@ function HeroCard({
         })}
       </div>
 
-      {canChooseSpecialization ? (
-        <div className="hero-specialization-picker">
-          <strong>Escolher especializacao (nivel {SPECIALIZATION_LEVEL}+)</strong>
-          {specializationOptions.map((option) => (
-            <button
-              className="hero-inline-action"
-              key={option.key}
-              onClick={() => {
-                const result = chooseHeroSpecializationAction(hero.id, option.key);
-                setFeedback(result.message);
-              }}
-              type="button"
-            >
-              {option.name}: {option.description}
+      <div className="hero-detail-section">
+        <strong>Especializacao</strong>
+        <span>{specialization ? `${specialization.passiveName}: ${specialization.description}` : "Nenhuma especializacao escolhida."}</span>
+        {canChooseSpecialization
+          ? specializationOptions.map((option) => (
+              <button
+                className="hero-inline-action"
+                key={option.key}
+                onClick={() => setFeedback(chooseHeroSpecializationAction(hero.id, option.key).message)}
+                type="button"
+              >
+                {option.name}: {option.description}
+              </button>
+            ))
+          : null}
+      </div>
+
+      <div className="hero-detail-section">
+        <strong>Ferimentos e Enfermaria</strong>
+        <span>{injurySummary || "Sem ferimentos ativos."}</span>
+        {activeInjuries.map((injury) => {
+          const definition = getInjuryDefinition(injury.typeKey);
+          return (
+            <span key={injury.id}>
+              {definition?.name || injury.typeKey} ({definition?.description || "ferimento"}) - {injury.remainingBattles} batalha(s)
+            </span>
+          );
+        })}
+        <div className="hero-equipment-actions">
+          {goldTreatmentCost ? (
+            <button className="hero-inline-action" onClick={() => setFeedback(treatHeroInjuriesAction(hero.id, "gold").message)} type="button">
+              Tratar com ouro ({goldTreatmentCost})
             </button>
-          ))}
+          ) : null}
+          {essenceTreatmentCost ? (
+            <button className="hero-inline-action" onClick={() => setFeedback(treatHeroInjuriesAction(hero.id, "essence").message)} type="button">
+              Tratar com essencia ({essenceTreatmentCost})
+            </button>
+          ) : null}
         </div>
-      ) : null}
+        <small>
+          Custo por ferimento: {INJURY_CONFIG.treatmentCosts.gold} ouro ou {INJURY_CONFIG.treatmentCosts.essence} essencia.
+        </small>
+      </div>
 
-      {activeInjuries.length > 0 ? (
-        <div className="hero-injury-panel">
-          <strong>Enfermaria</strong>
-          {activeInjuries.map((injury) => {
-            const definition = getInjuryDefinition(injury.typeKey);
-            return (
-              <span key={injury.id}>
-                {definition?.name || injury.typeKey} ({definition?.description || "ferimento"}) — {injury.remainingBattles} batalha(s)
-              </span>
-            );
-          })}
-          <div className="hero-equipment-actions">
-            {goldTreatmentCost ? (
-              <button
-                className="hero-inline-action"
-                onClick={() => {
-                  const result = treatHeroInjuriesAction(hero.id, "gold");
-                  setFeedback(result.message);
-                }}
-                type="button"
-              >
-                Tratar com ouro ({goldTreatmentCost})
-              </button>
-            ) : null}
-            {essenceTreatmentCost ? (
-              <button
-                className="hero-inline-action"
-                onClick={() => {
-                  const result = treatHeroInjuriesAction(hero.id, "essence");
-                  setFeedback(result.message);
-                }}
-                type="button"
-              >
-                Tratar com essencia ({essenceTreatmentCost})
-              </button>
-            ) : null}
-          </div>
-          <small>
-            Custo por ferimento: {INJURY_CONFIG.treatmentCosts.gold} ouro ou {INJURY_CONFIG.treatmentCosts.essence} essencia.
-          </small>
-        </div>
-      ) : null}
-
-      <div className="hero-action-row">
-        {inFormation ? (
-          <button
-            className="hero-inline-action"
-            onClick={() => {
-              const result = removeHeroFromFormation(hero.id);
-              setFeedback(result.message);
-            }}
-            type="button"
-          >
-            Remover da formacao
-          </button>
+      <div className="hero-detail-section">
+        <strong>Afinidades</strong>
+        {affinities.length > 0 ? (
+          affinities.map((affinity) => (
+            <span key={affinity.key}>
+              {affinity.ally.name}: {affinity.label} ({affinity.nextXp ? `${affinity.xp}/${affinity.nextXp}` : "Max"})
+            </span>
+          ))
         ) : (
-          <button
-            className="hero-inline-action primary"
-            onClick={() => {
-              const result = addHeroToFormation(hero.id);
-              setFeedback(result.message);
-            }}
-            type="button"
-          >
-            Adicionar a formacao
-          </button>
+          <span>Nenhuma afinidade relevante ainda.</span>
         )}
       </div>
 
+      <div className="hero-detail-section">
+        <strong>Consumiveis</strong>
+        {consumables.length > 0 ? (
+          <div className="hero-equipment-actions">
+            <select className="hero-equipment-select" onChange={(event) => setSelectedConsumableId(event.target.value)} value={selectedConsumableId}>
+              <option value="">Escolher consumivel</option>
+              {consumables.map((definition) => (
+                <option key={definition.id} value={definition.id}>
+                  {definition.name} x{state.consumables[definition.id] || 0}
+                </option>
+              ))}
+            </select>
+            <button
+              className="hero-inline-action"
+              disabled={!selectedConsumableId}
+              onClick={() => {
+                if (!selectedConsumableId) return;
+                setFeedback(useConsumableAction(selectedConsumableId, hero.id).message);
+              }}
+              type="button"
+            >
+              Usar
+            </button>
+          </div>
+        ) : (
+          <span>Nenhum consumivel disponivel.</span>
+        )}
+      </div>
+
+      <div className="hero-detail-section">
+        <strong>Historico</strong>
+        <span>Combates, expedicoes e eventos detalhados ainda nao possuem historico individual persistido.</span>
+      </div>
+
       {feedback ? <p className="hero-action-feedback">{feedback}</p> : null}
-    </article>
+    </aside>
   );
 }
 
@@ -310,14 +340,14 @@ export function HeroRosterPanel() {
   const [sortBy, setSortBy] = useState<HeroSort>("power");
   const [classKey, setClassKey] = useState<string>("all");
   const [status, setStatus] = useState<HeroStatusFilter>("all");
-  const formationIds = new Set(state.formation.filter(Boolean));
-  const unequippedItems = getUnequippedInventory(state);
+  const [selectedHeroId, setSelectedHeroId] = useState<string | null>(null);
+  const formationIds = useMemo(() => new Set(state.formation.filter(Boolean)), [state.formation]);
   const classOptions = Array.from(new Set(state.heroes.map((hero) => hero.classKey))).sort();
   const filteredHeroes = sortHeroesForDisplay(
     state.heroes.filter((hero) => (classKey === "all" || hero.classKey === classKey) && heroMatchesStatus(hero, state, status)),
-    state,
     sortBy,
   );
+  const selectedHero = state.heroes.find((hero) => hero.id === (selectedHeroId || filteredHeroes[0]?.id)) ?? null;
   const totalPower = filteredHeroes.reduce((sum, hero) => sum + getHeroPower(hero), 0);
 
   return (
@@ -325,7 +355,7 @@ export function HeroRosterPanel() {
       <div className="section-heading">
         <span>Elenco</span>
         <h2>Herois</h2>
-        <p>Gerencie formacao e equipamentos pelo core TypeScript com persistencia no save local e na nuvem.</p>
+        <p>Escaneie o elenco rapidamente e selecione um heroi para gerenciar detalhes.</p>
       </div>
 
       <div className="hero-list-controls">
@@ -381,17 +411,19 @@ export function HeroRosterPanel() {
       </div>
 
       {filteredHeroes.length > 0 ? (
-        <div className="hero-roster-grid">
-          {filteredHeroes.slice(0, 12).map((hero) => (
-            <HeroCard
-              hero={hero}
-              inFormation={formationIds.has(hero.id)}
-              inventory={state.inventory}
-              key={hero.id}
-              state={state}
-              unequippedItems={unequippedItems}
-            />
-          ))}
+        <div className="hero-roster-layout">
+          <div className="hero-roster-grid compact">
+            {filteredHeroes.map((hero) => (
+              <HeroCompactCard
+                hero={hero}
+                key={hero.id}
+                onSelect={() => setSelectedHeroId(hero.id)}
+                selected={selectedHero?.id === hero.id}
+                state={state}
+              />
+            ))}
+          </div>
+          {selectedHero ? <HeroDetailPanel hero={selectedHero} inventory={state.inventory} state={state} /> : null}
         </div>
       ) : state.heroes.length > 0 ? (
         <article className="empty-panel">

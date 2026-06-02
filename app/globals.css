@@ -229,6 +229,7 @@ article,
 .missions-panel,
 .relics-panel,
 .recruitment-panel-react,
+.formation-panel,
 .tower-events-panel,
 .tower-battle-panel,
 .battle-result-panel,
@@ -731,6 +732,129 @@ article,
   gap: 0.8rem;
 }
 
+.hero-roster-layout {
+  align-items: start;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+  gap: 1rem;
+}
+
+.hero-roster-grid.compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.hero-compact-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  text-align: left;
+}
+
+.hero-compact-card.selected,
+.hero-compact-card:hover {
+  border-color: rgba(232, 188, 88, 0.45);
+  background: rgba(232, 188, 88, 0.08);
+}
+
+.hero-compact-head {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.8rem;
+  justify-content: space-between;
+}
+
+.hero-compact-head span,
+.hero-detail-head span {
+  color: var(--teal);
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.hero-compact-head strong,
+.hero-detail-head h3 {
+  display: block;
+  margin-top: 0.2rem;
+}
+
+.hero-compact-head em {
+  color: var(--gold);
+  font-style: normal;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.hero-compact-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.hero-compact-stats span {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.hero-compact-life {
+  height: 7px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.24);
+  border-radius: 999px;
+}
+
+.hero-compact-life i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+}
+
+.hero-detail-panel {
+  border: 1px solid rgba(232, 188, 88, 0.2);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 10px;
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.hero-detail-head {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.hero-detail-head small,
+.hero-detail-section span,
+.hero-detail-section small {
+  color: var(--muted);
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.hero-detail-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: grid;
+  gap: 0.45rem;
+  padding-top: 0.85rem;
+}
+
+.hero-detail-section strong {
+  color: var(--gold);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
 .hero-card {
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.2);
@@ -1040,6 +1164,117 @@ article,
 .team-presets-columns {
   display: grid;
   gap: 0.8rem;
+}
+
+.team-presets-panel.compact {
+  margin-top: 1rem;
+}
+
+.formation-overview,
+.formation-available-grid {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.formation-overview {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 1rem;
+}
+
+.formation-overview div,
+.formation-slot-card,
+.formation-available-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: 8px;
+  padding: 0.8rem;
+}
+
+.formation-overview strong,
+.formation-overview span {
+  display: block;
+}
+
+.formation-overview strong {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.formation-overview span {
+  color: var(--gold);
+  font-weight: 900;
+  margin-top: 0.25rem;
+}
+
+.formation-board,
+.formation-available-panel {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.formation-line h3,
+.section-heading.compact h3 {
+  margin: 0 0 0.65rem;
+}
+
+.formation-slot-row {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.formation-slot-row.front {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.formation-slot-row.back {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.formation-slot-card.filled {
+  border-color: rgba(86, 199, 189, 0.28);
+}
+
+.formation-slot-card.empty {
+  border-style: dashed;
+  opacity: 0.82;
+}
+
+.formation-slot-card span {
+  color: var(--teal);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.formation-slot-card small,
+.formation-slot-card p,
+.formation-available-card span,
+.formation-available-card small {
+  color: var(--muted);
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.formation-slot-card h4 {
+  margin: 0.4rem 0 0;
+}
+
+.formation-available-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.formation-available-card {
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.formation-available-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .team-presets-columns {
@@ -1679,6 +1914,8 @@ code {
   .tower-summary,
   .floor-strip,
   .hero-roster-grid,
+  .hero-roster-grid.compact,
+  .hero-roster-layout,
   .inventory-columns,
   .expedition-grid,
   .mission-columns,
@@ -1692,9 +1929,17 @@ code {
   .battle-reward-grid,
   .battle-consequence-grid,
   .repeat-floor-grid,
+  .formation-overview,
+  .formation-slot-row.front,
+  .formation-slot-row.back,
+  .formation-available-grid,
   .memorial-grid,
   .summon-grid-react {
     grid-template-columns: 1fr;
+  }
+
+  .hero-detail-panel {
+    position: static;
   }
 
   .battle-result-hero {
