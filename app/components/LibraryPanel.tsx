@@ -32,7 +32,7 @@ export function LibraryPanel() {
       <div className="section-heading">
         <span>Arquivo da Torre</span>
         <h2>Biblioteca</h2>
-        <p>Descobertas normalizadas do save legado, prontas para alimentar bestiario e colecoes React.</p>
+        <p>Descobertas normalizadas do save atual, prontas para alimentar bestiario e colecoes React.</p>
       </div>
 
       <div className="tower-summary">

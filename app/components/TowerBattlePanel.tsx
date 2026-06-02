@@ -43,7 +43,7 @@ export function TowerBattlePanel() {
 
   const statusMessage = useMemo(() => {
     if (state.pendingTowerEvent) return "Resolva o evento pendente antes de iniciar o combate.";
-    if (heroCount === 0) return "Monte uma formacao com herois no save legado.";
+    if (heroCount === 0) return "Monte uma formacao com herois no save atual.";
     if (energy < GAME_CONFIG.towerEnergyCost) return `Energia insuficiente (${energy}/${GAME_CONFIG.towerEnergyCost}).`;
     return `Pronto para lutar no andar ${state.towerFloor}.`;
   }, [energy, heroCount, state.pendingTowerEvent, state.towerFloor]);
@@ -53,7 +53,7 @@ export function TowerBattlePanel() {
       <div className="section-heading">
         <span>Combate React</span>
         <h2>Tentativa na Torre</h2>
-        <p>Inicia o fluxo completo pelo core TypeScript e persiste no save legado deste navegador.</p>
+        <p>Inicia o fluxo completo pelo core TypeScript e persiste no save local deste navegador.</p>
       </div>
 
       <div className="tower-summary roster-summary">

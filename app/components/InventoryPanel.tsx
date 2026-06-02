@@ -29,7 +29,7 @@ export function InventoryPanel() {
       <div className="section-heading">
         <span>Inventario React</span>
         <h2>Itens e suprimentos</h2>
-        <p>Equipe itens e use consumiveis pelo core TypeScript com persistencia no save legado.</p>
+        <p>Equipe itens e use consumiveis pelo core TypeScript com persistencia no save local e na nuvem.</p>
       </div>
 
       <div className="tower-summary roster-summary">

@@ -29,7 +29,7 @@ export function SummonPanel() {
       <div className="section-heading">
         <span>Portal Migrado</span>
         <h2>Invocacao</h2>
-        <p>Invoque herois pelo core TypeScript com persistencia no save legado.</p>
+        <p>Invoque herois pelo core TypeScript com persistencia no save local e na nuvem.</p>
       </div>
 
       <div className="summon-grid-react">

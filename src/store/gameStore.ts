@@ -54,11 +54,11 @@ type ActionResult = { ok: boolean; message: string };
 
 type GameStore = {
   state: GameState;
-  source: "initial" | "legacy-localstorage" | "manual" | "cloud-postgres";
-  loadLegacyLocalSave: () => { ok: true; state: GameState } | { ok: false; message: string };
+  source: "initial" | "local-storage" | "manual" | "cloud-postgres";
+  loadLocalSave: () => { ok: true; state: GameState } | { ok: false; message: string };
   replaceState: (state: PartialGameState) => void;
   resetLocalState: () => void;
-  persistLegacySave: () => void;
+  persistLocalSave: () => void;
   refreshSession: () => void;
   continueNarrative: (sceneId: string) => ActionResult;
   skipNarrative: (sceneId: string) => ActionResult;
@@ -95,13 +95,13 @@ type GameStore = {
   saveCloudSave: (playerId: string) => Promise<ActionResult>;
 };
 
-function readLegacyLocalSave(): unknown {
+function readLocalSave(): unknown {
   if (typeof window === "undefined") return null;
   const raw = window.localStorage.getItem(GAME_CONFIG.saveKey);
   return raw ? JSON.parse(raw) : null;
 }
 
-function writeLegacyLocalSave(state: GameState): void {
+function writeLocalSave(state: GameState): void {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(
     GAME_CONFIG.saveKey,
@@ -114,7 +114,7 @@ function writeLegacyLocalSave(state: GameState): void {
 
 function commitState(state: GameState): GameState {
   const normalized = ensureStateShape(state);
-  writeLegacyLocalSave(normalized);
+  writeLocalSave(normalized);
   return normalized;
 }
 
@@ -141,17 +141,17 @@ function mutateState<T extends ActionResult>(
 export const useGameStore = create<GameStore>((set, get) => ({
   state: createInitialState(),
   source: "initial",
-  loadLegacyLocalSave: () => {
+  loadLocalSave: () => {
     try {
-      const raw = readLegacyLocalSave();
-      if (!raw) return { ok: false, message: "Nenhum save legado encontrado neste navegador." };
+      const raw = readLocalSave();
+      if (!raw) return { ok: false, message: "Nenhum save local encontrado neste navegador." };
 
       const state = hydrateLoadedState(raw as PartialGameState);
-      set({ state, source: "legacy-localstorage" });
+      set({ state, source: "local-storage" });
       applyPreferencesToDocument();
       return { ok: true, state };
     } catch {
-      return { ok: false, message: "Save legado existe, mas nao pode ser lido como JSON valido." };
+      return { ok: false, message: "Save local existe, mas nao pode ser lido como JSON valido." };
     }
   },
   replaceState: (state) => {
@@ -160,10 +160,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   resetLocalState: () => {
     const state = createInitialState();
-    writeLegacyLocalSave(state);
+    writeLocalSave(state);
     set({ state, source: "initial" });
   },
-  persistLegacySave: () => {
+  persistLocalSave: () => {
     const state = commitState(get().state);
     set({ state, source: "manual" });
   },

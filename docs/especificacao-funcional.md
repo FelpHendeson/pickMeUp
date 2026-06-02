@@ -73,7 +73,8 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 - A especificacao deve ser sincronizada com o GDD atualizado em `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md`.
 
 ## Migracao Next/PostgreSQL
-- O core TypeScript em `src/game/` deve continuar validado por testes de regressao e paridade com o legado.
-- A UI React deve cobrir o fluxo jogavel principal antes de remover a dependencia operacional de `public/game/`.
+- A UI React e o fluxo operacional principal desta branch.
+- O core TypeScript em `src/game/` deve continuar validado por testes de regressao e fixtures estaveis.
+- O save local no navegador permanece como fallback tecnico e deve preservar a chave existente de `localStorage`.
 - O PostgreSQL armazena snapshots completos do save normalizado e mantem `PlayerProfile`/`Hero` como tabelas preparatorias.
 - O banco local versionado deve subir por Docker Compose com volume persistente e ser validado por `npm run validate:db`.

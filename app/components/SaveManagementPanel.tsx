@@ -5,23 +5,23 @@ import { getOrCreatePlayerId } from "@/src/lib/playerId";
 import { useGameStore } from "@/src/store/gameStore";
 import { useEffect, useRef, useState } from "react";
 
-export function MigrationBridgePanel() {
-  const { state, source, loadLegacyLocalSave, loadCloudSave, saveCloudSave, exportSave, importSave, resetLocalState, persistLegacySave } =
+export function SaveManagementPanel() {
+  const { state, source, loadLocalSave, loadCloudSave, saveCloudSave, exportSave, importSave, resetLocalState, persistLocalSave } =
     useGameStore();
   const [message, setMessage] = useState("Verificando save local...");
   const [playerId, setPlayerId] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const result = loadLegacyLocalSave();
-    setMessage(result.ok ? "Save legado encontrado e normalizado pelo core TypeScript." : result.message);
+    const result = loadLocalSave();
+    setMessage(result.ok ? "Save local encontrado e normalizado pelo core TypeScript." : result.message);
     setPlayerId(getOrCreatePlayerId());
-  }, [loadLegacyLocalSave]);
+  }, [loadLocalSave]);
 
   return (
     <article>
-      <span>Ponte de save</span>
-      <h2>Leitura do legado e nuvem</h2>
+      <span>Save</span>
+      <h2>Gerenciamento de progresso</h2>
       <p>{message}</p>
       <div className="mini-grid">
         <div>
@@ -47,8 +47,8 @@ export function MigrationBridgePanel() {
           <button
             className="hero-inline-action"
             onClick={() => {
-              const result = loadLegacyLocalSave();
-              setMessage(result.ok ? "Save legado recarregado." : result.message);
+              const result = loadLocalSave();
+              setMessage(result.ok ? "Save local recarregado." : result.message);
             }}
             type="button"
           >
@@ -57,7 +57,7 @@ export function MigrationBridgePanel() {
           <button
             className="hero-inline-action"
             onClick={() => {
-              persistLegacySave();
+              persistLocalSave();
               setMessage("Save local persistido.");
             }}
             type="button"
@@ -74,11 +74,7 @@ export function MigrationBridgePanel() {
           >
             Exportar JSON
           </button>
-          <button
-            className="hero-inline-action"
-            onClick={() => fileInputRef.current?.click()}
-            type="button"
-          >
+          <button className="hero-inline-action" onClick={() => fileInputRef.current?.click()} type="button">
             Importar JSON
           </button>
           <button
@@ -137,7 +133,7 @@ export function MigrationBridgePanel() {
             Salvar na nuvem
           </button>
         </div>
-        <small>Use DATABASE_URL e prisma migrate antes de sincronizar com PostgreSQL.</small>
+        <small>Use DATABASE_URL e npm run db:migrate antes de sincronizar com PostgreSQL.</small>
       </div>
     </article>
   );

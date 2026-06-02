@@ -178,7 +178,7 @@ export function ExpeditionsPanel() {
       <div className="section-heading">
         <span>Expedicoes React</span>
         <h2>Rotas disponiveis</h2>
-        <p>Inicie e colete expedicoes pelo core TypeScript com persistencia no save legado.</p>
+        <p>Inicie e colete expedicoes pelo core TypeScript com persistencia no save local e na nuvem.</p>
       </div>
 
       <div className="tower-summary roster-summary">

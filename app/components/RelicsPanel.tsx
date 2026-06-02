@@ -24,7 +24,7 @@ export function RelicsPanel() {
       <div className="section-heading">
         <span>Reliquias React</span>
         <h2>Progressao permanente</h2>
-        <p>Aprimore reliquias pelo core TypeScript com persistencia no save legado.</p>
+        <p>Aprimore reliquias pelo core TypeScript com persistencia no save local e na nuvem.</p>
       </div>
 
       <div className="tower-summary roster-summary">

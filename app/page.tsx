@@ -4,14 +4,13 @@ export default function HomePage() {
   return (
     <main className="shell">
       <section className="hero">
-        <p className="eyebrow">Branch de migracao</p>
+        <p className="eyebrow">Jogo em React</p>
         <h1>Ascensao dos Ecos</h1>
         <p>
-          Base inicial em Next.js para evoluir o jogo para React, TypeScript e persistencia em banco sem alterar a
-          branch master.
+          Experiencia principal em Next.js, React, TypeScript e PostgreSQL, com save local no navegador e snapshot
+          opcional na nuvem.
         </p>
         <div className="actions">
-          <a href="/game/index.html">Abrir jogo legado</a>
           <a className="secondary" href="https://github.com/FelpHendeson/pickMeUp">
             Repositorio
           </a>

@@ -323,9 +323,9 @@ export function HeroRosterPanel() {
   return (
     <section className="roster-panel">
       <div className="section-heading">
-        <span>Elenco React</span>
+        <span>Elenco</span>
         <h2>Herois</h2>
-        <p>Gerencie formacao e equipamentos pelo core TypeScript com persistencia no save legado.</p>
+        <p>Gerencie formacao e equipamentos pelo core TypeScript com persistencia no save local e na nuvem.</p>
       </div>
 
       <div className="hero-list-controls">
@@ -403,7 +403,7 @@ export function HeroRosterPanel() {
         <article className="empty-panel">
           <span>Sem herois</span>
           <h3>Nenhum heroi no save atual</h3>
-          <p>Abra o jogo legado, invoque ou recrute herois e recarregue esta pagina para ver o painel preenchido.</p>
+          <p>Use as abas Invocacao ou Recrutamento para preencher o elenco.</p>
         </article>
       )}
     </section>

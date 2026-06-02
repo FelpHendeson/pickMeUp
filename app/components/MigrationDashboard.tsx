@@ -9,7 +9,6 @@ import { HeroRosterPanel } from "./HeroRosterPanel";
 import { InventoryPanel } from "./InventoryPanel";
 import { LibraryPanel } from "./LibraryPanel";
 import { MemorialPanel } from "./MemorialPanel";
-import { MigrationBridgePanel } from "./MigrationBridgePanel";
 import { MissionsPanel } from "./MissionsPanel";
 import { NarrativeModal } from "./NarrativeModal";
 import { PreferencesPanel } from "./PreferencesPanel";
@@ -17,6 +16,7 @@ import { RecruitmentPanel } from "./RecruitmentPanel";
 import { RelicsPanel } from "./RelicsPanel";
 import { RepeatFloorsPanel } from "./RepeatFloorsPanel";
 import { ResourceHudPanel } from "./ResourceHudPanel";
+import { SaveManagementPanel } from "./SaveManagementPanel";
 import { SummonPanel } from "./SummonPanel";
 import { TeamPresetsPanel } from "./TeamPresetsPanel";
 import { TowerBattlePanel } from "./TowerBattlePanel";
@@ -53,11 +53,11 @@ const dashboardTabs: Array<{ id: DashboardTab; label: string }> = [
 ];
 
 const migrationMilestones = [
-  "Manter regressao do core e paridade com o legado sempre verdes",
-  "Fechar o fluxo principal jogavel pela UI React",
+  "Manter regressao do core TypeScript e fixtures estaveis sempre verdes",
+  "Completar QA manual do fluxo React-only",
   "Validar snapshots PostgreSQL com save normalizado",
-  "Usar o legado apenas como fallback ate o QA do fluxo React",
-  "Remover dependencia operacional de /game somente depois da validacao completa",
+  "Evoluir sincronizacao de nuvem sem remover o fallback local",
+  "Normalizar novos sistemas em tabelas proprias quando o JSON estabilizar",
 ];
 
 const currentSystems = [
@@ -67,7 +67,7 @@ const currentSystems = [
   "Reliquias, biblioteca, missoes e conquistas",
   "Consumiveis, afinidade e recrutamento alternativo",
   "Narrativa, preferencias, HUD e export/import de save",
-  "Regressao automatizada do legado, core TypeScript e paridade",
+  "Regressao automatizada do core TypeScript, fixtures e banco",
 ];
 
 function BasePanel() {
@@ -78,14 +78,14 @@ function BasePanel() {
       <section className="grid">
         <article>
           <span>Status atual</span>
-          <h2>Legado preservado</h2>
+          <h2>Stack atual</h2>
           <p>
-            A implementacao em JavaScript puro continua em <code>game/</code>. A migracao deve trocar telas e regras por
-            partes, mantendo o jogo jogavel durante o processo.
+            A experiencia operacional desta branch roda em React com regras centralizadas no core TypeScript e save
+            local preservado no navegador.
           </p>
         </article>
 
-        <MigrationBridgePanel />
+        <SaveManagementPanel />
       </section>
 
       <article className={`weekly-event-card tone-${weeklyEvent.tone}`}>
@@ -101,11 +101,11 @@ function BasePanel() {
 
       <section className="grid">
         <article>
-          <span>Stack alvo</span>
+          <span>Stack principal</span>
           <h2>Next + PostgreSQL</h2>
           <p>
-            A branch prepara Next.js, TypeScript, Prisma, Zustand e TanStack Query para suportar login, cloud save e
-            sincronizacao futura.
+            Next.js, TypeScript, Prisma, Zustand e TanStack Query sustentam o jogo atual, com cloud save explicito por
+            snapshot.
           </p>
         </article>
 
