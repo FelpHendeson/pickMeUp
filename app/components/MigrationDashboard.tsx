@@ -53,11 +53,11 @@ const dashboardTabs: Array<{ id: DashboardTab; label: string }> = [
 ];
 
 const migrationMilestones = [
-  "Extrair regras puras para game-core em TypeScript",
-  "Migrar estado local para store React/Zustand",
-  "Adicionar persistencia PostgreSQL com Prisma",
-  "Recriar telas principais em componentes React",
-  "Substituir o legado /game quando o fluxo da torre estiver completo",
+  "Manter regressao do core e paridade com o legado sempre verdes",
+  "Fechar o fluxo principal jogavel pela UI React",
+  "Validar snapshots PostgreSQL com save normalizado",
+  "Usar o legado apenas como fallback ate o QA do fluxo React",
+  "Remover dependencia operacional de /game somente depois da validacao completa",
 ];
 
 const currentSystems = [
@@ -67,6 +67,7 @@ const currentSystems = [
   "Reliquias, biblioteca, missoes e conquistas",
   "Consumiveis, afinidade e recrutamento alternativo",
   "Narrativa, preferencias, HUD e export/import de save",
+  "Regressao automatizada do legado, core TypeScript e paridade",
 ];
 
 function BasePanel() {

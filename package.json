@@ -8,7 +8,18 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/regression.test.js",
+    "test": "npm run test:legacy && npm run test:core && npm run test:parity",
+    "test:legacy": "node --test tests/regression.test.js",
+    "test:core": "node --import tsx --test tests/core-regression.test.ts",
+    "test:parity": "node --import tsx --test tests/parity-regression.test.ts",
+    "test:db": "node --import tsx --test tests/db-regression.test.ts",
+    "validate": "npm run prisma:generate && npm run typecheck && npm test && npm run build",
+    "validate:db": "npm run db:up && npm run db:migrate && npm run test:db",
+    "db:up": "docker volume create ecos_postgres_data && docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs postgres",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"
   },
@@ -27,6 +38,7 @@
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "prisma": "latest",
+    "tsx": "^4.22.4",
     "typescript": "latest"
   }
 }

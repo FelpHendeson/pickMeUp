@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ascensao_dos_ecos
+    ports:
+      - "5432:5432"
+    volumes:
+      - ecos_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ascensao_dos_ecos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  ecos_postgres_data:
+    external: true
+    name: ecos_postgres_data

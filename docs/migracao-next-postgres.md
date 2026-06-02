@@ -31,12 +31,46 @@ O schema inicial em `prisma/schema.prisma` cria:
 Os sistemas complexos ainda podem ficar em `payload Json` durante a migracao. Depois, inventario, reliquias,
 missoes, biblioteca e historico de combate podem ganhar tabelas proprias conforme estabilizarem.
 
+## Banco local com Docker
+
+O projeto usa `docker-compose.yml` para subir um PostgreSQL local persistente em volume nomeado:
+
+- servico: `postgres`;
+- imagem: `postgres:16`;
+- volume: `ecos_postgres_data`;
+- banco: `ascensao_dos_ecos`;
+- DSN: `postgresql://postgres:postgres@localhost:5432/ascensao_dos_ecos?schema=public`.
+
+Fluxo recomendado:
+
+```bash
+npm run db:up
+npm run db:migrate
+npm run dev
+```
+
+Use `npm run validate:db` para subir o banco, aplicar migrations e rodar o smoke test de persistencia na nuvem.
+O arquivo `.env` deve ficar local e seguir `.env.example`.
+
+Se existir um container manual antigo usando a porta 5432, pare-o antes do Compose:
+
+```bash
+docker stop ecos-postgres
+```
+
+Nao remova o volume `ecos_postgres_data` se quiser preservar os saves locais.
+
 ## Comandos
 
 ```bash
 npm install
+npm run db:up
+npm run db:migrate
 npm run dev
 npm run typecheck
+npm test
+npm run validate
+npm run validate:db
 npm run prisma:generate
 ```
 
@@ -139,6 +173,12 @@ Configure `DATABASE_URL` com base em `.env.example` antes de rodar Prisma.
   `app/components/TeamPresetsPanel.tsx`.
 - API inicial de save em PostgreSQL criada em `app/api/saves/[playerId]/route.ts`, com helpers em
   `src/lib/playerSave.ts` e sincronizacao na ponte de save da Base.
+- Infraestrutura de regressao da migracao adicionada com `test:legacy`, `test:core`, `test:parity` e `validate`,
+  cobrindo o legado, o core TypeScript e contratos de paridade entre as duas implementacoes.
+- Save em PostgreSQL passa a validar e normalizar o payload pelo core antes de criar snapshots, mantendo
+  `PlayerProfile` e `Hero` sincronizados como tabelas preparatorias enquanto sistemas complexos seguem em JSON.
+- Infraestrutura local do PostgreSQL versionada com Docker Compose, migration inicial Prisma e teste `test:db`
+  para validar snapshot, perfil e herois gravados no banco real.
 
 ## Legado no Next
 

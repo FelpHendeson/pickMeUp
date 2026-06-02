@@ -1,4 +1,4 @@
-import { createPlayerSaveSnapshot, getLatestPlayerSave } from "@/src/lib/playerSave";
+import { InvalidPlayerSavePayloadError, createPlayerSaveSnapshot, getLatestPlayerSave } from "@/src/lib/playerSave";
 import { NextResponse } from "next/server";
 
 type RouteContext = {
@@ -6,6 +6,10 @@ type RouteContext = {
 };
 
 function databaseUnavailableResponse(error: unknown) {
+  if (error instanceof InvalidPlayerSavePayloadError) {
+    return NextResponse.json({ message: error.message }, { status: 400 });
+  }
+
   const message = error instanceof Error ? error.message : "Erro desconhecido";
   if (message.includes("DATABASE_URL") || message.includes("Environment variable not found")) {
     return NextResponse.json({ message: "DATABASE_URL nao configurada para PostgreSQL." }, { status: 503 });

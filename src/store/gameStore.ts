@@ -303,6 +303,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return { ok: false, message: body?.message || "Falha ao salvar na nuvem." };
       }
 
+      set({ state, source: "cloud-postgres" });
       return { ok: true, message: "Save enviado para o PostgreSQL." };
     } catch {
       return { ok: false, message: "Nao foi possivel conectar a API de save." };
