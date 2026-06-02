@@ -14,7 +14,7 @@
     "test:db": "node --import tsx --test tests/db-regression.test.ts",
     "validate": "npm run prisma:generate && npm run typecheck && npm test && npm run build",
     "validate:db": "npm run db:up && npm run db:migrate && npm run test:db",
-    "db:up": "docker volume create ecos_postgres_data && docker compose up -d postgres",
+    "db:up": "docker volume create ecos_postgres_data && docker compose up -d --wait postgres",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs postgres",
     "db:migrate": "prisma migrate dev",

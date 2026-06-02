@@ -56,3 +56,41 @@ test("cloud save persiste snapshot normalizado, perfil e herois no PostgreSQL", 
     await prisma.$disconnect();
   }
 });
+
+test("API de save rejeita payload invalido antes de gravar snapshot", async () => {
+  const { PUT } = await import("../app/api/saves/[playerId]/route.ts");
+  const response = await PUT(
+    new Request("http://localhost/api/saves/player_payload_invalido", {
+      method: "PUT",
+      body: JSON.stringify({ payload: null }),
+    }),
+    { params: Promise.resolve({ playerId: "player_payload_invalido" }) },
+  );
+  const body = (await response.json()) as { message?: string };
+
+  assert.equal(response.status, 400);
+  assert.equal(body.message, "Payload invalido.");
+});
+
+test("API de save retorna 404 para jogador sem snapshot", async () => {
+  const [{ GET }, { getPrismaClient }] = await Promise.all([
+    import("../app/api/saves/[playerId]/route.ts"),
+    import("../src/lib/prisma.ts"),
+  ]);
+  const prisma = getPrismaClient();
+  const playerId = `db_missing_${Date.now()}`;
+
+  try {
+    await prisma.player.delete({ where: { id: playerId } }).catch(() => undefined);
+    const response = await GET(new Request(`http://localhost/api/saves/${playerId}`), {
+      params: Promise.resolve({ playerId }),
+    });
+    const body = (await response.json()) as { message?: string };
+
+    assert.equal(response.status, 404);
+    assert.equal(body.message, "Save nao encontrado.");
+  } finally {
+    await prisma.player.delete({ where: { id: playerId } }).catch(() => undefined);
+    await prisma.$disconnect();
+  }
+});
