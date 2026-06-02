@@ -1,34 +1,38 @@
 # Ascensao dos Ecos
 
-**Ascensao dos Ecos** e um jogo web single-player de estrategia, idle RPG, gacha e progressao por torre. A branch atual opera a experiencia principal em **Next.js, React, TypeScript e PostgreSQL**, com regras de jogo concentradas em um core TypeScript e persistencia em duas camadas.
+**Ascensao dos Ecos** e um jogo web single-player de estrategia, idle RPG, gacha e progressao por torre. A versao atual esta em fase Alpha de desenvolvimento local, com a experiencia principal migrada para Next.js, React e TypeScript.
 
-## Status
+O jogo deve abrir e funcionar localmente sem banco de dados. O PostgreSQL e opcional nesta etapa e serve para testar o fluxo experimental de save em nuvem por snapshot JSON.
 
-Alpha estavel em fechamento na branch `migration/next-postgres`.
+## Status Atual
 
-- UI principal em React/Next.
-- Core de gameplay em `src/game/`.
-- Save local no navegador como fallback imediato.
-- Save em nuvem por snapshot JSON explicito no PostgreSQL.
-- O runtime antigo em JavaScript puro nao faz mais parte operacional desta branch.
+- Foco atual: desenvolvimento local.
+- Deploy futuro planejado: Vercel.
+- GitHub Pages nao e mais alvo da versao atual.
+- Branch principal de trabalho da migracao: `migration/next-postgres`.
+- Runtime legado em JavaScript puro nao e mais o caminho operacional desta branch.
 
 ## Stack
 
-- Next.js e React para UI.
-- TypeScript para regras, estado e contratos.
-- Zustand como ponte unica de mutacoes da UI.
-- Prisma e PostgreSQL para snapshots de save.
-- Docker Compose para banco local.
+- **Next.js**: aplicacao web e rotas de API.
+- **React**: interface principal do jogo.
+- **TypeScript**: regras, contratos e estado do jogo.
+- **Zustand**: store central usada pela UI.
+- **Prisma**: acesso ao banco e migrations.
+- **PostgreSQL**: opcional, usado para testar cloud save local.
+- **Docker Compose**: ambiente local do PostgreSQL.
 
-## Como Rodar
+## Instalacao
 
-Instale dependencias:
+Clone o repositorio e instale as dependencias:
 
 ```bash
 npm install
 ```
 
-Rode a aplicacao:
+## Rodar Local Sem Banco
+
+Este e o fluxo principal por enquanto. O jogo usa `localStorage` do navegador para salvar o progresso.
 
 ```bash
 npm run dev
@@ -40,11 +44,17 @@ Abra o endereco informado pelo Next, normalmente:
 http://localhost:3000
 ```
 
-Se a porta 3000 ja estiver ocupada, o Next pode oferecer outra porta.
+Se a porta 3000 estiver ocupada, rode em outra porta:
 
-## Banco Local
+```bash
+npm run dev -- -p 3002
+```
 
-O projeto usa PostgreSQL via Docker Compose.
+Sem `DATABASE_URL`, a tela principal continua funcionando. Apenas as acoes de cloud save pela API devem retornar erro de banco indisponivel.
+
+## Rodar Local Com PostgreSQL
+
+Use este fluxo quando quiser testar save em nuvem/local via API e PostgreSQL.
 
 Suba o banco:
 
@@ -52,12 +62,16 @@ Suba o banco:
 npm run db:up
 ```
 
-Esse comando cria o volume, sobe o container e aguarda o healthcheck do PostgreSQL.
-
-Aplique migrations:
+Aplique as migrations:
 
 ```bash
 npm run db:migrate
+```
+
+Rode a aplicacao:
+
+```bash
+npm run dev
 ```
 
 DSN local padrao:
@@ -66,44 +80,104 @@ DSN local padrao:
 postgresql://postgres:postgres@localhost:5433/ascensao_dos_ecos?schema=public
 ```
 
-Configure `.env` a partir de `.env.example`:
+O Docker Compose usa a porta local `5433` para evitar conflito com PostgreSQL ja instalado na maquina. O volume `ecos_postgres_data` preserva os dados locais.
+
+## Variaveis de Ambiente
+
+Crie um `.env` a partir de `.env.example` apenas se for testar PostgreSQL/cloud save:
 
 ```bash
 DATABASE_URL="postgresql://postgres:postgres@localhost:5433/ascensao_dos_ecos?schema=public"
 ```
 
-O volume Docker `ecos_postgres_data` preserva os dados locais do banco.
+Variavel:
 
-## Validacao
+- `DATABASE_URL`: opcional para jogar localmente; necessaria para `db:migrate`, `db:studio`, `validate:db` e rotas de cloud save.
 
-Comandos principais:
+## Comandos Uteis
+
+```bash
+npm run dev
+```
+
+Inicia o Next em modo desenvolvimento.
+
+```bash
+npm run build
+```
+
+Gera o build de producao.
 
 ```bash
 npm run typecheck
-npm test
-npm run build
-npm run validate
-npm run validate:db
 ```
 
-O que cada comando cobre:
+Executa `tsc --noEmit`.
 
-- `npm run typecheck`: contratos TypeScript.
-- `npm test`: regressao do core e fixtures estaveis.
-- `npm run build`: build Next de producao.
-- `npm run validate`: Prisma generate, typecheck, testes e build.
-- `npm run validate:db`: Docker Compose, migrations e smoke test do PostgreSQL.
+```bash
+npm test
+```
 
-## Persistencia
+Roda testes de regressao do core e fixtures.
 
-O save local usa `localStorage` pela chave definida em `GAME_CONFIG.saveKey`.
+```bash
+npm run validate
+```
 
-O save em nuvem e explicito pelo jogador e usa:
+Roda Prisma generate, typecheck, testes e build.
+
+```bash
+npm run db:up
+```
+
+Sobe o PostgreSQL local via Docker Compose e aguarda healthcheck.
+
+```bash
+npm run db:migrate
+```
+
+Aplica/verifica migrations Prisma no PostgreSQL local.
+
+```bash
+npm run db:studio
+```
+
+Abre o Prisma Studio para inspecionar dados locais.
+
+Comandos adicionais:
+
+```bash
+npm run validate:db
+npm run db:down
+npm run db:logs
+```
+
+## Sistema de Save
+
+### Save local
+
+O save principal atual e o `localStorage`, pela chave configurada em `GAME_CONFIG.saveKey`.
+
+Esse caminho e suficiente para:
+
+- iniciar novo jogo;
+- salvar progresso automaticamente no navegador;
+- exportar/importar JSON;
+- resetar o save local;
+- jogar sem PostgreSQL.
+
+### Save em nuvem/local experimental
+
+O PostgreSQL e usado como camada opcional para testar cloud save local. O jogador aciona esse fluxo manualmente na tela de Config.
+
+Rotas atuais:
 
 - `GET /api/saves/[playerId]`
 - `PUT /api/saves/[playerId]` com `{ payload: GameState }`
 
-No PostgreSQL, `SaveSnapshot.payload` continua sendo a fonte completa do save. `PlayerProfile` e `Hero` sao tabelas auxiliares sincronizadas para preparar evolucoes futuras sem expandir o schema nesta etapa.
+No banco, `SaveSnapshot.payload` e a fonte completa do save. `Player`, `PlayerProfile` e `Hero` sao tabelas auxiliares sincronizadas para preparar evolucoes futuras.
+
+Sem `DATABASE_URL`, a aplicacao continua jogavel; apenas as rotas de cloud save ficam indisponiveis.
 
 ## Sistemas de Jogo
 
@@ -113,8 +187,7 @@ O core TypeScript em `src/game/` cobre:
 - formacao e presets de equipe;
 - equipamentos e atributos efetivos;
 - consumiveis;
-- moral e ferimentos;
-- enfermaria;
+- moral, ferimentos e enfermaria;
 - especializacoes;
 - afinidade entre herois;
 - invocacao e historico;
@@ -133,39 +206,53 @@ O core TypeScript em `src/game/` cobre:
 - preferencias;
 - export/import de save.
 
-## UI Principal
+## Estrutura Principal
 
-Os componentes React ficam em `app/components/` e incluem paineis para:
+- `app/`: app Next, rotas e componentes React.
+- `app/components/`: paineis da UI do jogo.
+- `app/api/saves/[playerId]/route.ts`: API opcional de cloud save.
+- `src/game/`: regras puras e contratos do jogo.
+- `src/store/gameStore.ts`: ponte entre UI, core e persistencia.
+- `src/lib/`: utilitarios de Prisma, playerId e snapshots.
+- `prisma/`: schema e migrations.
+- `tests/`: regressao do core, fixtures e banco.
+- `docs/`: especificacao funcional e notas da migracao.
+- `agentsRules/`: convencoes internas para agentes.
 
-- recursos e gerenciamento de save;
-- torre, combate, eventos e resultados;
-- herois, formacao, presets e memorial;
-- inventario, consumiveis e equipamentos;
-- expedicoes;
-- missoes;
-- reliquias;
-- invocacao;
-- recrutamento;
-- biblioteca;
-- preferencias;
-- narrativa.
+## Deploy
+
+### Agora
+
+O alvo atual e rodar bem localmente. GitHub Pages foi descartado para esta fase porque a aplicacao agora usa Next.js, rotas de API e uma stack pensada para Vercel.
+
+### Futuro
+
+O deploy planejado e Vercel.
+
+Antes do deploy, ainda e preciso decidir:
+
+- provedor do PostgreSQL;
+- estrategia real de autenticacao/playerId;
+- politica de sync entre `localStorage` e cloud save;
+- variaveis de ambiente de producao;
+- rotinas de backup e migracao de saves.
+
+## Roadmap Tecnico Imediato
+
+1. Manter o fluxo local sem banco sempre funcionando.
+2. Endurecer mensagens de erro de cloud save quando `DATABASE_URL` nao existir.
+3. Validar manualmente os fluxos principais no React: novo jogo, torre, combate, resultado, save, export/import e reset.
+4. Melhorar QA visual em desktop e mobile basico.
+5. Documentar melhor a sincronizacao entre save local e snapshot PostgreSQL.
+6. Preparar checklist de deploy para Vercel sem antecipar autenticacao real.
 
 ## Fluxo de Desenvolvimento
 
-Regras praticas:
-
-- trabalhar na branch `migration/next-postgres`;
-- manter `master` preservada;
-- fazer commits pequenos por responsabilidade;
-- chamar mutacoes de UI por `src/store/gameStore.ts`;
-- manter regras puras em `src/game/`;
-- normalizar saves antigos antes de usar;
-- manter textos em PT-BR;
-- rodar validacoes antes de commitar.
-
-## Documentacao Interna
-
-- `docs/migracao-next-postgres.md`: status da migracao, banco e comandos.
-- `docs/especificacao-funcional.md`: especificacao funcional do jogo.
-- `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md`: referencia de design.
-- `agentsRules/`: contexto, pre-analise, padroes de codigo e padrao de commit.
+- Trabalhe na branch `migration/next-postgres`.
+- Preserve `master` enquanto a migracao nao for promovida.
+- Faca commits pequenos por responsabilidade.
+- Chame mutacoes de UI por `src/store/gameStore.ts`.
+- Mantenha regras de jogo em `src/game/`.
+- Normalize saves antigos antes de usar.
+- Mantenha textos em PT-BR.
+- Rode validacoes antes de commitar quando houver mudanca de codigo.
