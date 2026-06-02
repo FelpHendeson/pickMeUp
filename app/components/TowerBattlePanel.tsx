@@ -2,10 +2,16 @@
 
 import {
   canSpendResource,
+  describeReward,
   GAME_CONFIG,
+  getFloorData,
+  getFloorModifierSummary,
   getFormationHeroCount,
   getFormationPower,
   getTowerDifficultySummary,
+  getTowerChapterByFloor,
+  getWeeklyTowerRewardOptions,
+  isBossFloor,
   normalizeTowerDifficultyMode,
   type RunTowerBattleResult,
 } from "@/src/game";
@@ -26,13 +32,18 @@ function formatBattleMessage(result: RunTowerBattleResult): string {
   return "Combate concluido.";
 }
 
-export function TowerBattlePanel() {
+export function TowerBattlePanel({ priority = "primary" }: { priority?: "primary" | "blocked-by-event" | "after-result" }) {
   const state = useGameStore((store) => store.state);
   const startTowerBattle = useGameStore((store) => store.startTowerBattle);
   const [difficultyMode, setDifficultyMode] = useState<(typeof difficultyModes)[number]>("normal");
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const normalizedDifficulty = normalizeTowerDifficultyMode(difficultyMode);
   const difficultySummary = getTowerDifficultySummary(normalizedDifficulty);
+  const currentChapter = getTowerChapterByFloor(state.towerFloor);
+  const currentFloor = getFloorData(state.towerFloor);
+  const modifierSummary = currentFloor ? getFloorModifierSummary(currentFloor) : "";
+  const rewardPreview = describeReward(state.towerFloor, getWeeklyTowerRewardOptions());
+  const bossFloor = isBossFloor(state.towerFloor);
   const heroCount = getFormationHeroCount(state);
   const formationPower = getFormationPower(state);
   const energy = state.resources.energy;
@@ -49,11 +60,13 @@ export function TowerBattlePanel() {
   }, [energy, heroCount, state.pendingTowerEvent, state.towerFloor]);
 
   return (
-    <section className="tower-battle-panel">
+    <section className={`tower-battle-panel tower-battle-${priority}`}>
       <div className="section-heading">
-        <span>Combate React</span>
-        <h2>Tentativa na Torre</h2>
-        <p>Inicia o fluxo completo pelo core TypeScript e persiste no save local deste navegador.</p>
+        <span>{priority === "blocked-by-event" ? "Combate bloqueado por evento" : priority === "after-result" ? "Proxima tentativa" : "Preparacao"}</span>
+        <h2>{currentFloor ? `${state.towerFloor}. ${currentFloor.title}` : "Tentativa na Torre"}</h2>
+        <p>
+          Capitulo {currentChapter.number}: {currentChapter.name}. {bossFloor ? `Chefe: ${currentChapter.finalBoss}.` : "Prepare a equipe para o proximo andar."}
+        </p>
       </div>
 
       <div className="tower-summary roster-summary">
@@ -70,6 +83,18 @@ export function TowerBattlePanel() {
           <span>
             {energy}/{state.resources.maxEnergy}
           </span>
+        </div>
+        <div>
+          <strong>Dificuldade</strong>
+          <span>{difficultySummary.name}</span>
+        </div>
+        <div>
+          <strong>Risco</strong>
+          <span>{difficultySummary.injuryRisk}</span>
+        </div>
+        <div>
+          <strong>Recompensa</strong>
+          <span>{difficultySummary.reward}</span>
         </div>
       </div>
 
@@ -90,12 +115,14 @@ export function TowerBattlePanel() {
       </div>
 
       <article className="tower-event-card tone-support">
-        <span>Modo selecionado</span>
-        <h3>{difficultySummary.name}</h3>
+        <span>Previsao do andar</span>
+        <h3>{bossFloor ? "Andar de chefe" : "Combate regular"}</h3>
         <p>
           Inimigos {difficultySummary.enemyPower} | Recompensa {difficultySummary.reward} | Risco {difficultySummary.injuryRisk}
         </p>
         <p>{difficultySummary.permanentDeath}</p>
+        <small>{modifierSummary || "Sem modificador adicional alem da regiao."}</small>
+        <small>{rewardPreview}</small>
       </article>
 
       <button

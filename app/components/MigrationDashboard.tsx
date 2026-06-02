@@ -239,6 +239,10 @@ function AboutPanel() {
 
 export function MigrationDashboard() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("base");
+  const lastBattle = useGameStore((store) => store.state.lastBattle);
+  const pendingTowerEvent = useGameStore((store) => store.state.pendingTowerEvent);
+  const [dismissedBattleId, setDismissedBattleId] = useState<string | null>(null);
+  const showBattleResultFirst = Boolean(lastBattle && lastBattle.id !== dismissedBattleId && !pendingTowerEvent);
 
   return (
     <section className="dashboard-shell">
@@ -265,11 +269,15 @@ export function MigrationDashboard() {
         {activeTab === "tower" ? (
           <>
             <ChapterCompletionPanel />
+            {pendingTowerEvent ? <TowerEventsPanel /> : null}
+            {showBattleResultFirst ? (
+              <BattleResultPanel onContinue={() => setDismissedBattleId(lastBattle?.id ?? null)} />
+            ) : null}
             <TowerCampaignPanel />
-            <TowerBattlePanel />
+            <TowerBattlePanel priority={pendingTowerEvent ? "blocked-by-event" : showBattleResultFirst ? "after-result" : "primary"} />
+            {!pendingTowerEvent ? <TowerEventsPanel /> : null}
             <RepeatFloorsPanel />
-            <TowerEventsPanel />
-            <BattleResultPanel />
+            {!showBattleResultFirst && lastBattle ? <BattleResultPanel compact onContinue={() => setDismissedBattleId(lastBattle.id)} /> : null}
           </>
         ) : null}
         {activeTab === "heroes" ? (
