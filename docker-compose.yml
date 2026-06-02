@@ -7,14 +7,15 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: ascensao_dos_ecos
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - ecos_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d ascensao_dos_ecos"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 60
+      start_period: 120s
 
 volumes:
   ecos_postgres_data:

@@ -63,13 +63,13 @@ npm run db:migrate
 DSN local padrao:
 
 ```text
-postgresql://postgres:postgres@localhost:5432/ascensao_dos_ecos?schema=public
+postgresql://postgres:postgres@localhost:5433/ascensao_dos_ecos?schema=public
 ```
 
 Configure `.env` a partir de `.env.example`:
 
 ```bash
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ascensao_dos_ecos?schema=public"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5433/ascensao_dos_ecos?schema=public"
 ```
 
 O volume Docker `ecos_postgres_data` preserva os dados locais do banco.

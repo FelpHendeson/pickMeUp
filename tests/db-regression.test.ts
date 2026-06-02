@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-const DEFAULT_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/ascensao_dos_ecos?schema=public";
+const DEFAULT_DATABASE_URL = "postgresql://postgres:postgres@localhost:5433/ascensao_dos_ecos?schema=public";
 process.env.DATABASE_URL ||= DEFAULT_DATABASE_URL;
 
 test("cloud save persiste snapshot normalizado, perfil e herois no PostgreSQL", async () => {
