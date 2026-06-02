@@ -1,7 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { getActiveWeeklyEvent } from "@/src/game";
+import { useEffect, useRef, useState } from "react";
+import {
+  GAME_CONFIG,
+  getActiveWeeklyEvent,
+  getClaimableMissionCount,
+  getFormationHeroCount,
+  getInjuredHeroes,
+  getTowerChapterByFloor,
+  type GameState,
+} from "@/src/game";
+import { useGameStore } from "@/src/store/gameStore";
 import { BattleResultPanel } from "./BattleResultPanel";
 import { ChapterCompletionPanel } from "./ChapterCompletionPanel";
 import { ExpeditionsPanel } from "./ExpeditionsPanel";
@@ -35,7 +44,7 @@ type DashboardTab =
   | "summon"
   | "library"
   | "settings"
-  | "roadmap";
+  | "about";
 
 const dashboardTabs: Array<{ id: DashboardTab; label: string }> = [
   { id: "base", label: "Base" },
@@ -49,7 +58,7 @@ const dashboardTabs: Array<{ id: DashboardTab; label: string }> = [
   { id: "recruitment", label: "Recrutamento" },
   { id: "library", label: "Biblioteca" },
   { id: "settings", label: "Config" },
-  { id: "roadmap", label: "Roadmap" },
+  { id: "about", label: "Sobre" },
 ];
 
 const migrationMilestones = [
@@ -70,22 +79,114 @@ const currentSystems = [
   "Regressao automatizada do core TypeScript, fixtures e banco",
 ];
 
+function SaveBootstrap() {
+  const loadLocalSave = useGameStore((store) => store.loadLocalSave);
+  const didLoadRef = useRef(false);
+
+  useEffect(() => {
+    if (didLoadRef.current) return;
+    didLoadRef.current = true;
+    loadLocalSave();
+  }, [loadLocalSave]);
+
+  return null;
+}
+
+function getBaseNextAction(state: GameState, formationCount: number): { title: string; description: string } {
+  if (state.heroes.length === 0) {
+    return {
+      title: "Recrute seu primeiro heroi",
+      description: "Use invocacao ou contrato para formar uma equipe antes de desafiar a torre.",
+    };
+  }
+
+  if (formationCount === 0) {
+    return {
+      title: "Monte uma formacao",
+      description: "Escolha ate cinco herois para liberar o proximo combate da torre.",
+    };
+  }
+
+  if (state.pendingTowerEvent) {
+    return {
+      title: "Resolva o evento pendente",
+      description: `Um evento aguarda no andar ${state.pendingTowerEvent.floor}. Va para Torre e escolha como prosseguir.`,
+    };
+  }
+
+  if (state.lastChapterCompletion) {
+    return {
+      title: "Conclua a transicao do capitulo",
+      description: "Colete a recompensa especial para registrar o avancao da campanha.",
+    };
+  }
+
+  return {
+    title: "Avance na torre",
+    description: `Prepare a equipe e inicie o combate do andar ${Math.min(state.towerFloor, GAME_CONFIG.towerMaxFloor)}.`,
+  };
+}
+
 function BasePanel() {
+  const state = useGameStore((store) => store.state);
   const weeklyEvent = getActiveWeeklyEvent();
+  const chapter = getTowerChapterByFloor(state.towerFloor);
+  const formationCount = getFormationHeroCount(state);
+  const injuredCount = getInjuredHeroes(state).length;
+  const claimableMissions = getClaimableMissionCount(state);
+  const nextAction = getBaseNextAction(state, formationCount);
+  const floorProgress = `${Math.min(state.towerFloor, GAME_CONFIG.towerMaxFloor)}/${GAME_CONFIG.towerMaxFloor}`;
 
   return (
     <>
       <section className="grid">
         <article>
-          <span>Status atual</span>
-          <h2>Stack atual</h2>
-          <p>
-            A experiencia operacional desta branch roda em React com regras centralizadas no core TypeScript e save
-            local preservado no navegador.
-          </p>
+          <span>Proximo passo</span>
+          <h2>{nextAction.title}</h2>
+          <p>{nextAction.description}</p>
+          <div className="mini-grid">
+            <div>
+              <strong>{formationCount}/{GAME_CONFIG.maxFormationSize}</strong>
+              <small>Formacao</small>
+            </div>
+            <div>
+              <strong>{claimableMissions}</strong>
+              <small>Missoes</small>
+            </div>
+            <div>
+              <strong>{injuredCount}</strong>
+              <small>Feridos</small>
+            </div>
+            <div>
+              <strong>{state.activeExpeditions.length}</strong>
+              <small>Exped.</small>
+            </div>
+          </div>
         </article>
 
-        <SaveManagementPanel />
+        <article>
+          <span>Campanha</span>
+          <h2>{chapter.name}</h2>
+          <p>{chapter.description}</p>
+          <div className="mini-grid">
+            <div>
+              <strong>{floorProgress}</strong>
+              <small>Torre</small>
+            </div>
+            <div>
+              <strong>{chapter.finalBoss}</strong>
+              <small>Chefe</small>
+            </div>
+            <div>
+              <strong>{state.echoFragments}</strong>
+              <small>Frag. eco</small>
+            </div>
+            <div>
+              <strong>{state.heroContracts}</strong>
+              <small>Contratos</small>
+            </div>
+          </div>
+        </article>
       </section>
 
       <article className={`weekly-event-card tone-${weeklyEvent.tone}`}>
@@ -98,35 +199,25 @@ function BasePanel() {
           ))}
         </div>
       </article>
-
-      <section className="grid">
-        <article>
-          <span>Stack principal</span>
-          <h2>Next + PostgreSQL</h2>
-          <p>
-            Next.js, TypeScript, Prisma, Zustand e TanStack Query sustentam o jogo atual, com cloud save explicito por
-            snapshot.
-          </p>
-        </article>
-
-        <article>
-          <span>Core TypeScript</span>
-          <h2>Estado tipado</h2>
-          <p>
-            O nucleo migrado ja possui estado, recursos, herois, equipamentos, consumiveis, dificuldade e dados da torre
-            sem dependencia de DOM.
-          </p>
-        </article>
-      </section>
     </>
   );
 }
 
-function RoadmapPanel() {
+function SettingsPanel() {
+  return (
+    <section className="grid">
+      <SaveManagementPanel />
+      <PreferencesPanel />
+    </section>
+  );
+}
+
+function AboutPanel() {
   return (
     <section className="columns dashboard-roadmap">
       <div>
-        <h2>Sistemas existentes</h2>
+        <span className="eyebrow">Sobre</span>
+        <h2>Alpha atual</h2>
         <ul>
           {currentSystems.map((item) => (
             <li key={item}>{item}</li>
@@ -134,6 +225,7 @@ function RoadmapPanel() {
         </ul>
       </div>
       <div>
+        <span className="eyebrow">Migracao</span>
         <h2>Proximos passos</h2>
         <ol>
           {migrationMilestones.map((item) => (
@@ -150,10 +242,11 @@ export function MigrationDashboard() {
 
   return (
     <section className="dashboard-shell">
+      <SaveBootstrap />
       <ResourceHudPanel />
       <NarrativeModal />
 
-      <nav className="dashboard-tabs" aria-label="Navegacao da migracao">
+      <nav className="dashboard-tabs" aria-label="Navegacao principal">
         {dashboardTabs.map((tab) => (
           <button
             aria-pressed={activeTab === tab.id}
@@ -193,8 +286,8 @@ export function MigrationDashboard() {
         {activeTab === "summon" ? <SummonPanel /> : null}
         {activeTab === "recruitment" ? <RecruitmentPanel /> : null}
         {activeTab === "library" ? <LibraryPanel /> : null}
-        {activeTab === "settings" ? <PreferencesPanel /> : null}
-        {activeTab === "roadmap" ? <RoadmapPanel /> : null}
+        {activeTab === "settings" ? <SettingsPanel /> : null}
+        {activeTab === "about" ? <AboutPanel /> : null}
       </div>
     </section>
   );

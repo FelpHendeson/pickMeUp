@@ -766,6 +766,26 @@ article,
   padding-top: 1rem;
 }
 
+.save-source-note {
+  color: var(--teal);
+  display: block;
+  font-weight: 800;
+  margin-top: 0.55rem;
+}
+
+.save-section {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.save-section strong {
+  color: var(--gold);
+}
+
+.save-section small {
+  color: var(--muted);
+}
+
 .cloud-save-input {
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1259,6 +1279,14 @@ article,
 .memorial-panel,
 .preferences-panel {
   margin-bottom: 1rem;
+}
+
+.preferences-panel {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 10px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+  padding: 1.2rem;
 }
 
 .resource-primary,

@@ -6,43 +6,27 @@ import { useGameStore } from "@/src/store/gameStore";
 import { useEffect, useRef, useState } from "react";
 
 export function SaveManagementPanel() {
-  const { state, source, loadLocalSave, loadCloudSave, saveCloudSave, exportSave, importSave, resetLocalState, persistLocalSave } =
-    useGameStore();
-  const [message, setMessage] = useState("Verificando save local...");
+  const { source, loadLocalSave, loadCloudSave, saveCloudSave, exportSave, importSave, resetLocalState, persistLocalSave } = useGameStore();
+  const [message, setMessage] = useState("Controle manual de backup, importacao e sincronizacao opcional.");
   const [playerId, setPlayerId] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const result = loadLocalSave();
-    setMessage(result.ok ? "Save local encontrado e normalizado pelo core TypeScript." : result.message);
     setPlayerId(getOrCreatePlayerId());
-  }, [loadLocalSave]);
+  }, []);
 
   return (
     <article>
       <span>Save</span>
-      <h2>Gerenciamento de progresso</h2>
+      <h2>Save e backup</h2>
       <p>{message}</p>
-      <div className="mini-grid">
-        <div>
-          <strong>{state.towerFloor}</strong>
-          <small>Andar</small>
-        </div>
-        <div>
-          <strong>{state.heroes.length}</strong>
-          <small>Herois</small>
-        </div>
-        <div>
-          <strong>{state.inventory.length}</strong>
-          <small>Itens</small>
-        </div>
-        <div>
-          <strong>{source}</strong>
-          <small>Fonte</small>
-        </div>
-      </div>
+      <small className="save-source-note">Fonte atual: {source}</small>
 
       <div className="cloud-save-panel">
+        <div className="save-section">
+          <strong>Backup local</strong>
+          <small>Exporte um JSON antes de resetar ou importar outro progresso.</small>
+        </div>
         <div className="hero-action-row">
           <button
             className="hero-inline-action"
@@ -110,8 +94,12 @@ export function SaveManagementPanel() {
         />
         <small>Arquivo padrao: {EXPORT_FILE_NAME}</small>
 
+        <div className="save-section">
+          <strong>Nuvem manual</strong>
+          <small>Sincronizacao opcional. O save local continua sendo o fallback deste navegador.</small>
+        </div>
         <label className="inventory-hero-picker">
-          ID do jogador (PostgreSQL)
+          ID do jogador para nuvem
           <input className="cloud-save-input" onChange={(event) => setPlayerId(event.target.value)} value={playerId} />
         </label>
         <div className="hero-action-row">
@@ -138,7 +126,6 @@ export function SaveManagementPanel() {
             Salvar na nuvem
           </button>
         </div>
-        <small>Use DATABASE_URL e npm run db:migrate antes de sincronizar com PostgreSQL.</small>
       </div>
     </article>
   );
