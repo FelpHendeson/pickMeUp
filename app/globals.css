@@ -1442,6 +1442,99 @@ article,
   gap: 0.8rem;
 }
 
+.inventory-tab-row,
+.library-tab-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0.8rem 0 1rem;
+}
+
+.inventory-tab-row button,
+.library-tab-row button {
+  min-height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  padding: 0.5rem 0.75rem;
+}
+
+.inventory-tab-row button.active,
+.library-tab-row button.active {
+  border-color: rgba(232, 188, 88, 0.48);
+  background: rgba(232, 188, 88, 0.12);
+  color: var(--text);
+}
+
+.inventory-target-card {
+  border: 1px solid rgba(232, 188, 88, 0.22);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 10px;
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.45fr);
+  margin-bottom: 1rem;
+  padding: 1rem;
+}
+
+.inventory-target-card span,
+.inventory-target-card label {
+  color: var(--teal);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.inventory-target-card h3 {
+  margin: 0.2rem 0;
+}
+
+.inventory-target-card p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.inventory-target-card label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.inventory-target-card select {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 0.5rem 0.6rem;
+}
+
+.inventory-equipped-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  grid-column: 1 / -1;
+}
+
+.inventory-equipped-summary span {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  padding: 0.4rem 0.55rem;
+  text-transform: none;
+}
+
+.inventory-equipment-sections {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .inventory-list-card h3 {
   margin: 0.25rem 0 0.8rem;
   font-family: Georgia, "Times New Roman", serif;
@@ -1463,8 +1556,21 @@ article,
   border-color: rgba(86, 199, 189, 0.3);
 }
 
+.inventory-row.equipped {
+  border-color: rgba(232, 188, 88, 0.34);
+}
+
+.inventory-row-head {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
 .inventory-row strong,
-.inventory-row span {
+.inventory-row span,
+.inventory-row small,
+.inventory-row em {
   display: block;
 }
 
@@ -1478,6 +1584,24 @@ article,
   font-size: 0.78rem;
   line-height: 1.45;
   margin-top: 0.3rem;
+}
+
+.inventory-row small,
+.inventory-row em {
+  color: var(--teal);
+  font-size: 0.76rem;
+  font-style: normal;
+  line-height: 1.45;
+  margin-top: 0.35rem;
+}
+
+.inventory-row em {
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.consumable-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .expedition-grid {
@@ -1623,6 +1747,40 @@ article,
   gap: 0.8rem;
 }
 
+.relic-echo-banner {
+  align-items: center;
+  border: 1px solid rgba(232, 188, 88, 0.3);
+  background: linear-gradient(180deg, rgba(232, 188, 88, 0.12), rgba(0, 0, 0, 0.18));
+  border-radius: 10px;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin: 1rem 0;
+  padding: 1rem;
+}
+
+.relic-echo-banner span,
+.relic-echo-banner strong {
+  display: block;
+}
+
+.relic-echo-banner span {
+  color: var(--teal);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.relic-echo-banner strong {
+  color: var(--gold);
+  font-size: 1.65rem;
+}
+
+.relic-echo-banner p {
+  color: var(--muted);
+  margin: 0;
+}
+
 .relic-card {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(0, 0, 0, 0.18);
@@ -1640,6 +1798,23 @@ article,
 
 .relic-card.maxed {
   border-color: rgba(232, 188, 88, 0.5);
+}
+
+.relic-card.upgradeable {
+  border-color: rgba(232, 188, 88, 0.68);
+  background: linear-gradient(180deg, rgba(232, 188, 88, 0.12), rgba(0, 0, 0, 0.18));
+}
+
+.relic-upgrade-badge {
+  border: 1px solid rgba(232, 188, 88, 0.38);
+  background: rgba(232, 188, 88, 0.14);
+  border-radius: 999px;
+  color: var(--gold);
+  display: inline-flex;
+  font-size: 0.72rem;
+  justify-self: start;
+  padding: 0.32rem 0.55rem;
+  text-transform: uppercase;
 }
 
 .relic-card-head {
@@ -1691,6 +1866,83 @@ article,
 
 .relic-card em {
   font-style: normal;
+}
+
+.library-section-head {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+
+.library-section-head h3 {
+  margin: 0;
+}
+
+.library-grid-react.collection {
+  margin-top: 0;
+}
+
+.collection-card {
+  position: relative;
+}
+
+.library-silhouette {
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: radial-gradient(circle at 35% 25%, rgba(86, 199, 189, 0.2), rgba(0, 0, 0, 0.24));
+  border-radius: 8px;
+  color: var(--gold);
+  display: grid;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.4rem;
+  font-weight: 900;
+  height: 54px;
+  margin-bottom: 0.65rem;
+  place-items: center;
+  width: 54px;
+}
+
+.library-entry.locked .library-silhouette {
+  background: rgba(0, 0, 0, 0.24);
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.library-entry em {
+  color: var(--teal);
+  display: block;
+  font-size: 0.76rem;
+  font-style: normal;
+  margin-top: 0.35rem;
+}
+
+.library-discovery-progress {
+  align-items: center;
+  display: grid;
+  gap: 0.35rem;
+  min-width: 160px;
+}
+
+.library-discovery-progress span {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.24);
+  border-radius: 999px;
+  display: block;
+  height: 8px;
+  overflow: hidden;
+}
+
+.library-discovery-progress i {
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+  display: block;
+  height: 100%;
+}
+
+.library-discovery-progress small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  justify-self: end;
 }
 
 .recruitment-choice-card h3 {
@@ -2054,6 +2306,9 @@ code {
   .hero-roster-grid.compact,
   .hero-roster-layout,
   .inventory-columns,
+  .inventory-target-card,
+  .inventory-equipment-sections,
+  .consumable-grid,
   .expedition-grid,
   .mission-columns,
   .relic-grid,
@@ -2073,6 +2328,12 @@ code {
   .memorial-grid,
   .summon-grid-react {
     grid-template-columns: 1fr;
+  }
+
+  .relic-echo-banner,
+  .library-section-head {
+    align-items: flex-start;
+    display: grid;
   }
 
   .hero-detail-panel {
