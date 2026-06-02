@@ -23,21 +23,21 @@
     "prisma:migrate": "prisma migrate dev"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "latest",
-    "@tanstack/react-query": "latest",
-    "next": "latest",
-    "pg": "^8.21.0",
-    "react": "latest",
-    "react-dom": "latest",
-    "zustand": "latest"
+    "@prisma/adapter-pg": "7.8.0",
+    "@prisma/client": "7.8.0",
+    "@tanstack/react-query": "5.100.14",
+    "next": "16.2.6",
+    "pg": "8.21.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "zustand": "5.0.14"
   },
   "devDependencies": {
-    "@types/node": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "prisma": "latest",
-    "tsx": "^4.22.4",
-    "typescript": "latest"
+    "@types/node": "25.9.1",
+    "@types/react": "19.2.15",
+    "@types/react-dom": "19.2.3",
+    "prisma": "7.8.0",
+    "tsx": "4.22.4",
+    "typescript": "6.0.3"
   }
 }
