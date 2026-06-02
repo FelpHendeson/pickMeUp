@@ -1496,7 +1496,7 @@ code {
   .resource-primary,
   .resource-secondary,
   .repeat-floor-grid,
-  .memorial-grid {
+  .memorial-grid,
   .summon-grid-react {
     grid-template-columns: 1fr;
   }
