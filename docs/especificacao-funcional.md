@@ -6,48 +6,50 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 ## Módulos e responsabilidades
 
 ### Estado, persistência e preferências
-- `state.js` define o estado inicial, recursos, energia, presets, `saveVersion` e a normalizacao do save.
-- `storage.js` carrega, salva, exporta, importa e reseta o progresso local, preservando relíquias permanentes e metadados da conta.
-- `preferences.js` guarda preferências visuais, de combate e de interface.
+- `src/game/state/` define o estado inicial, recursos, energia, presets, `saveVersion` e a normalizacao do save.
+- `src/game/save/` carrega, valida, exporta, importa e normaliza progresso local.
+- `src/game/preferences/` guarda preferências visuais, de combate e de interface.
+- `src/store/gameStore.ts` expõe ações persistentes para a UI React.
 
 ### Heróis, recrutamento e progressão
-- `heroes.js` define classes, raridades, atributos, XP, níveis e geracao procedimental de herois.
-- `recruitment.js` controla contratos de heroi, selecao entre tres candidatos, veteranos tematicos e recrutamento alternativo.
-- `relics.js` gerencia relíquias permanentes da conta, custos em Fragmentos de Eco e bonus globais.
-- `specializations.js` disponibiliza especializacoes por classe, requisitos de nivel e bonus permanentes.
-- `injuries.js` controla ferimentos, tratamento na enfermaria, estados temporarios e efeitos de desempenho.
-- `morale.js` gerencia moral de 0 a 100, estados emocionais e bonus/penalidades em combate.
-- `affinity.js` salva vinculos por par de herois, evolui afinidade e aplica bonus leves de equipe.
+- `src/game/heroes/` define classes, raridades, atributos, XP, níveis e geracao procedimental de herois.
+- `src/game/recruitment/` controla contratos de heroi, selecao entre tres candidatos, veteranos tematicos e recrutamento alternativo.
+- `src/game/relics/` gerencia relíquias permanentes da conta, custos em Fragmentos de Eco e bonus globais.
+- `src/game/specializations/` disponibiliza especializacoes por classe, requisitos de nivel e bonus permanentes.
+- `src/game/hero-status/` controla ferimentos, tratamento, moral, estados temporarios e efeitos de desempenho.
+- `src/game/affinity/` salva vinculos por par de herois, evolui afinidade e aplica bonus leves de equipe.
 
 ### Formação e equipamentos
-- `formation.js` organiza a equipe ativa, limites de slots, posicoes de frente/retaguarda e presets de time.
-- `equipment.js` gera, normaliza, equipa e calcula efeitos de equipamentos, recalculando bonus derivados de raridade e andar.
-- `consumables.js` define consumiveis, quantidades, alvos permitidos, validacao de uso e efeitos de preparacao.
+- `src/game/formation/` organiza a equipe ativa, limites de slots, posicoes de frente/retaguarda e presets de time.
+- `src/game/equipment/` gera, normaliza, equipa e calcula efeitos de equipamentos, recalculando bonus derivados de raridade e andar.
+- `src/game/consumables/` define consumiveis, quantidades, alvos permitidos, validacao de uso e efeitos de preparacao.
 - Itens obtidos por eventos, recompensas ou drops raros devem ser normalizados para evitar discrepancia entre raridade, nome e bonus efetivo.
 
 ### Progresso principal
-- `tower.js` define andares, capitulos, inimigos, modificadores regionais, chefes e progresso da torre.
-- `difficulty.js` define modos Normal, Desafio e Hardcore, aplica modificadores de risco/recompensa e registra estatisticas por modo.
-- `tower-events.js` controla eventos aleatorios antes e depois de combates, escolhas de risco/recompensa e efeitos aplicado na proxima luta.
-- `weekly-events.js` aplica eventos semanais locais conforme o calendario do navegador.
-- `rewards.js` concede recompensas de vitória, marcos de capitulo, drops especiais e itens permanentes.
-- `library.js` registra bestiario, chefes, eventos, reliquias e herois encontrados.
+- `src/game/tower/` define andares, capitulos, inimigos, modificadores regionais, chefes e progresso da torre.
+- `src/game/difficulty/` define modos Normal, Desafio e Hardcore, aplica modificadores de risco/recompensa e registra estatisticas por modo.
+- `src/game/tower-events/` controla eventos aleatorios antes e depois de combates, escolhas de risco/recompensa e efeitos aplicado na proxima luta.
+- `src/game/weekly-events/` aplica eventos semanais locais conforme o calendario do navegador.
+- `src/game/rewards/` concede recompensas de vitória, marcos de capitulo, drops especiais e itens permanentes.
+- `src/game/library/` registra bestiario, chefes, eventos, reliquias e herois encontrados.
 
 ### Combate
-- `battle.js` simula o combate automatico com turnos, energia, alvos, dano, cura, status e efeitos.
-- `battle-view.js` renderiza replay, log de combate, barra de energia e painel de resultado para explicar o desenrolar da batalha.
+- `src/game/battle/` simula o combate automatico com turnos, energia, alvos, dano, cura, status e efeitos.
+- `app/components/tower/BattleResultPanel.tsx` renderiza replay, log de combate, barra de energia e painel de resultado para explicar o desenrolar da batalha.
 
 ### Sistemas auxiliares
-- `summon.js` gerencia invocacao comum e superior, histórico, custos e probabilidades.
-- `expeditions.js` administra expedicoes temporizadas, ate 3 herois por expedicao e recompensas escaladas pelo poder enviado.
-- `missions.js` valida missoes diarias, conquistas permanentes e recompensas.
-- `narrative.js` gerencia cenas curtas por gatilho e marca narrativas ja vistas.
-- `view-utils.js` concentra utilitarios visuais e escape de conteudo dinamico.
-- `main.js` coordena handlers, renderizacao, fluxo de combate e integracao entre os módulos.
+- `src/game/summon/` gerencia invocacao comum e superior, histórico, custos e probabilidades.
+- `src/game/expeditions/` administra expedicoes temporizadas, ate 3 herois por expedicao e recompensas escaladas pelo poder enviado.
+- `src/game/missions/` valida missoes diarias, conquistas permanentes e recompensas.
+- `src/game/narrative/` gerencia cenas curtas por gatilho e marca narrativas ja vistas.
+- `app/components/` concentra os paineis React por domínio.
+- `app/components/layout/GameShell.tsx` coordena a navegação principal e a composição dos painéis.
 
 ### Interface
-- `ui.js` renderiza as abas da base, herois, formacao, inventario, expedicoes, missoes, invocacao, torre, combate e configuracoes.
+- `app/components/` renderiza as abas da base, herois, formacao, inventario, expedicoes, missoes, invocacao, torre, combate e configuracoes.
 - A interface deve destacar poder do time, risco do andar, ferimentos, moral e modificadores ativos.
+- A versão atual deve ter identidade Dark Fantasy consistente, design system interno e responsividade real em mobile.
+- A tela da Torre usa layout mestre-detalhe: mapa de andares selecionável à esquerda, dados do desafio à direita e resultado/histórico em modal.
 
 ## Fluxo principal do jogador
 1. O jogador abre a home e entra no jogo, carregando o save local.
@@ -78,3 +80,4 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 - O save local no navegador permanece como fallback tecnico e deve preservar a chave existente de `localStorage`.
 - O PostgreSQL armazena snapshots completos do save normalizado e mantem `PlayerProfile`/`Hero` como tabelas preparatorias.
 - O banco local versionado deve subir por Docker Compose com volume persistente e ser validado por `npm run validate:db`.
+- O deploy futuro planejado e Vercel; GitHub Pages nao e alvo desta versao.

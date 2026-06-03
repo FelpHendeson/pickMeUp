@@ -17,6 +17,7 @@ import {
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
 import { useMemo, useState } from "react";
+import { useConfirmDialog } from "../ui";
 
 const difficultyModes = ["normal", "challenge", "hardcore"] as const;
 
@@ -35,6 +36,7 @@ function formatBattleMessage(result: RunTowerBattleResult): string {
 export function TowerBattlePanel({ priority = "primary" }: { priority?: "primary" | "blocked-by-event" | "after-result" }) {
   const state = useGameStore((store) => store.state);
   const startTowerBattle = useGameStore((store) => store.startTowerBattle);
+  const confirmDialog = useConfirmDialog();
   const [difficultyMode, setDifficultyMode] = useState<(typeof difficultyModes)[number]>("normal");
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const normalizedDifficulty = normalizeTowerDifficultyMode(difficultyMode);
@@ -128,8 +130,19 @@ export function TowerBattlePanel({ priority = "primary" }: { priority?: "primary
       <button
         className="tower-start-battle-button"
         disabled={!canStart}
-        onClick={() => {
-          if (normalizedDifficulty === "hardcore" && !window.confirm("Iniciar combate no modo Hardcore? Herois que cairem podem morrer permanentemente.")) {
+        onClick={async () => {
+          if (normalizedDifficulty === "hardcore") {
+            const confirmed = await confirmDialog({
+              title: "Iniciar modo Hardcore?",
+              description: "Heróis que caírem neste modo podem morrer permanentemente. Esta tentativa deve ser tratada como uma decisão de alto risco.",
+              confirmLabel: "Iniciar Hardcore",
+              tone: "danger",
+            });
+            if (!confirmed) {
+              return;
+            }
+          }
+          if (!canStart) {
             return;
           }
           const result = startTowerBattle({ difficultyMode: normalizedDifficulty });

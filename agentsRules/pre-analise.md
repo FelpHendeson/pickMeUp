@@ -7,7 +7,7 @@ Use este checklist antes de implementar qualquer feature.
 - Localizar os arquivos envolvidos com `rg`.
 - Ler o fluxo completo antes de editar.
 - Identificar onde o estado e mutado e onde ele e salvo.
-- Verificar se a mudanca afeta GitHub Pages ou apenas o jogo em `game/`.
+- Verificar se a mudança afeta apenas UI React, regras em `src/game/`, save local ou cloud save experimental.
 
 ## 2. Separar Responsabilidades
 
@@ -40,7 +40,8 @@ Para mudancas na torre:
 ## 5. Verificacao Minima
 
 Antes de finalizar:
-- rodar `node --check` nos arquivos JS alterados;
-- quando possivel, simular o fluxo afetado;
+- rodar `npm run typecheck` quando houver mudança em TypeScript/React;
+- rodar `npm test` quando regras ou persistência forem afetadas;
+- rodar `npm run build` antes de finalizar mudanças de UI estruturais;
 - revisar `git diff`;
 - confirmar que arquivos de responsabilidades diferentes estao em commits separados.

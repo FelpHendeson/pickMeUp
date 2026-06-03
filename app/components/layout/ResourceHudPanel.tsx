@@ -30,6 +30,10 @@ export function ResourceHudPanel() {
 
   return (
     <section className="resource-hud-panel">
+      <div className="resource-hud-header">
+        <span>Vigília da Base</span>
+        <strong>Andar {floorLabel}</strong>
+      </div>
       <div className="resource-primary">
         <div className="resource-pill featured tone-gold">
           <span>Ouro</span>

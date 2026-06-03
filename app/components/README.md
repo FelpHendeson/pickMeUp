@@ -3,6 +3,7 @@
 Organizacao por dominio da interface principal:
 
 - `layout/`: shell da aplicacao, HUD global e modais transversais.
+- `ui/`: primitivas reutilizaveis de painel, botao, badge, progresso, empty state e confirmacao.
 - `tower/`: campanha da torre, eventos, combate, resultado e andares repetiveis.
 - `heroes/`: elenco, detalhes de heroi, formacao, presets e memorial.
 - `inventory/`: equipamentos e consumiveis.

@@ -8,6 +8,7 @@ import {
   getEquipmentTypeName,
   getHeroActiveInjuries,
   getHeroAffinitySummaries,
+  getHeroExpedition,
   getHeroInjurySummary,
   getHeroInjuryTreatmentCost,
   getHeroMoraleState,
@@ -70,6 +71,14 @@ function getEquippedItems(hero: Hero, inventory: EquipmentItem[]): EquipmentItem
   return inventory.filter((item) => ids.has(item.id));
 }
 
+function getRarityLabel(rarity: number): string {
+  if (rarity >= 5) return "Lendário";
+  if (rarity === 4) return "Épico";
+  if (rarity === 3) return "Raro";
+  if (rarity === 2) return "Incomum";
+  return "Comum";
+}
+
 function HeroCompactCard({
   hero,
   selected,
@@ -85,43 +94,65 @@ function HeroCompactCard({
   const hpPercent = Math.round((Math.max(0, currentHp) / Math.max(1, hero.stats.hp)) * 100);
   const moraleState = getHeroMoraleState(hero);
   const injuryCount = getActiveInjuryCount(hero);
+  const injurySummary = getHeroInjurySummary(hero);
   const specialization = getHeroSpecialization(hero);
   const affinity = getHeroAffinitySummaries(state, hero.id)[0];
   const inFormation = isHeroInFormation(state, hero.id);
   const onExpedition = isHeroOnExpedition(state, hero.id);
+  const expedition = getHeroExpedition(state, hero.id);
   const specializationAvailable = hero.level >= SPECIALIZATION_LEVEL && !hero.specializationKey;
+  const power = getHeroPower(hero);
+  const availabilityTone = injuryCount > 0 ? "injured" : onExpedition ? "expedition" : inFormation ? "formation" : "available";
 
   return (
-    <button className={`hero-compact-card rarity-${hero.rarity}${selected ? " selected" : ""}`} onClick={onSelect} type="button">
+    <button
+      className={`hero-compact-card rarity-${hero.rarity} morale-${moraleState.tone} state-${availabilityTone}${selected ? " selected" : ""}`}
+      onClick={onSelect}
+      type="button"
+    >
       <div className="hero-compact-head">
-        <div>
+        <div className="hero-portrait-sigil" aria-hidden="true">
+          {hero.name.slice(0, 1)}
+        </div>
+        <div className="hero-compact-title">
           <span>{hero.className}</span>
           <strong>{hero.name}</strong>
+          <small>{getRarityLabel(hero.rarity)} | {getRarityStars(hero.rarity)}</small>
         </div>
-        <em>{getRarityStars(hero.rarity)}</em>
+        <em>Poder {power}</em>
       </div>
 
       <div className="hero-compact-stats">
         <span>Lv. {hero.level}</span>
-        <span>Poder {getHeroPower(hero)}</span>
-        <span>
-          HP {currentHp}/{hero.stats.hp}
-        </span>
+        <span>HP {currentHp}/{hero.stats.hp}</span>
+        <span>Moral {hero.morale}</span>
       </div>
 
-      <div className="hero-compact-life" aria-label={`HP em ${hpPercent}%`}>
-        <i style={{ width: `${hpPercent}%` }} />
+      <div className="hero-card-bars">
+        <label>
+          <span>Vigor</span>
+          <i className="hero-compact-life" aria-label={`HP em ${hpPercent}%`}>
+            <b style={{ width: `${hpPercent}%` }} />
+          </i>
+        </label>
+        <label>
+          <span>{moraleState.label}</span>
+          <i className={`hero-compact-morale tone-${moraleState.tone}`} aria-label={`Moral em ${hero.morale}%`}>
+            <b style={{ width: `${Math.max(0, Math.min(100, hero.morale))}%` }} />
+          </i>
+        </label>
       </div>
 
       <div className="hero-tags">
-        <span>{moraleState.label}</span>
-        {inFormation ? <span>Formacao</span> : null}
-        {onExpedition ? <span>Expedicao</span> : null}
-        {injuryCount > 0 ? <span>{injuryCount} ferimento(s)</span> : null}
+        <span className={`tone-${moraleState.tone}`}>{moraleState.label}</span>
+        {inFormation ? <span className="tone-formation">Formação</span> : null}
+        {onExpedition ? <span className="tone-expedition">{expedition?.name || "Expedição"}</span> : null}
+        {injuryCount > 0 ? <span className="tone-injured">{injuryCount} ferimento(s)</span> : null}
         {specialization ? <span>{specialization.name}</span> : null}
-        {specializationAvailable ? <span>Especializacao</span> : null}
+        {specializationAvailable ? <span className="tone-arcane">Especialização</span> : null}
         {affinity ? <span>{affinity.ally.name}: {affinity.label}</span> : null}
       </div>
+      {injurySummary ? <small className="hero-card-warning">{injurySummary}</small> : null}
     </button>
   );
 }
@@ -151,6 +182,8 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
   const essenceTreatmentCost = getHeroInjuryTreatmentCost(hero, "essence");
   const affinities = getHeroAffinitySummaries(state, hero.id).slice(0, 4);
   const inFormation = isHeroInFormation(state, hero.id);
+  const expedition = getHeroExpedition(state, hero.id);
+  const onExpedition = Boolean(expedition);
   const consumables = Object.values(CONSUMABLE_DEFINITIONS).filter(
     (definition) => definition.target === "hero" && (state.consumables[definition.id] || 0) > 0,
   );
@@ -158,10 +191,15 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
   return (
     <aside className="hero-detail-panel">
       <div className="hero-detail-head">
-        <div>
-          <span>{hero.className}</span>
+        <div className="hero-detail-identity">
+          <div className="hero-portrait-sigil large" aria-hidden="true">
+            {hero.name.slice(0, 1)}
+          </div>
+          <div>
+          <span>{hero.className} | {getRarityLabel(hero.rarity)}</span>
           <h3>{hero.name}</h3>
-          <small>{getRarityStars(hero.rarity)} | {moraleState.label}</small>
+          <small>{getRarityStars(hero.rarity)} | {moraleState.label} | Poder {getHeroPower(hero)}</small>
+          </div>
         </div>
         <button
           className={inFormation ? "hero-inline-action" : "hero-inline-action primary"}
@@ -175,19 +213,43 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
         </button>
       </div>
 
-      <div className="hero-stat-grid">
-        <span>Lv. {hero.level}</span>
-        <span>XP {hero.xp}/{xpNeeded}</span>
-        <span>Poder {getHeroPower(hero)}</span>
-        <span>HP {hero.currentHp ?? hero.stats.hp}/{hero.stats.hp}</span>
-        <span>ATK {hero.stats.atk}</span>
-        <span>DEF {hero.stats.def}</span>
-        <span>SPD {hero.stats.spd}</span>
-        <span>FOCUS {hero.stats.focus}</span>
-        <span>Moral {hero.morale}</span>
+      <div className="hero-detail-badges">
+        <span className={`tone-${moraleState.tone}`}>Moral {hero.morale} | {moraleState.label}</span>
+        {inFormation ? <span className="tone-formation">Na formação</span> : null}
+        {onExpedition ? <span className="tone-expedition">{expedition?.name}</span> : null}
+        {activeInjuries.length > 0 ? <span className="tone-injured">{activeInjuries.length} ferimento(s)</span> : <span>Pronto</span>}
       </div>
 
-      <div className="hero-detail-section">
+      <div className="hero-detail-section hero-detail-block">
+        <strong>Resumo</strong>
+        <div className="hero-stat-grid hero-stat-grid-featured">
+          <span><strong>Lv.</strong>{hero.level}</span>
+          <span><strong>XP</strong>{hero.xp}/{xpNeeded}</span>
+          <span><strong>Poder</strong>{getHeroPower(hero)}</span>
+          <span><strong>HP</strong>{hero.currentHp ?? hero.stats.hp}/{hero.stats.hp}</span>
+        </div>
+      </div>
+
+      <div className="hero-detail-section hero-detail-block">
+        <strong>Combate</strong>
+        <div className="hero-stat-grid">
+          <span><strong>ATK</strong>{hero.stats.atk}</span>
+          <span><strong>DEF</strong>{hero.stats.def}</span>
+          <span><strong>SPD</strong>{hero.stats.spd}</span>
+          <span><strong>FOCUS</strong>{hero.stats.focus}</span>
+          <span><strong>LUCK</strong>{hero.stats.luck}</span>
+          <span><strong>Moral</strong>{hero.morale}</span>
+        </div>
+      </div>
+
+      <div className="hero-detail-section hero-detail-block">
+        <strong>Status</strong>
+        <span>{moraleState.label}: {moraleState.description}.</span>
+        <span>{injurySummary || "Sem ferimentos ativos."}</span>
+        {onExpedition ? <span>Em expedição: {expedition?.name}</span> : null}
+      </div>
+
+      <div className="hero-detail-section hero-detail-block">
         <strong>Equipamentos</strong>
         {EQUIPMENT_SLOTS.map((slot) => {
           const equipped = equippedItems.find((item) => item.type === slot);
@@ -238,8 +300,8 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
         })}
       </div>
 
-      <div className="hero-detail-section">
-        <strong>Especializacao</strong>
+      <div className="hero-detail-section hero-detail-block">
+        <strong>Especialização</strong>
         <span>{specialization ? `${specialization.passiveName}: ${specialization.description}` : "Nenhuma especializacao escolhida."}</span>
         {canChooseSpecialization
           ? specializationOptions.map((option) => (
@@ -255,7 +317,7 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
           : null}
       </div>
 
-      <div className="hero-detail-section">
+      <div className="hero-detail-section hero-detail-block">
         <strong>Ferimentos e Enfermaria</strong>
         <span>{injurySummary || "Sem ferimentos ativos."}</span>
         {activeInjuries.map((injury) => {
@@ -283,7 +345,7 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
         </small>
       </div>
 
-      <div className="hero-detail-section">
+      <div className="hero-detail-section hero-detail-block">
         <strong>Afinidades</strong>
         {affinities.length > 0 ? (
           affinities.map((affinity) => (
@@ -296,8 +358,8 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
         )}
       </div>
 
-      <div className="hero-detail-section">
-        <strong>Consumiveis</strong>
+      <div className="hero-detail-section hero-detail-block">
+        <strong>Consumíveis</strong>
         {consumables.length > 0 ? (
           <div className="hero-equipment-actions">
             <select className="hero-equipment-select" onChange={(event) => setSelectedConsumableId(event.target.value)} value={selectedConsumableId}>
@@ -325,8 +387,8 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
         )}
       </div>
 
-      <div className="hero-detail-section">
-        <strong>Historico</strong>
+      <div className="hero-detail-section hero-detail-block">
+        <strong>Histórico</strong>
         <span>Combates, expedicoes e eventos detalhados ainda nao possuem historico individual persistido.</span>
       </div>
 
@@ -353,9 +415,9 @@ export function HeroRosterPanel() {
   return (
     <section className="roster-panel">
       <div className="section-heading">
-        <span>Elenco</span>
-        <h2>Herois</h2>
-        <p>Escaneie o elenco rapidamente e selecione um heroi para gerenciar detalhes.</p>
+        <span>Quartel da Guilda</span>
+        <h2>Heróis</h2>
+        <p>Elenco ativo de aventureiros, vínculos, ferimentos e prontidão para a torre.</p>
       </div>
 
       <div className="hero-list-controls">

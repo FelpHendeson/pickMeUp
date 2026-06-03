@@ -38,6 +38,8 @@ type BattleContext = {
 };
 
 type PerformanceKey = keyof Omit<BattlePerformanceEntry, "id" | "name" | "className">;
+type NormalizedBattleRewards = NonNullable<AutoBattleResult["rewards"]>;
+type NormalizedBattleProgression = NonNullable<AutoBattleResult["progression"]>;
 
 export { BATTLE_CONFIG, PLAYER_SKILLS } from "./config";
 
@@ -751,6 +753,56 @@ function nonNegativeInteger(value: unknown): number {
   return Math.max(0, Math.floor(Number(value) || 0));
 }
 
+function normalizeBattleRewards(value: unknown): NormalizedBattleRewards {
+  const raw = asRecord(value);
+  return {
+    gold: nonNegativeInteger(raw.gold),
+    crystals: nonNegativeInteger(raw.crystals),
+    essence: nonNegativeInteger(raw.essence),
+    fragments: nonNegativeInteger(raw.fragments),
+    echoFragments: nonNegativeInteger(raw.echoFragments),
+    energyRefund: nonNegativeInteger(raw.energyRefund),
+    heroContracts: nonNegativeInteger(raw.heroContracts),
+    equipment: Array.isArray(raw.equipment) ? (raw.equipment as NormalizedBattleRewards["equipment"]) : [],
+    consumables: Array.isArray(raw.consumables) ? (raw.consumables as NormalizedBattleRewards["consumables"]) : [],
+  };
+}
+
+function normalizeBattleSummary(value: unknown): BattleResult["summary"] {
+  const raw = asRecord(value);
+  if (!raw.chapterId && !raw.chapterName) return undefined;
+
+  return {
+    chapterId: typeof raw.chapterId === "string" ? raw.chapterId : "",
+    chapterName: typeof raw.chapterName === "string" ? raw.chapterName : "",
+    chapterNumber: nonNegativeInteger(raw.chapterNumber),
+    difficultyId: typeof raw.difficultyId === "string" ? raw.difficultyId : "normal",
+    difficultyName: typeof raw.difficultyName === "string" ? raw.difficultyName : "Normal",
+    enemyNames: Array.isArray(raw.enemyNames) ? raw.enemyNames.filter((name): name is string => typeof name === "string") : [],
+    modifiers: Array.isArray(raw.modifiers) ? raw.modifiers.filter((modifier): modifier is string => typeof modifier === "string") : [],
+    weeklyEvent: typeof raw.weeklyEvent === "string" ? raw.weeklyEvent : "",
+    isBoss: Boolean(raw.isBoss),
+  };
+}
+
+function normalizeBattleProgression(value: unknown): NormalizedBattleProgression | undefined {
+  const raw = asRecord(value);
+  if (!raw.heroXp && !raw.levelUps && !raw.specializationsAvailable && !raw.missionUpdates && !raw.achievementsAvailable && !raw.libraryUpdates) {
+    return undefined;
+  }
+
+  return {
+    heroXp: Array.isArray(raw.heroXp) ? (raw.heroXp as NormalizedBattleProgression["heroXp"]) : [],
+    levelUps: Array.isArray(raw.levelUps) ? (raw.levelUps as NormalizedBattleProgression["levelUps"]) : [],
+    specializationsAvailable: Array.isArray(raw.specializationsAvailable)
+      ? (raw.specializationsAvailable as NormalizedBattleProgression["specializationsAvailable"])
+      : [],
+    missionUpdates: Array.isArray(raw.missionUpdates) ? raw.missionUpdates : [],
+    achievementsAvailable: Array.isArray(raw.achievementsAvailable) ? raw.achievementsAvailable : [],
+    libraryUpdates: Array.isArray(raw.libraryUpdates) ? raw.libraryUpdates : [],
+  };
+}
+
 export function normalizeBattleResult(value: unknown): BattleResult | null {
   const raw = asRecord(value);
   if (!raw.result || (raw.result !== "victory" && raw.result !== "defeat")) return null;
@@ -788,5 +840,8 @@ export function normalizeBattleResult(value: unknown): BattleResult | null {
     log: Array.isArray(raw.log) ? raw.log.filter((line): line is string => typeof line === "string") : [],
     events: Array.isArray(raw.events) ? (raw.events as BattleEvent[]) : [],
     performance,
+    summary: normalizeBattleSummary(raw.summary),
+    rewards: normalizeBattleRewards(raw.rewards),
+    progression: normalizeBattleProgression(raw.progression),
   };
 }

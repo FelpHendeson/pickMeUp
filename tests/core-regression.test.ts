@@ -186,6 +186,8 @@ test("runTowerBattle vence andar inicial, aplica recompensa e avanca progresso",
   assert.equal(state.towerFloor, 2);
   assert.ok(state.resources.gold > startingGold);
   assert.ok(state.lastBattle);
+  assert.ok((state.lastBattle.rewards?.gold || 0) > 0);
+  assert.ok((ensureStateShape(state).lastBattle?.rewards?.gold || 0) > 0);
 });
 
 test("narrativa inicial entra na fila uma unica vez e cenas vistas nao retornam", () => {
@@ -255,4 +257,6 @@ test("fluxo alpha registra missoes, aplica acoes principais e preserva export/im
   assert.equal(imported.state.heroes.length, state.heroes.length);
   assert.equal(imported.state.inventory[0]?.id, weapon.id);
   assert.equal(imported.state.dailyMissions.claimed.summon_1, true);
+  assert.ok((imported.state.lastBattle?.rewards?.gold || 0) > 0);
+  assert.ok((imported.state.lastBattle?.progression?.heroXp.length || 0) > 0);
 });

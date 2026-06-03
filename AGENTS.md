@@ -2,7 +2,7 @@
 
 ## Objetivo
 - Reduzir chamadas redundantes e o consumo de tokens.
-- Preservar a arquitetura existente do jogo web puro.
+- Preservar a arquitetura atual em Next.js, React, TypeScript e Zustand.
 - Priorizar mudanças pequenas, legíveis e verificadas.
 
 ## Workflow otimizado
@@ -13,11 +13,12 @@
 5. Só então gerar commit/push, se solicitado.
 
 ## Regras de código
-- Preserve o padrão IIFE e `Echoes` como superfície pública.
-- Evite globals novos fora de `Echoes`.
+- Preserve `src/game/` como núcleo de regras puras e `src/store/gameStore.ts` como ponte da UI.
+- Evite novos globals e dependências externas sem necessidade.
 - Normalizar dados do save antes de usar.
 - Manter textos em PT-BR e consistentes com o visual dark fantasy.
-- Usar `data-action` em botões e `escapeHtml` em conteúdo dinâmico.
+- Manter o save local em `localStorage` como fluxo principal.
+- Não quebrar o cloud save experimental nem as rotas Next existentes.
 
 ## Regras de eficiência
 - Leia primeiro, edite depois.
@@ -33,9 +34,10 @@
 - `agentsRules/padrao-commit.md`
 - `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md` como fonte atualizada de design.
 - `docs/especificacao-funcional.md` deve ser mantida sincronizada com o GDD.
+- `README.md` como fonte operacional atual da stack Next/PostgreSQL.
 
 ## Padrão Codex / GPT
 - Este arquivo serve como instrução canônica para o Codex e outros agentes GPT que consultam `AGENTS.md`.
 - Mantenha as regras aqui enxutas e reutilizáveis, evitando duplicação em mensagens e prompts locais.
 - Quando houver um ajuste estrutural no fluxo de trabalho, atualize este arquivo antes de alterar instruções específicas de ferramenta.
-- Sempre que houver mudanças em gameplay, progressão, economia, torre ou save, sincronize primeiro o GDD atualizado e em seguida `docs/especificacao-funcional.md`.
+- Sempre que houver mudanças em gameplay, progressão, economia, torre, UI estrutural ou save, sincronize primeiro o GDD atualizado e em seguida `docs/especificacao-funcional.md`.

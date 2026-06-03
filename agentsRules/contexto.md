@@ -8,46 +8,38 @@ O jogador gerencia uma base, invoca herois, monta uma formacao, equipa personage
 
 ## Deploy
 
-O projeto deve funcionar em GitHub Pages.
+O alvo operacional atual é desenvolvimento local em Next.js, com deploy futuro planejado para Vercel.
 
 Regras importantes:
-- a raiz do repositorio possui a tela inicial em `index.html`;
-- o jogo fica em `game/index.html`;
-- links entre paginas devem usar caminhos relativos;
-- nao depender de backend para o MVP atual.
+- a experiência principal roda em `app/` via Next.js;
+- `localStorage` continua sendo o save principal;
+- PostgreSQL/Prisma é opcional e usado apenas para cloud save experimental;
+- o jogo deve funcionar localmente mesmo sem `DATABASE_URL`.
 
 ## Estrutura Atual
 
-- `index.html`: menu inicial/landing do jogo.
-- `styles/menu.css`: estilo do menu inicial.
-- `src/menu.js`: comportamento simples do menu inicial.
-- `game/index.html`: entrada do jogo.
-- `game/styles/style.css`: estilos do jogo.
-- `game/src/*.js`: logica do jogo em JavaScript simples.
-- `gdd_web_tower_gacha_mvp.md`: documento de design do jogo.
-- `ArtPickMeUp.png`: arte principal usada no menu inicial.
+- `app/`: aplicação Next, rotas e componentes React.
+- `app/components/`: painéis da UI do jogo.
+- `src/game/`: regras puras, tipos e normalização do estado.
+- `src/store/gameStore.ts`: store Zustand usada pela UI.
+- `src/lib/`: utilitários de Prisma, playerId e snapshots.
+- `prisma/`: schema e migrations do PostgreSQL opcional.
+- `tests/`: regressão do core, fixtures e banco.
+- `docs/`: especificação funcional e notas da migração.
 
 ## Arquitetura do Jogo
 
-O codigo do jogo usa HTML, CSS e JavaScript puro, sem framework.
-
-Os modulos JavaScript usam IIFE e registram funcoes/constantes em `window.Echoes`.
+O código operacional usa Next.js, React, TypeScript e Zustand.
 
 Fluxos centrais:
-- `state.js`: estado inicial, recursos e normalizacao de save.
-- `storage.js`: load/save/reset via `localStorage`.
-- `heroes.js`: criacao, progressao e atributos de herois.
-- `formation.js`: equipe ativa.
-- `equipment.js`: inventario e equipamentos.
-- `tower.js`: andares, inimigos e inicio de batalhas.
-- `tower-events.js`: eventos aleatorios da torre.
-- `battle.js`: simulacao de combate automatico.
-- `rewards.js`: recompensas de vitoria.
-- `ui.js`: renderizacao das telas.
-- `main.js`: eventos de interface e orquestracao.
+- `app/components/layout/GameShell.tsx`: shell, navegação e composição dos painéis.
+- `app/globals.css`: tokens visuais, responsividade e estilos globais.
+- `src/game/state/`: estado inicial, normalização e persistência.
+- `src/game/heroes`, `src/game/tower`, `src/game/battle`: regras principais.
+- `src/store/gameStore.ts`: ações persistentes consumidas pela UI.
 
 ## Persistencia
 
-O save fica em `localStorage`, chave definida em `Echoes.CONFIG.saveKey`.
+O save principal fica em `localStorage`, pela chave configurada em `GAME_CONFIG.saveKey`.
 
-Toda mudanca persistente deve passar por `Echoes.saveGameState(state)` ou por fluxo ja existente que salve depois da mutacao.
+Toda mudança persistente deve passar por ações do `gameStore` ou por regras puras em `src/game/` chamadas pelo store.

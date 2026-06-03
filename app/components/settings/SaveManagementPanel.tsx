@@ -4,6 +4,7 @@ import { EXPORT_FILE_NAME } from "@/src/game";
 import { getOrCreatePlayerId } from "@/src/lib/playerId";
 import { useGameStore } from "@/src/store/gameStore";
 import { useEffect, useRef, useState } from "react";
+import { useConfirmDialog } from "../ui";
 
 const cloudSaveEnabled = process.env.NEXT_PUBLIC_ENABLE_CLOUD_SAVE === "true";
 type CloudStatus = "disabled" | "checking" | "available" | "unavailable";
@@ -17,6 +18,7 @@ function getSourceLabel(source: string): string {
 
 export function SaveManagementPanel() {
   const { source, loadLocalSave, loadCloudSave, saveCloudSave, exportSave, importSave, resetLocalState, persistLocalSave } = useGameStore();
+  const confirmDialog = useConfirmDialog();
   const [message, setMessage] = useState("Save local ativo. O progresso fica salvo neste navegador.");
   const [playerId, setPlayerId] = useState("");
   const [cloudStatus, setCloudStatus] = useState<CloudStatus>(cloudSaveEnabled ? "checking" : "disabled");
@@ -87,9 +89,14 @@ export function SaveManagementPanel() {
             </button>
             <button
               className="hero-inline-action"
-              onClick={() => {
-                if (!window.confirm("Resetar o save local deste navegador? Esta acao apaga o progresso salvo neste dispositivo.")) return;
-                if (!window.confirm("Confirmacao final: o reset local e irreversivel sem um export JSON ou save na nuvem.")) return;
+              onClick={async () => {
+                const confirmed = await confirmDialog({
+                  title: "Resetar save local?",
+                  description: "Esta ação apaga o progresso salvo neste dispositivo. Exporte um JSON antes se quiser manter backup.",
+                  confirmLabel: "Resetar save",
+                  tone: "danger",
+                });
+                if (!confirmed) return;
                 resetLocalState();
                 setMessage("Save local resetado.");
               }}
@@ -126,7 +133,13 @@ export function SaveManagementPanel() {
             onChange={async (event) => {
               const file = event.target.files?.[0];
               if (!file) return;
-              if (!window.confirm("Importar este JSON vai sobrescrever o progresso local atual. Continuar?")) {
+              const confirmed = await confirmDialog({
+                title: "Importar backup JSON?",
+                description: "O progresso local atual será sobrescrito pelo arquivo selecionado após validação e normalização.",
+                confirmLabel: "Importar",
+                tone: "danger",
+              });
+              if (!confirmed) {
                 event.target.value = "";
                 return;
               }

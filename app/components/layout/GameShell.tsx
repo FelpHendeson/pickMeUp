@@ -20,7 +20,6 @@ import {
   type Hero,
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
-import { BattleResultPanel } from "../tower/BattleResultPanel";
 import { ChapterCompletionPanel } from "../tower/ChapterCompletionPanel";
 import { ExpeditionsPanel } from "../systems/ExpeditionsPanel";
 import { FormationPanel } from "../heroes/FormationPanel";
@@ -33,13 +32,11 @@ import { NarrativeModal } from "./NarrativeModal";
 import { PreferencesPanel } from "../settings/PreferencesPanel";
 import { RecruitmentPanel } from "../systems/RecruitmentPanel";
 import { RelicsPanel } from "../progression/RelicsPanel";
-import { RepeatFloorsPanel } from "../tower/RepeatFloorsPanel";
 import { ResourceHudPanel } from "./ResourceHudPanel";
 import { SaveManagementPanel } from "../settings/SaveManagementPanel";
 import { SummonPanel } from "../systems/SummonPanel";
-import { TowerBattlePanel } from "../tower/TowerBattlePanel";
-import { TowerCampaignPanel } from "../tower/TowerCampaignPanel";
-import { TowerEventsPanel } from "../tower/TowerEventsPanel";
+import { TowerChallengePanel } from "../tower/TowerChallengePanel";
+import { UiProgressBar } from "../ui";
 
 type DashboardTab =
   | "base"
@@ -56,20 +53,44 @@ type DashboardTab =
   | "settings"
   | "about";
 
-const dashboardTabs: Array<{ id: DashboardTab; label: string }> = [
-  { id: "base", label: "Base" },
-  { id: "tower", label: "Torre" },
-  { id: "heroes", label: "Herois" },
-  { id: "formation", label: "Formacao" },
-  { id: "inventory", label: "Inventario" },
-  { id: "expeditions", label: "Expedicoes" },
-  { id: "missions", label: "Missoes" },
-  { id: "relics", label: "Reliquias" },
-  { id: "summon", label: "Invocacao" },
-  { id: "recruitment", label: "Recrutamento" },
-  { id: "library", label: "Biblioteca" },
-  { id: "settings", label: "Config" },
-  { id: "about", label: "Sobre" },
+const dashboardTabGroups: Array<{ id: string; label: string; tabs: Array<{ id: DashboardTab; label: string }> }> = [
+  {
+    id: "main",
+    label: "Principal",
+    tabs: [
+      { id: "base", label: "Base" },
+      { id: "tower", label: "Torre" },
+      { id: "heroes", label: "Heróis" },
+      { id: "formation", label: "Formação" },
+    ],
+  },
+  {
+    id: "management",
+    label: "Gestão",
+    tabs: [
+      { id: "inventory", label: "Inventário" },
+      { id: "expeditions", label: "Expedições" },
+      { id: "missions", label: "Missões" },
+      { id: "relics", label: "Relíquias" },
+    ],
+  },
+  {
+    id: "progression",
+    label: "Progressão",
+    tabs: [
+      { id: "summon", label: "Invocação" },
+      { id: "recruitment", label: "Recrutamento" },
+      { id: "library", label: "Biblioteca" },
+    ],
+  },
+  {
+    id: "system",
+    label: "Sistema",
+    tabs: [
+      { id: "settings", label: "Config" },
+      { id: "about", label: "Sobre" },
+    ],
+  },
 ];
 
 const migrationMilestones = [
@@ -89,6 +110,12 @@ const currentSystems = [
   "Narrativa, preferencias, HUD e export/import de save",
   "Regressao automatizada do core TypeScript, fixtures e banco",
 ];
+
+type BaseAlert = {
+  label: string;
+  tab: DashboardTab;
+  tone: "success" | "danger" | "arcane" | "gold" | "warning";
+};
 
 function SaveBootstrap() {
   const loadLocalSave = useGameStore((store) => store.loadLocalSave);
@@ -184,14 +211,17 @@ function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) 
   const upgradeableRelics = getRelicUpgradeableCount(state);
   const nextAction = getBaseNextAction(state, formationCount, completeExpeditions);
   const floorProgress = `${Math.min(state.towerFloor, GAME_CONFIG.towerMaxFloor)}/${GAME_CONFIG.towerMaxFloor}`;
-  const alerts = [
-    completeExpeditions > 0 ? `${completeExpeditions} expedicao(oes) concluida(s)` : null,
-    injuredCount > 0 ? `${injuredCount} heroi(s) ferido(s)` : null,
-    criticalMoraleCount > 0 ? `${criticalMoraleCount} heroi(s) com moral critica` : null,
-    claimableMissions > 0 ? `${claimableMissions} missao(oes) pronta(s)` : null,
-    upgradeableRelics > 0 ? `${upgradeableRelics} reliquia(s) aprimoravel(is)` : null,
-    state.heroContracts > 0 ? `${state.heroContracts} contrato(s) disponivel(is)` : null,
-  ].filter((alert): alert is string => Boolean(alert));
+  const alertCandidates: Array<BaseAlert | null> = [
+    completeExpeditions > 0 ? { label: `${completeExpeditions} expedição(ões) concluída(s)`, tab: "expeditions" as const, tone: "success" } : null,
+    injuredCount > 0 ? { label: `${injuredCount} herói(s) ferido(s)`, tab: "heroes" as const, tone: "danger" } : null,
+    criticalMoraleCount > 0 ? { label: `${criticalMoraleCount} herói(s) com moral crítica`, tab: "heroes" as const, tone: "danger" } : null,
+    claimableMissions > 0 ? { label: `${claimableMissions} missão(ões) pronta(s)`, tab: "missions" as const, tone: "success" } : null,
+    upgradeableRelics > 0 ? { label: `${upgradeableRelics} relíquia(s) aprimorável(is)`, tab: "relics" as const, tone: "arcane" } : null,
+    state.heroContracts > 0 ? { label: `${state.heroContracts} contrato(s) disponível(is)`, tab: "recruitment" as const, tone: "gold" } : null,
+    state.pendingTowerEvent ? { label: "Evento da torre pendente", tab: "tower" as const, tone: "warning" } : null,
+  ];
+  const alerts = alertCandidates.filter((alert): alert is BaseAlert => Boolean(alert));
+  const campaignProgress = Math.min(100, (Math.min(state.towerFloor, GAME_CONFIG.towerMaxFloor) / GAME_CONFIG.towerMaxFloor) * 100);
 
   return (
     <section className="command-center-panel">
@@ -209,9 +239,7 @@ function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) 
           <span>Campanha</span>
           <h3>{chapter.name}</h3>
           <p>{chapter.description}</p>
-          <div className="command-progress-bar" aria-label={`Progresso da torre ${floorProgress}`}>
-            <i style={{ width: `${Math.min(100, (Math.min(state.towerFloor, GAME_CONFIG.towerMaxFloor) / GAME_CONFIG.towerMaxFloor) * 100)}%` }} />
-          </div>
+          <UiProgressBar label={`Progresso da torre ${floorProgress}`} value={campaignProgress} />
           <div className="command-metrics">
             <span>Andar {floorProgress}</span>
             <span>Chefe: {chapter.finalBoss}</span>
@@ -250,7 +278,15 @@ function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) 
           <span>Alertas</span>
           <h3>{alerts.length > 0 ? `${alerts.length} ponto(s) de atencao` : "Tudo sob controle"}</h3>
           <div className="command-alert-list">
-            {alerts.length > 0 ? alerts.map((alert) => <span key={alert}>{alert}</span>) : <span>Nenhum alerta urgente no momento.</span>}
+            {alerts.length > 0 ? (
+              alerts.map((alert) => (
+                <button className={`command-alert-chip tone-${alert.tone}`} key={alert.label} onClick={() => onNavigate(alert.tab)} type="button">
+                  {alert.label}
+                </button>
+              ))
+            ) : (
+              <span>Nenhum alerta urgente no momento.</span>
+            )}
           </div>
           <div className="command-alert-actions">
             {completeExpeditions > 0 ? (
@@ -311,10 +347,6 @@ function AboutPanel() {
 
 export function GameShell() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("base");
-  const lastBattle = useGameStore((store) => store.state.lastBattle);
-  const pendingTowerEvent = useGameStore((store) => store.state.pendingTowerEvent);
-  const [dismissedBattleId, setDismissedBattleId] = useState<string | null>(null);
-  const showBattleResultFirst = Boolean(lastBattle && lastBattle.id !== dismissedBattleId && !pendingTowerEvent);
 
   return (
     <section className="dashboard-shell">
@@ -322,17 +354,25 @@ export function GameShell() {
       <ResourceHudPanel />
       <NarrativeModal />
 
-      <nav className="dashboard-tabs" aria-label="Navegacao principal">
-        {dashboardTabs.map((tab) => (
-          <button
-            aria-pressed={activeTab === tab.id}
-            data-active={activeTab === tab.id ? "true" : "false"}
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            type="button"
-          >
-            {tab.label}
-          </button>
+      <nav className="dashboard-tabs" aria-label="Navegação principal">
+        {dashboardTabGroups.map((group) => (
+          <div className="dashboard-tab-group" key={group.id}>
+            <span className="dashboard-tab-group-label">{group.label}</span>
+            <div className="dashboard-tab-list">
+              {group.tabs.map((tab) => (
+                <button
+                  aria-pressed={activeTab === tab.id}
+                  data-active={activeTab === tab.id ? "true" : "false"}
+                  data-group={group.id}
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  type="button"
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
 
@@ -341,15 +381,7 @@ export function GameShell() {
         {activeTab === "tower" ? (
           <>
             <ChapterCompletionPanel />
-            {pendingTowerEvent ? <TowerEventsPanel /> : null}
-            {showBattleResultFirst ? (
-              <BattleResultPanel onContinue={() => setDismissedBattleId(lastBattle?.id ?? null)} />
-            ) : null}
-            <TowerCampaignPanel />
-            <TowerBattlePanel priority={pendingTowerEvent ? "blocked-by-event" : showBattleResultFirst ? "after-result" : "primary"} />
-            {!pendingTowerEvent ? <TowerEventsPanel /> : null}
-            <RepeatFloorsPanel />
-            {!showBattleResultFirst && lastBattle ? <BattleResultPanel compact onContinue={() => setDismissedBattleId(lastBattle.id)} /> : null}
+            <TowerChallengePanel />
           </>
         ) : null}
         {activeTab === "heroes" ? (

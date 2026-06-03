@@ -2,10 +2,10 @@
 
 **Documento:** GDD Alpha / Pos-MVP  
 **Projeto analisado:** `pickMeUp.zip`  
-**Versao tecnica identificada:** `gameVersion: 0.4.0`  
-**Plataforma:** Web static / GitHub Pages  
-**Entrada publica:** `/index.html`  
-**Entrada do jogo:** `/game/index.html`
+**Versao tecnica identificada:** `package.json 0.10.0-migration`  
+**Plataforma:** Next.js / React / TypeScript  
+**Entrada publica:** `app/page.tsx`  
+**Entrada do jogo:** `app/components/layout/GameShell.tsx`
 
 ---
 
@@ -35,10 +35,11 @@ O estado atual deve ser tratado como **Alpha jogavel**, nao mais como MVP.
 
 ### Sistemas implementados
 
-- Home/menu inicial na raiz do repositorio.
-- Botao de entrada para `./game/index.html`.
-- Jogo em HTML/CSS/JavaScript puro.
+- Interface principal em Next.js, React e TypeScript.
+- Componentes organizados por dominio em `app/components/`.
+- Store global em Zustand via `src/store/gameStore.ts`.
 - Persistencia em `localStorage`.
+- Cloud save experimental com Prisma/PostgreSQL opcional.
 - Exportacao, importacao e reset de save.
 - Configuracoes de preferencias.
 - Recursos: ouro, cristais, essencia, fragmentos e energia.
@@ -76,66 +77,49 @@ Moral, ferimentos, especializacoes e equipamentos ja criam apego. O proximo salt
 ### 4.3 Torre como campanha viva
 A torre ja possui capitulos, chefes, eventos e narrativa. Ela deve evoluir como campanha, nao como lista infinita de numeros.
 
+Na UI atual, a Torre deve priorizar uma leitura mestre-detalhe: o jogador escolhe o andar liberado no mapa, vê inimigos/recompensas/risco no painel de desafio e abre combate, resultado ou histórico em modal para evitar excesso de informação persistente na tela.
+
 ### 4.4 Progressao horizontal e vertical
 O jogo ja possui progressao vertical: nivel, andar, poder, equipamentos. Agora precisa fortalecer progressao horizontal: biblioteca, bestiario, relíquias, afinidades e escolhas permanentes.
 
 ### 4.5 Web first
-Manter o jogo estatico e leve e uma vantagem. Backend so deve entrar quando houver necessidade real: cloud save, ranking, contas, multiplayer assíncrono ou telemetria.
+Manter o jogo leve e jogavel sem banco e uma vantagem. Backend so deve ser obrigatorio quando houver necessidade real: cloud save, ranking, contas, multiplayer assíncrono ou telemetria.
 
 ---
 
 ## 5. Arquitetura tecnica atual
 
-O jogo usa JavaScript puro com modulos IIFE expostos em `window.Echoes`.
-
-```js
-(function (global) {
-  "use strict";
-  const Echoes = (global.Echoes = global.Echoes || {});
-  Echoes.minhaFuncao = minhaFuncao;
-})(window);
-```
+O jogo usa Next.js, React, TypeScript e Zustand. O runtime antigo em JavaScript puro nao e o caminho operacional desta versao.
 
 ### Estrutura principal
 
 ```text
-/index.html                 Home/menu inicial
-/ArtPickMeUp.png            Arte da home
-/src/menu.js                Script da home
-/styles/menu.css            Estilo da home
-/game/index.html            Entrada do jogo
-/game/src/*.js              Sistemas do jogo
-/game/styles/style.css      Estilo do jogo
+/app                         Aplicacao Next, rotas e componentes React
+/app/components              Paineis da UI por dominio
+/src/game                    Regras puras, tipos e normalizacao do estado
+/src/store/gameStore.ts      Store Zustand consumida pela UI
+/src/lib                     Prisma, playerId e snapshots
+/prisma                      Schema e migrations do PostgreSQL opcional
+/tests                       Testes de regressao do core, fixtures e banco
 /docs/especificacao-funcional.md
 /agentsRules/*.md
-/gdd_web_tower_gacha_mvp.md GDD antigo, agora desatualizado
+/README.md                   Fonte operacional da stack atual
 ```
 
 ### Modulos principais
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `state.js` | Estado inicial, recursos, energia, presets e normalizacao |
-| `storage.js` | Carregar, salvar, exportar, importar e resetar save |
-| `preferences.js` | Preferencias visuais, combate e audio |
-| `heroes.js` | Classes, raridades, XP, atributos e geracao de herois |
-| `formation.js` | Formacao, presets e poder de equipe |
-| `equipment.js` | Inventario, equipamentos e atributos efetivos |
-| `expeditions.js` | Expedicoes temporizadas e recompensas |
-| `battle.js` | Simulacao de combate automatico |
-| `battle-view.js` | Replay visual e velocidade de combate |
-| `tower.js` | Andares, capitulos, inimigos e modificadores |
-| `tower-events.js` | Eventos aleatorios e escolhas de torre |
-| `weekly-events.js` | Eventos semanais locais |
-| `summon.js` | Invocacao comum/superior |
-| `rewards.js` | Recompensas da torre |
-| `injuries.js` | Ferimentos e tratamento |
-| `morale.js` | Moral e efeitos de desempenho |
-| `specializations.js` | Especializacoes e passivas |
-| `missions.js` | Missoes diarias e conquistas |
-| `narrative.js` | Cenas narrativas curtas |
-| `ui.js` | Renderizacao geral da interface |
-| `main.js` | Orquestracao de handlers, fluxo e render |
+| Modulo | Responsabilidade |
+|---|---|
+| `src/game/state` | Estado inicial, recursos, energia, presets e normalizacao |
+| `src/game/save` | Validacao, exportacao, importacao e normalizacao de save |
+| `src/game/heroes` | Classes, raridades, XP, atributos e geracao de herois |
+| `src/game/tower` | Andares, capitulos, inimigos e modificadores |
+| `src/game/battle` | Simulacao de combate automatico |
+| `src/game/*` | Sistemas auxiliares: eventos, relíquias, missoes, biblioteca, recrutamento e expedicoes |
+| `src/store/gameStore.ts` | Mutacoes persistentes e ponte entre UI e core |
+| `app/components/*` | Renderizacao da interface React por dominio |
 
 ---
 

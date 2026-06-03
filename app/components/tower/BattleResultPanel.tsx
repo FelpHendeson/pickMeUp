@@ -42,15 +42,32 @@ function formatNumber(value: number | undefined): string {
   return new Intl.NumberFormat("pt-BR").format(Number(value || 0));
 }
 
+function getFirstLoggedAmount(log: string[], pattern: RegExp): number {
+  for (const line of log) {
+    const match = line.match(pattern);
+    if (match?.[1]) return Number(match[1]) || 0;
+  }
+  return 0;
+}
+
+function getHeroXpReward(battle: BattleResult): number {
+  const progressionXp = battle.progression?.heroXp?.[0]?.xp;
+  if (typeof progressionXp === "number" && progressionXp > 0) return progressionXp;
+  return getFirstLoggedAmount(battle.log || [], /\+(\d+)\s+XP para cada heroi/i);
+}
+
 function getResourceRewards(battle: BattleResult) {
   const rewards = battle.rewards;
+  const log = battle.log || [];
   return [
-    { label: "Ouro", value: rewards?.gold || 0 },
-    { label: "Cristais", value: rewards?.crystals || 0 },
-    { label: "Essencia", value: rewards?.essence || 0 },
-    { label: "Fragmentos", value: rewards?.fragments || 0 },
-    { label: "Frag. eco", value: rewards?.echoFragments || 0 },
-    { label: "Contratos", value: rewards?.heroContracts || 0 },
+    { label: "Ouro", value: rewards?.gold || getFirstLoggedAmount(log, /\+(\d+)\s+ouro/i) },
+    { label: "Energia", value: rewards?.energyRefund || getFirstLoggedAmount(log, /\+(\d+)\s+energia/i) },
+    { label: "XP/herói", value: getHeroXpReward(battle) },
+    { label: "Cristais", value: rewards?.crystals || getFirstLoggedAmount(log, /Cristais encontrados:\s+\+(\d+)/i) },
+    { label: "Essencia", value: rewards?.essence || getFirstLoggedAmount(log, /Essencia recuperada:\s+\+(\d+)/i) },
+    { label: "Fragmentos", value: rewards?.fragments || getFirstLoggedAmount(log, /Fragmentos recolhidos:\s+\+(\d+)/i) },
+    { label: "Frag. eco", value: rewards?.echoFragments || getFirstLoggedAmount(log, /Fragmentos de Eco ressoaram:\s+\+(\d+)/i) },
+    { label: "Contratos", value: rewards?.heroContracts || getFirstLoggedAmount(log, /\+(\d+)\s+contrato/i) },
   ];
 }
 
