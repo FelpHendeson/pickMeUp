@@ -395,7 +395,7 @@ export function GameShell() {
         {activeTab === "expeditions" ? <ExpeditionsPanel /> : null}
         {activeTab === "missions" ? <MissionsPanel /> : null}
         {activeTab === "relics" ? <RelicsPanel /> : null}
-        {activeTab === "summon" ? <SummonPanel /> : null}
+        {activeTab === "summon" ? <SummonPanel onViewHero={() => setActiveTab("heroes")} /> : null}
         {activeTab === "recruitment" ? <RecruitmentPanel /> : null}
         {activeTab === "library" ? <LibraryPanel /> : null}
         {activeTab === "settings" ? <SettingsPanel /> : null}

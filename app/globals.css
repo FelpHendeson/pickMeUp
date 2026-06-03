@@ -2030,40 +2030,426 @@ article,
   margin-top: 0.45rem;
 }
 
+.summon-panel-react {
+  position: relative;
+  overflow: hidden;
+}
+
+.summon-panel-react::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 10%, rgba(155, 127, 232, 0.14), transparent 26rem),
+    radial-gradient(circle at 10% 55%, rgba(232, 188, 88, 0.09), transparent 20rem),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 14px);
+  pointer-events: none;
+}
+
+.summon-panel-react > * {
+  position: relative;
+}
+
+.summon-ritual-hero {
+  border: 1px solid rgba(155, 127, 232, 0.28);
+  background:
+    radial-gradient(circle at 72% 40%, rgba(155, 127, 232, 0.2), transparent 18rem),
+    linear-gradient(135deg, rgba(232, 188, 88, 0.08), rgba(0, 0, 0, 0.22));
+  border-radius: var(--radius-lg);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  padding: clamp(1rem, 2.4vw, 1.3rem);
+}
+
+.summon-ritual-hero span,
+.summon-card-head span,
+.summon-history-react > span,
+.summon-result-panel > span,
+.summon-result-copy > span {
+  color: var(--teal);
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.summon-ritual-hero h2,
+.summon-card-react h3,
+.summon-history-react h3,
+.summon-result-panel h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  margin: 0.3rem 0 0;
+}
+
+.summon-ritual-hero h2 {
+  font-size: clamp(1.9rem, 4vw, 3.2rem);
+}
+
+.summon-ritual-hero p {
+  color: var(--muted-strong);
+  margin: 0.45rem 0 0;
+  max-width: 68ch;
+}
+
+.summon-resource-ledger {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(6rem, 1fr));
+  gap: 0.6rem;
+}
+
+.summon-resource-ledger span {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.72rem;
+}
+
+.summon-resource-ledger strong {
+  color: var(--gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.45rem;
+}
+
 .summon-grid-react {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.8rem;
+  gap: 0.9rem;
   margin-top: 1rem;
 }
 
-.summon-card-react h3,
-.summon-history-react h3 {
-  margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+.summon-card-react {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(232, 188, 88, 0.18);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(232, 188, 88, 0.12), transparent 16rem),
+    linear-gradient(180deg, rgba(24, 19, 27, 0.96), rgba(7, 6, 10, 0.92));
+  border-radius: var(--radius-lg);
+  display: grid;
+  gap: 0.78rem;
+  min-height: 28rem;
+  padding: 1rem;
 }
 
-.summon-card-react.superior {
-  border-color: rgba(86, 199, 189, 0.35);
+.summon-card-react.ritual-superior {
+  border-color: rgba(155, 127, 232, 0.42);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(155, 127, 232, 0.2), transparent 17rem),
+    radial-gradient(circle at 80% 20%, rgba(232, 188, 88, 0.1), transparent 16rem),
+    linear-gradient(180deg, rgba(24, 19, 31, 0.96), rgba(7, 6, 10, 0.92));
+}
+
+.summon-card-react::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-top: 3px solid rgba(232, 188, 88, 0.38);
+  pointer-events: none;
+}
+
+.summon-card-react.ritual-superior::before {
+  border-top-color: rgba(155, 127, 232, 0.72);
+}
+
+.summon-card-orb {
+  align-items: center;
+  aspect-ratio: 1;
+  border: 1px solid rgba(232, 188, 88, 0.32);
+  background:
+    radial-gradient(circle, rgba(232, 188, 88, 0.28), transparent 45%),
+    radial-gradient(circle, rgba(155, 127, 232, 0.2), transparent 68%),
+    rgba(0, 0, 0, 0.22);
+  border-radius: 50%;
+  display: inline-flex;
+  justify-content: center;
+  margin-bottom: 0.1rem;
+  width: 4rem;
+}
+
+.summon-card-orb i {
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 50%;
+  display: block;
+  height: 42%;
+  width: 42%;
+}
+
+.summon-card-head small {
+  color: var(--gold);
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  margin-top: 0.25rem;
+}
+
+.summon-card-react p {
+  color: var(--muted-strong);
+  margin: 0;
+}
+
+.summon-cost-row,
+.summon-odds-summary {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.72rem;
+}
+
+.summon-cost-row div {
+  align-items: baseline;
+  display: flex;
+  gap: 0.45rem;
+}
+
+.summon-cost-row strong {
+  color: var(--gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.7rem;
+}
+
+.summon-cost-row span,
+.summon-cost-row small,
+.summon-odds-summary span {
+  color: var(--muted);
+}
+
+.summon-odds-summary strong {
+  color: var(--teal);
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .summon-rates,
 .history-list-react {
   display: grid;
   gap: 0.45rem;
-  margin-top: 0.8rem;
 }
 
-.summon-rates span,
-.history-list-react small {
+.summon-rates {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.summon-rates span {
+  align-items: center;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(0, 0, 0, 0.16);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   color: var(--muted);
-  padding: 0.45rem 0.55rem;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.48rem 0.58rem;
 }
 
+.summon-rates span strong {
+  color: var(--gold);
+}
+
+.summon-rates span.rarity-epic,
+.summon-history-entry.rare {
+  border-color: rgba(155, 127, 232, 0.48);
+  color: #d7c7ff;
+}
+
+.summon-rates span.rarity-legendary,
+.summon-result-panel.rarity-5,
+.summon-history-entry.rarity-5 {
+  border-color: rgba(232, 188, 88, 0.58);
+}
+
+.summon-action-button {
+  align-items: center;
+  display: grid;
+  gap: 0.2rem;
+  margin-top: auto;
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+}
+
+.summon-action-button strong,
+.summon-action-button span {
+  display: block;
+}
+
+.summon-action-button span {
+  color: rgba(25, 17, 9, 0.78);
+  font-size: 0.76rem;
+}
+
+.summon-action-button:disabled span {
+  color: var(--muted);
+}
+
+.summon-afterglow-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr);
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.summon-result-panel,
 .summon-history-react {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(0, 0, 0, 0.18)),
+    rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius-lg);
+  min-width: 0;
+  padding: 1rem;
+}
+
+.summon-result-panel {
+  align-items: start;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.summon-result-panel.empty {
+  display: block;
+}
+
+.summon-result-panel.rare-impact {
+  border-color: rgba(232, 188, 88, 0.58);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(232, 188, 88, 0.18), transparent 15rem),
+    radial-gradient(circle at 80% 0%, rgba(155, 127, 232, 0.18), transparent 16rem),
+    linear-gradient(180deg, rgba(34, 27, 34, 0.96), rgba(8, 7, 10, 0.94));
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.32), inset 0 0 0 1px rgba(232, 188, 88, 0.08);
+}
+
+.summon-result-panel.rare-impact::after {
+  content: "★";
+  color: rgba(232, 188, 88, 0.1);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 11rem;
+  line-height: 1;
+  position: absolute;
+  right: -1.4rem;
+  top: -1.5rem;
+}
+
+.summon-result-sigil {
+  align-items: center;
+  aspect-ratio: 1;
+  border: 1px solid rgba(232, 188, 88, 0.42);
+  background:
+    radial-gradient(circle at 50% 32%, rgba(232, 188, 88, 0.26), transparent 54%),
+    rgba(0, 0, 0, 0.22);
+  border-radius: 50%;
+  color: var(--gold);
+  display: inline-flex;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.1rem;
+  font-weight: 900;
+  justify-content: center;
+  text-transform: uppercase;
+  width: 5rem;
+}
+
+.summon-result-copy,
+.summon-result-stats,
+.summon-result-message,
+.summon-result-actions {
+  position: relative;
+  z-index: 1;
+}
+
+.summon-result-copy p {
+  color: var(--muted-strong);
+  margin: 0.4rem 0 0;
+}
+
+.summon-result-stars {
+  color: var(--gold);
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  margin-top: 0.35rem;
+}
+
+.summon-result-stats {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.summon-result-stats span {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.55rem;
+}
+
+.summon-result-stats strong {
+  color: var(--gold);
+  font-size: 1.05rem;
+}
+
+.summon-result-message {
+  color: var(--muted-strong);
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.summon-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  grid-column: 1 / -1;
+}
+
+.summon-history-react h3 {
+  margin-bottom: 0.75rem;
+}
+
+.summon-history-entry {
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  padding: 0.62rem 0.7rem;
+}
+
+.summon-history-entry strong,
+.summon-history-entry span,
+.summon-history-entry em {
+  display: block;
+}
+
+.summon-history-entry strong {
+  color: var(--text);
+}
+
+.summon-history-entry span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin-top: 0.15rem;
+}
+
+.summon-history-entry em {
+  color: var(--gold);
+  font-style: normal;
+  font-weight: 900;
+}
+
+.summon-feedback {
   margin-top: 1rem;
 }
 
@@ -2365,6 +2751,17 @@ code {
   .memorial-grid,
   .summon-grid-react {
     grid-template-columns: 1fr;
+  }
+
+  .summon-ritual-hero,
+  .summon-afterglow-layout,
+  .summon-result-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .summon-resource-ledger,
+  .summon-result-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .relic-echo-banner,
