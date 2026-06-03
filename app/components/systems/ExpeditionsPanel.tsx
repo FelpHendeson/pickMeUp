@@ -8,64 +8,142 @@ import {
   getActiveExpedition,
   getActiveExpeditionReward,
   getExpeditionDurationMs,
+  getExpeditionPower,
   getExpeditionRemainingMs,
   getExpeditionRewardName,
   getExpeditionRewardPreview,
+  getHeroActiveInjuries,
+  getHeroMoraleState,
+  getHeroPower,
   getTeamPresets,
   isExpeditionComplete,
   isHeroOnExpedition,
+  type ExpeditionRewardType,
+  type Hero,
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const MAX_ACTIVE_EXPEDITIONS = 3;
 
-function getHeroNames(heroIds: string[], heroes: Array<{ id: string; name: string }>): string {
-  const names = heroIds
-    .map((heroId) => heroes.find((hero) => hero.id === heroId)?.name)
-    .filter((name): name is string => Boolean(name));
-  return names.length > 0 ? names.join(", ") : "Equipe nao encontrada";
+type ExpeditionDefinition = (typeof EXPEDITION_DEFINITIONS)[number];
+type ExpeditionStatus = "available" | "active" | "ready" | "blocked" | "no-heroes";
+type RiskTone = "safe" | "warning" | "danger";
+
+function getRarityStars(rarity: number): string {
+  return "★".repeat(rarity) + "☆".repeat(Math.max(0, 5 - rarity));
 }
 
-function ExpeditionCard({
-  definition,
-  now,
-}: {
-  definition: (typeof EXPEDITION_DEFINITIONS)[number];
-  now: number;
-}) {
+function getRiskProfile(power: number, recommendedPower: number): { label: string; tone: RiskTone; description: string } {
+  if (power <= 0) return { label: "Sem equipe", tone: "danger", description: "Selecione heróis antes de assinar o contrato." };
+
+  const ratio = power / Math.max(1, recommendedPower);
+  if (ratio >= 1.2) return { label: "Seguro", tone: "safe", description: "Equipe acima do recomendado; recompensa tende a render melhor." };
+  if (ratio >= 1) return { label: "Adequado", tone: "safe", description: "Poder suficiente para cumprir o contrato." };
+  if (ratio >= 0.7) return { label: "Arriscado", tone: "warning", description: "Poder abaixo do ideal; recompensa e segurança caem." };
+  return { label: "Perigoso", tone: "danger", description: "Equipe muito fraca para esta rota." };
+}
+
+function getStatusLabel(status: ExpeditionStatus): string {
+  if (status === "ready") return "Concluída";
+  if (status === "active") return "Em andamento";
+  if (status === "blocked") return "Bloqueada";
+  if (status === "no-heroes") return "Sem heróis";
+  return "Disponível";
+}
+
+function getRewardText(reward: { amount: number; type: ExpeditionRewardType; multiplier?: number }): string {
+  return `${reward.amount} ${getExpeditionRewardName(reward.type)} · ${Math.round((reward.multiplier || 1) * 100)}%`;
+}
+
+function getHeroById(heroes: Hero[], heroId: string): Hero | null {
+  return heroes.find((hero) => hero.id === heroId) ?? null;
+}
+
+function getHeroWarnings(hero: Hero): string[] {
+  const warnings: string[] = [];
+  const morale = getHeroMoraleState(hero);
+  const injuries = getHeroActiveInjuries(hero);
+  if (morale.tone === "collapse" || morale.tone === "shaken") warnings.push(morale.label);
+  if (injuries.length > 0) warnings.push(`${injuries.length} ferimento(s)`);
+  return warnings;
+}
+
+function ExpeditionHeroChip({ hero, disabled, selected, onToggle }: { hero: Hero; disabled?: boolean; selected?: boolean; onToggle?: () => void }) {
+  const warnings = getHeroWarnings(hero);
+
+  return (
+    <button
+      aria-pressed={selected}
+      className={`expedition-hero-chip rarity-${hero.rarity}${selected ? " selected" : ""}${disabled ? " disabled" : ""}${warnings.length > 0 ? " warning" : ""}`}
+      disabled={disabled}
+      onClick={onToggle}
+      type="button"
+    >
+      <strong>{hero.name}</strong>
+      <span>
+        {hero.className} · {getRarityStars(hero.rarity)}
+      </span>
+      <small>Poder {getHeroPower(hero)}</small>
+      {warnings.length > 0 ? <em>{warnings.join(" · ")}</em> : null}
+    </button>
+  );
+}
+
+function ActiveHeroList({ heroIds, heroes }: { heroIds: string[]; heroes: Hero[] }) {
+  const sentHeroes = heroIds.map((heroId) => getHeroById(heroes, heroId)).filter((hero): hero is Hero => Boolean(hero));
+
+  if (sentHeroes.length === 0) return <small>Equipe enviada não encontrada.</small>;
+
+  return (
+    <div className="expedition-sent-heroes">
+      {sentHeroes.map((hero) => (
+        <div className={`expedition-sent-hero rarity-${hero.rarity}`} key={hero.id}>
+          <strong>{hero.name}</strong>
+          <span>
+            {hero.className} · Poder {getHeroPower(hero)}
+          </span>
+          {getHeroWarnings(hero).length > 0 ? <small>{getHeroWarnings(hero).join(" · ")}</small> : <small>{getRarityStars(hero.rarity)}</small>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ExpeditionCard({ definition, now }: { definition: ExpeditionDefinition; now: number }) {
   const state = useGameStore((store) => store.state);
   const startExpeditionAction = useGameStore((store) => store.startExpedition);
   const collectExpeditionAction = useGameStore((store) => store.collectExpedition);
-  const [selectedHeroIds, setSelectedHeroIds] = useState<string[]>(() =>
-    state.formation.filter((heroId): heroId is string => Boolean(heroId)).slice(0, GAME_CONFIG.maxExpeditionHeroes),
-  );
+  const freeFormationHeroes = state.formation
+    .filter((heroId): heroId is string => Boolean(heroId))
+    .filter((heroId) => !isHeroOnExpedition(state, heroId))
+    .slice(0, GAME_CONFIG.maxExpeditionHeroes);
+  const [selectedHeroIds, setSelectedHeroIds] = useState<string[]>(freeFormationHeroes);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const active = getActiveExpedition(state, definition.id);
-  const preview = getExpeditionRewardPreview(
-    state,
-    definition,
-    selectedHeroIds.length > 0 ? selectedHeroIds : state.formation.filter((heroId): heroId is string => Boolean(heroId)).slice(0, 3),
-  );
-  const reward = active ? getActiveExpeditionReward(state, active) || preview : preview;
+  const allHeroIds = new Set(state.heroes.map((hero) => hero.id));
+  const selectedValidHeroIds = selectedHeroIds.filter((heroId) => allHeroIds.has(heroId) && !isHeroOnExpedition(state, heroId));
+  const selectedPower = getExpeditionPower(state, selectedValidHeroIds);
+  const selectionPreview = getExpeditionRewardPreview(state, definition, selectedValidHeroIds);
+  const reward = active ? getActiveExpeditionReward(state, active) || selectionPreview : selectionPreview;
   const complete = active ? isExpeditionComplete(active, now) : false;
   const remaining = active ? getExpeditionRemainingMs(active, now) : getExpeditionDurationMs(state, definition);
   const durationMs = getExpeditionDurationMs(state, definition);
-  const progress = active
-    ? Math.round(((durationMs - getExpeditionRemainingMs(active, now)) / Math.max(1, durationMs)) * 100)
-    : 0;
-  const availableHeroes = useMemo(
-    () => state.heroes.filter((hero) => !isHeroOnExpedition(state, hero.id)),
-    [state],
-  );
+  const progress = active ? Math.round(((durationMs - getExpeditionRemainingMs(active, now)) / Math.max(1, durationMs)) * 100) : 0;
+  const availableHeroes = useMemo(() => state.heroes.filter((hero) => !isHeroOnExpedition(state, hero.id)), [state]);
+  const busyHeroes = useMemo(() => state.heroes.filter((hero) => isHeroOnExpedition(state, hero.id)), [state]);
+  const capacityBlocked = !active && state.activeExpeditions.length >= MAX_ACTIVE_EXPEDITIONS;
+  const noHeroes = !active && availableHeroes.length === 0;
+  const status: ExpeditionStatus = active ? (complete ? "ready" : "active") : capacityBlocked ? "blocked" : noHeroes ? "no-heroes" : "available";
+  const risk = getRiskProfile(active ? reward.power || 0 : selectedPower, definition.recommendedPower);
   const canStart =
-    !active &&
-    state.activeExpeditions.length < MAX_ACTIVE_EXPEDITIONS &&
-    selectedHeroIds.length > 0 &&
-    selectedHeroIds.length <= GAME_CONFIG.maxExpeditionHeroes;
+    status === "available" &&
+    selectedValidHeroIds.length > 0 &&
+    selectedValidHeroIds.length <= GAME_CONFIG.maxExpeditionHeroes;
 
   const toggleHero = (heroId: string) => {
+    if (isHeroOnExpedition(state, heroId)) return;
     setSelectedHeroIds((current) => {
       if (current.includes(heroId)) return current.filter((id) => id !== heroId);
       if (current.length >= GAME_CONFIG.maxExpeditionHeroes) return current;
@@ -74,37 +152,65 @@ function ExpeditionCard({
   };
 
   return (
-    <article className={`expedition-card${active ? " active" : ""}${complete ? " ready" : ""}`}>
+    <article className={`expedition-card status-${status} risk-${risk.tone}`}>
+      <div className="expedition-seal" aria-hidden="true">
+        {definition.name.slice(0, 1)}
+      </div>
+
       <div className="expedition-card-head">
         <div>
-          <span>{active ? (complete ? "Pronta" : "Em andamento") : "Disponivel"}</span>
+          <span>{getStatusLabel(status)}</span>
           <h3>{definition.name}</h3>
+          <p>{definition.description}</p>
         </div>
-        <strong>{formatDuration(remaining)}</strong>
+        <strong>{complete ? "Pronta" : formatDuration(remaining)}</strong>
       </div>
 
-      <p>{definition.description}</p>
-
-      <div className="expedition-progress">
-        <i>
-          <b style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} />
-        </i>
-      </div>
-
-      <div className="expedition-stats">
-        <span>Poder recomendado: {definition.recommendedPower}</span>
+      <div className="expedition-contract-stats">
         <span>
-          Recompensa: {reward.amount} {getExpeditionRewardName(reward.type)}
+          <strong>{formatDuration(durationMs)}</strong>
+          Duração
         </span>
-        <span>Multiplicador: {Math.round((reward.multiplier || 1) * 100)}%</span>
+        <span>
+          <strong>{definition.recommendedPower}</strong>
+          Poder recomendado
+        </span>
+        <span className={`tone-${risk.tone}`}>
+          <strong>{risk.label}</strong>
+          Risco
+        </span>
+      </div>
+
+      <div className="expedition-reward-scroll">
+        <strong>Recompensa esperada</strong>
+        <span>{getRewardText(reward)}</span>
+        <small>{risk.description}</small>
+      </div>
+
+      <div className="expedition-progress-block">
+        <div>
+          <span>{active ? (complete ? "Retorno confirmado" : "Progresso da rota") : "Contrato aguardando assinatura"}</span>
+          <strong>{active ? `${Math.min(100, Math.max(0, progress))}%` : "0%"}</strong>
+        </div>
+        <div className="expedition-progress">
+          <i>
+            <b style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} />
+          </i>
+        </div>
+        <small>{active ? (complete ? "A equipe retornou à guilda." : `${formatDuration(remaining)} restante(s).`) : "Selecione heróis para iniciar a missão."}</small>
       </div>
 
       {active ? (
-        <>
-          <small>Equipe: {getHeroNames(active.heroIds, state.heroes)}</small>
+        <div className="expedition-active-team">
+          <strong>Heróis enviados</strong>
+          <ActiveHeroList heroIds={active.heroIds} heroes={state.heroes} />
+          <div className="expedition-power-readout">
+            <span>Poder enviado {reward.power || 0}</span>
+            <span>Recompensa final {getRewardText(reward)}</span>
+          </div>
           {complete ? (
             <button
-              className="hero-inline-action primary"
+              className="hero-inline-action primary expedition-collect-button"
               onClick={() => {
                 const result = collectExpeditionAction(definition.id);
                 setFeedback(result.message);
@@ -114,9 +220,19 @@ function ExpeditionCard({
               Coletar recompensa
             </button>
           ) : null}
-        </>
+        </div>
       ) : (
-        <>
+        <div className="expedition-selection-panel">
+          <div className="expedition-selection-head">
+            <div>
+              <strong>Seleção da equipe</strong>
+              <span>
+                Poder {selectedPower}/{definition.recommendedPower} · {selectedValidHeroIds.length}/{GAME_CONFIG.maxExpeditionHeroes} herói(s)
+              </span>
+            </div>
+            <em className={`tone-${risk.tone}`}>{risk.label}</em>
+          </div>
+
           <div className="expedition-preset-row">
             {getTeamPresets(state, "expedition").map((preset, index) => (
               <button
@@ -124,7 +240,7 @@ function ExpeditionCard({
                 key={preset.id}
                 onClick={() => {
                   const result = applyExpeditionPresetToExpeditionSelection(state, index);
-                  if (result.ok) setSelectedHeroIds(result.heroIds);
+                  if (result.ok) setSelectedHeroIds(result.heroIds.filter((heroId) => !isHeroOnExpedition(state, heroId)));
                   setFeedback(result.message);
                 }}
                 type="button"
@@ -133,34 +249,43 @@ function ExpeditionCard({
               </button>
             ))}
           </div>
+
           <div className="expedition-hero-picker">
-            {availableHeroes.length > 0 ? (
-              availableHeroes.slice(0, 8).map((hero) => (
-                <label className="expedition-hero-option" key={hero.id}>
-                  <input
-                    checked={selectedHeroIds.includes(hero.id)}
-                    onChange={() => toggleHero(hero.id)}
-                    type="checkbox"
+            {state.heroes.length > 0 ? (
+              <>
+                {availableHeroes.map((hero) => (
+                  <ExpeditionHeroChip
+                    hero={hero}
+                    key={hero.id}
+                    onToggle={() => toggleHero(hero.id)}
+                    selected={selectedHeroIds.includes(hero.id)}
                   />
-                  <span>{hero.name}</span>
-                </label>
-              ))
+                ))}
+                {busyHeroes.map((hero) => (
+                  <ExpeditionHeroChip disabled hero={hero} key={hero.id} selected={false} />
+                ))}
+              </>
             ) : (
-              <small>Nenhum heroi livre para enviar.</small>
+              <small>Nenhum herói recrutado para enviar.</small>
             )}
           </div>
+
+          {capacityBlocked ? <p className="expedition-warning">Limite de {MAX_ACTIVE_EXPEDITIONS} expedições ativas atingido.</p> : null}
+          {noHeroes ? <p className="expedition-warning">Todos os heróis estão ocupados ou indisponíveis.</p> : null}
+          {selectedPower > 0 && selectedPower < definition.recommendedPower ? <p className="expedition-warning">Equipe abaixo do poder recomendado para este contrato.</p> : null}
+
           <button
-            className="hero-inline-action primary"
+            className="hero-inline-action primary expedition-start-button"
             disabled={!canStart}
             onClick={() => {
-              const result = startExpeditionAction(definition.id, selectedHeroIds);
+              const result = startExpeditionAction(definition.id, selectedValidHeroIds);
               setFeedback(result.message);
             }}
             type="button"
           >
-            Iniciar expedicao ({selectedHeroIds.length}/{GAME_CONFIG.maxExpeditionHeroes})
+            Iniciar expedição ({selectedValidHeroIds.length}/{GAME_CONFIG.maxExpeditionHeroes})
           </button>
-        </>
+        </div>
       )}
 
       {feedback ? <p className="hero-action-feedback">{feedback}</p> : null}
@@ -170,31 +295,37 @@ function ExpeditionCard({
 
 export function ExpeditionsPanel() {
   const state = useGameStore((store) => store.state);
-  const now = Date.now();
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const readyCount = state.activeExpeditions.filter((expedition) => isExpeditionComplete(expedition, now)).length;
+  const busyHeroCount = new Set(state.activeExpeditions.flatMap((expedition) => expedition.heroIds)).size;
 
   return (
     <section className="expeditions-panel">
-      <div className="section-heading">
-        <span>Expedicoes React</span>
-        <h2>Rotas disponiveis</h2>
-        <p>Inicie e colete expedicoes pelo core TypeScript com persistencia no save local e na nuvem.</p>
-      </div>
-
-      <div className="tower-summary roster-summary">
+      <div className="expedition-board-hero">
         <div>
-          <strong>Ativas</strong>
+          <span>Quadro de contratos</span>
+          <h2>Expedições da guilda</h2>
+          <p>Envie patrulhas para rotas perigosas, acompanhe retornos e colete recompensas fora da Torre.</p>
+        </div>
+        <div className="expedition-board-ledger">
           <span>
-            {state.activeExpeditions.length}/{MAX_ACTIVE_EXPEDITIONS}
+            <strong>{state.activeExpeditions.length}/{MAX_ACTIVE_EXPEDITIONS}</strong>
+            Ativas
           </span>
-        </div>
-        <div>
-          <strong>Prontas</strong>
-          <span>{readyCount}</span>
-        </div>
-        <div>
-          <strong>Rotas</strong>
-          <span>{EXPEDITION_DEFINITIONS.length}</span>
+          <span>
+            <strong>{readyCount}</strong>
+            Prontas
+          </span>
+          <span>
+            <strong>{busyHeroCount}</strong>
+            Heróis ocupados
+          </span>
         </div>
       </div>
 

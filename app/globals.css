@@ -2091,26 +2091,166 @@ article,
   min-height: 14rem;
 }
 
-.expedition-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.8rem;
+.expeditions-panel {
+  position: relative;
+  overflow: hidden;
 }
 
-.expedition-card {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.18);
-  border-radius: 8px;
+.expeditions-panel::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background:
+    radial-gradient(circle at 10% 8%, rgba(232, 188, 88, 0.12), transparent 16rem),
+    radial-gradient(circle at 92% 18%, rgba(86, 199, 189, 0.08), transparent 18rem),
+    linear-gradient(135deg, rgba(73, 42, 23, 0.18), transparent 34%);
+}
+
+.expedition-board-hero,
+.expedition-board-ledger,
+.expedition-grid {
+  position: relative;
+  z-index: 1;
+}
+
+.expedition-board-hero {
+  border: 1px solid rgba(232, 188, 88, 0.28);
+  background:
+    linear-gradient(135deg, rgba(232, 188, 88, 0.12), transparent 44%),
+    linear-gradient(180deg, rgba(39, 28, 20, 0.92), rgba(13, 11, 16, 0.92));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 0.9rem;
   padding: 1rem;
 }
 
-.expedition-card.active {
-  border-color: rgba(86, 199, 189, 0.35);
+.expedition-board-hero p {
+  margin: 0.45rem 0 0;
 }
 
-.expedition-card.ready {
-  border-color: rgba(232, 188, 88, 0.55);
-  background: rgba(232, 188, 88, 0.08);
+.expedition-board-ledger {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.expedition-board-ledger span {
+  border: 1px solid rgba(232, 188, 88, 0.18);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.7rem;
+}
+
+.expedition-board-ledger strong {
+  color: var(--gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.1rem;
+}
+
+.expedition-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.95rem;
+}
+
+.expedition-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(232, 188, 88, 0.2);
+  background:
+    linear-gradient(160deg, rgba(232, 188, 88, 0.08), transparent 42%),
+    linear-gradient(180deg, rgba(27, 21, 23, 0.96), rgba(10, 9, 12, 0.96));
+  border-radius: var(--radius-lg);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+}
+
+.expedition-card::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 2rem 2rem;
+  opacity: 0.18;
+}
+
+.expedition-card.status-active {
+  border-color: rgba(86, 199, 189, 0.45);
+  box-shadow: 0 0 0 1px rgba(86, 199, 189, 0.08), 0 18px 42px rgba(0, 0, 0, 0.28);
+}
+
+.expedition-card.status-ready {
+  border-color: rgba(232, 188, 88, 0.64);
+  background:
+    linear-gradient(160deg, rgba(232, 188, 88, 0.16), transparent 46%),
+    linear-gradient(180deg, rgba(38, 28, 18, 0.98), rgba(12, 10, 11, 0.98));
+}
+
+.expedition-card.status-blocked,
+.expedition-card.status-no-heroes {
+  filter: saturate(0.76);
+}
+
+.expedition-card.status-blocked::after,
+.expedition-card.status-no-heroes::after {
+  position: absolute;
+  right: -2.8rem;
+  top: 1rem;
+  width: 9rem;
+  border: 1px solid rgba(214, 90, 90, 0.34);
+  background: rgba(73, 16, 18, 0.62);
+  color: #ffb4a8;
+  content: "EM ESPERA";
+  font-size: 0.62rem;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+  padding: 0.28rem;
+  text-align: center;
+  text-transform: uppercase;
+  transform: rotate(32deg);
+}
+
+.expedition-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.expedition-seal {
+  width: 3.2rem;
+  height: 3.2rem;
+  border: 1px solid rgba(232, 188, 88, 0.42);
+  background:
+    radial-gradient(circle, rgba(232, 188, 88, 0.28), transparent 60%),
+    rgba(0, 0, 0, 0.26);
+  border-radius: 999px;
+  color: var(--gold);
+  display: grid;
+  flex: 0 0 auto;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+  font-weight: 900;
+  place-items: center;
+  text-shadow: 0 0 18px rgba(232, 188, 88, 0.36);
+}
+
+.expedition-card.status-active .expedition-seal {
+  border-color: rgba(86, 199, 189, 0.5);
+  color: var(--teal);
+  text-shadow: 0 0 18px rgba(86, 199, 189, 0.34);
+}
+
+.expedition-card.status-ready .expedition-seal {
+  box-shadow: 0 0 24px rgba(232, 188, 88, 0.22);
 }
 
 .expedition-card-head {
@@ -2122,14 +2262,24 @@ article,
 
 .expedition-card-head span {
   color: var(--teal);
-  font-size: 0.72rem;
-  font-weight: 900;
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .expedition-card-head h3 {
-  margin: 0.25rem 0 0;
+  margin: 0.3rem 0 0;
   font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.12rem, 2vw, 1.45rem);
+}
+
+.expedition-card-head p {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
 }
 
 .expedition-card-head strong {
@@ -2137,39 +2287,229 @@ article,
   white-space: nowrap;
 }
 
+.expedition-contract-stats,
+.expedition-reward-scroll,
+.expedition-power-readout {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.expedition-contract-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.expedition-contract-stats span,
+.expedition-reward-scroll,
+.expedition-power-readout span {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+  padding: 0.55rem;
+}
+
+.expedition-contract-stats strong,
+.expedition-reward-scroll strong,
+.expedition-power-readout strong {
+  color: var(--gold);
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.18rem;
+  text-transform: uppercase;
+}
+
+.expedition-contract-stats .tone-safe,
+.expedition-selection-head .tone-safe {
+  color: #9ee6b4;
+}
+
+.expedition-contract-stats .tone-warning,
+.expedition-selection-head .tone-warning {
+  color: var(--gold);
+}
+
+.expedition-contract-stats .tone-danger,
+.expedition-selection-head .tone-danger {
+  color: #ff9d90;
+}
+
+.expedition-reward-scroll {
+  border-color: rgba(232, 188, 88, 0.2);
+  background:
+    linear-gradient(90deg, rgba(232, 188, 88, 0.08), transparent),
+    rgba(0, 0, 0, 0.2);
+}
+
+.expedition-progress-block {
+  border: 1px solid rgba(86, 199, 189, 0.2);
+  background: rgba(86, 199, 189, 0.05);
+  border-radius: var(--radius-md);
+  padding: 0.7rem;
+}
+
+.expedition-progress-block > span,
+.expedition-progress span {
+  color: var(--muted);
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
 .expedition-progress i {
   display: block;
-  height: 8px;
+  height: 10px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.24);
+  background: rgba(0, 0, 0, 0.26);
   border-radius: 999px;
-  margin: 0.8rem 0;
+  margin: 0.55rem 0;
 }
 
 .expedition-progress b {
   display: block;
   height: 100%;
   background: linear-gradient(90deg, var(--teal), var(--gold));
+  box-shadow: 0 0 14px rgba(86, 199, 189, 0.26);
 }
 
-.expedition-stats {
+.expedition-active-team,
+.expedition-selection-panel {
+  border: 1px solid rgba(232, 188, 88, 0.14);
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius-md);
   display: grid;
-  gap: 0.35rem;
+  gap: 0.65rem;
+  padding: 0.75rem;
 }
 
-.expedition-stats span,
-.expedition-card small {
+.expedition-active-team h4,
+.expedition-selection-panel h4 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+}
+
+.expedition-sent-heroes,
+.expedition-hero-picker {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.expedition-sent-hero,
+.expedition-hero-chip {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.58rem;
+  text-align: left;
+}
+
+.expedition-hero-chip {
+  cursor: pointer;
+  color: var(--text);
+}
+
+.expedition-hero-chip:hover:not(:disabled),
+.expedition-hero-chip.selected {
+  border-color: rgba(232, 188, 88, 0.48);
+  background: rgba(232, 188, 88, 0.1);
+}
+
+.expedition-hero-chip.selected {
+  box-shadow: inset 3px 0 0 rgba(232, 188, 88, 0.75);
+}
+
+.expedition-hero-chip.disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.expedition-hero-chip.warning,
+.expedition-sent-hero:has(small) {
+  border-color: rgba(214, 90, 90, 0.28);
+}
+
+.expedition-sent-hero strong,
+.expedition-hero-chip strong {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expedition-sent-hero span,
+.expedition-hero-chip span {
+  color: var(--teal);
+  font-size: 0.64rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.expedition-sent-hero small,
+.expedition-hero-chip small {
   color: var(--muted);
-  display: block;
-  font-size: 0.78rem;
-  line-height: 1.45;
+  font-size: 0.72rem;
+  line-height: 1.35;
 }
 
-.expedition-card small {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  margin-top: 0.8rem;
-  padding-top: 0.8rem;
+.expedition-sent-hero.rarity-4,
+.expedition-sent-hero.rarity-5,
+.expedition-hero-chip.rarity-4,
+.expedition-hero-chip.rarity-5 {
+  border-color: rgba(155, 127, 232, 0.34);
+  background:
+    linear-gradient(135deg, rgba(155, 127, 232, 0.12), transparent 60%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.expedition-sent-hero.rarity-5,
+.expedition-hero-chip.rarity-5 {
+  border-color: rgba(232, 188, 88, 0.5);
+  box-shadow: 0 0 18px rgba(232, 188, 88, 0.1);
+}
+
+.expedition-selection-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.expedition-selection-head p {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+}
+
+.expedition-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.expedition-warning {
+  border: 1px solid rgba(214, 90, 90, 0.28);
+  background: rgba(73, 16, 18, 0.18);
+  border-radius: var(--radius-sm);
+  color: #ffb4a8;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.4;
+  padding: 0.55rem;
+}
+
+.expedition-start-button,
+.expedition-collect-button {
+  justify-content: center;
+  min-height: 46px;
+  width: 100%;
 }
 
 .mission-columns {
@@ -3659,7 +3999,6 @@ body::before {
 .hero-card,
 .inventory-row,
 .inventory-list-card,
-.expedition-card,
 .mission-row,
 .mission-list-card,
 .relic-card,
@@ -3679,7 +4018,6 @@ body::before {
   min-width: 0;
 }
 
-.expedition-card.ready,
 .mission-row.complete,
 .relic-card.upgradeable {
   border-color: rgba(86, 199, 189, 0.5);
@@ -4973,6 +5311,8 @@ body::before {
   .inventory-arsenal-layout,
   .inventory-card-grid,
   .inventory-card-grid.consumable-grid,
+  .expedition-board-ledger,
+  .expedition-grid,
   .hero-roster-layout {
     grid-template-columns: 1fr;
   }
@@ -5080,9 +5420,16 @@ body::before {
   }
 
   .tower-challenge-actions,
+  .expedition-card-head,
+  .expedition-selection-head,
   .tower-difficulty-picker.compact,
   .tower-event-choice-grid.compact {
     display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .expedition-contract-stats,
+  .expedition-board-ledger {
     grid-template-columns: 1fr;
   }
 
