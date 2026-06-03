@@ -20,26 +20,26 @@ import {
   type Hero,
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
-import { BattleResultPanel } from "./BattleResultPanel";
-import { ChapterCompletionPanel } from "./ChapterCompletionPanel";
-import { ExpeditionsPanel } from "./ExpeditionsPanel";
-import { FormationPanel } from "./FormationPanel";
-import { HeroRosterPanel } from "./HeroRosterPanel";
-import { InventoryPanel } from "./InventoryPanel";
-import { LibraryPanel } from "./LibraryPanel";
-import { MemorialPanel } from "./MemorialPanel";
-import { MissionsPanel } from "./MissionsPanel";
+import { BattleResultPanel } from "../tower/BattleResultPanel";
+import { ChapterCompletionPanel } from "../tower/ChapterCompletionPanel";
+import { ExpeditionsPanel } from "../systems/ExpeditionsPanel";
+import { FormationPanel } from "../heroes/FormationPanel";
+import { HeroRosterPanel } from "../heroes/HeroRosterPanel";
+import { InventoryPanel } from "../inventory/InventoryPanel";
+import { LibraryPanel } from "../progression/LibraryPanel";
+import { MemorialPanel } from "../heroes/MemorialPanel";
+import { MissionsPanel } from "../progression/MissionsPanel";
 import { NarrativeModal } from "./NarrativeModal";
-import { PreferencesPanel } from "./PreferencesPanel";
-import { RecruitmentPanel } from "./RecruitmentPanel";
-import { RelicsPanel } from "./RelicsPanel";
-import { RepeatFloorsPanel } from "./RepeatFloorsPanel";
+import { PreferencesPanel } from "../settings/PreferencesPanel";
+import { RecruitmentPanel } from "../systems/RecruitmentPanel";
+import { RelicsPanel } from "../progression/RelicsPanel";
+import { RepeatFloorsPanel } from "../tower/RepeatFloorsPanel";
 import { ResourceHudPanel } from "./ResourceHudPanel";
-import { SaveManagementPanel } from "./SaveManagementPanel";
-import { SummonPanel } from "./SummonPanel";
-import { TowerBattlePanel } from "./TowerBattlePanel";
-import { TowerCampaignPanel } from "./TowerCampaignPanel";
-import { TowerEventsPanel } from "./TowerEventsPanel";
+import { SaveManagementPanel } from "../settings/SaveManagementPanel";
+import { SummonPanel } from "../systems/SummonPanel";
+import { TowerBattlePanel } from "../tower/TowerBattlePanel";
+import { TowerCampaignPanel } from "../tower/TowerCampaignPanel";
+import { TowerEventsPanel } from "../tower/TowerEventsPanel";
 
 type DashboardTab =
   | "base"
@@ -309,7 +309,7 @@ function AboutPanel() {
   );
 }
 
-export function MigrationDashboard() {
+export function GameShell() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("base");
   const lastBattle = useGameStore((store) => store.state.lastBattle);
   const pendingTowerEvent = useGameStore((store) => store.state.pendingTowerEvent);

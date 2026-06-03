@@ -1,4 +1,4 @@
-import { MigrationDashboard } from "./components/MigrationDashboard";
+import { GameShell } from "./components/layout/GameShell";
 
 export default function HomePage() {
   return (
@@ -17,7 +17,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <MigrationDashboard />
+      <GameShell />
     </main>
   );
 }
