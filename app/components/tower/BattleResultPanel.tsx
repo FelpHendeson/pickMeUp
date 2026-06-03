@@ -8,10 +8,11 @@ import {
   getDefaultBattleSpeed,
   getTowerChapterByFloor,
   setBattlePlaybackSpeed,
-  type BattleSpeed,
   type BattleEvent,
   type BattlePerformanceEntry,
   type BattleResult,
+  type BattleSpeed,
+  type GameState,
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
 import { useEffect, useMemo, useState } from "react";
@@ -38,6 +39,8 @@ type LibraryUpdate = {
   detailsUnlocked?: boolean;
 };
 
+type ResultTone = "success" | "warning" | "danger" | "neutral";
+
 function formatNumber(value: number | undefined): string {
   return new Intl.NumberFormat("pt-BR").format(Number(value || 0));
 }
@@ -60,14 +63,13 @@ function getResourceRewards(battle: BattleResult) {
   const rewards = battle.rewards;
   const log = battle.log || [];
   return [
-    { label: "Ouro", value: rewards?.gold || getFirstLoggedAmount(log, /\+(\d+)\s+ouro/i) },
-    { label: "Energia", value: rewards?.energyRefund || getFirstLoggedAmount(log, /\+(\d+)\s+energia/i) },
-    { label: "XP/herói", value: getHeroXpReward(battle) },
-    { label: "Cristais", value: rewards?.crystals || getFirstLoggedAmount(log, /Cristais encontrados:\s+\+(\d+)/i) },
-    { label: "Essencia", value: rewards?.essence || getFirstLoggedAmount(log, /Essencia recuperada:\s+\+(\d+)/i) },
-    { label: "Fragmentos", value: rewards?.fragments || getFirstLoggedAmount(log, /Fragmentos recolhidos:\s+\+(\d+)/i) },
-    { label: "Frag. eco", value: rewards?.echoFragments || getFirstLoggedAmount(log, /Fragmentos de Eco ressoaram:\s+\+(\d+)/i) },
-    { label: "Contratos", value: rewards?.heroContracts || getFirstLoggedAmount(log, /\+(\d+)\s+contrato/i) },
+    { label: "Ouro", value: rewards?.gold || getFirstLoggedAmount(log, /\+(\d+)\s+ouro/i), description: "Moeda para cura, base e melhorias." },
+    { label: "Cristais", value: rewards?.crystals || getFirstLoggedAmount(log, /Cristais encontrados:\s+\+(\d+)/i), description: "Recurso raro para invocação superior." },
+    { label: "Essência", value: rewards?.essence || getFirstLoggedAmount(log, /Essencia recuperada:\s+\+(\d+)/i), description: "Material arcano de progressão." },
+    { label: "Fragmentos", value: rewards?.fragments || getFirstLoggedAmount(log, /Fragmentos recolhidos:\s+\+(\d+)/i), description: "Material de avanço e contratos." },
+    { label: "Frag. eco", value: rewards?.echoFragments || getFirstLoggedAmount(log, /Fragmentos de Eco ressoaram:\s+\+(\d+)/i), description: "Usado em relíquias e marcos especiais." },
+    { label: "Energia", value: rewards?.energyRefund || getFirstLoggedAmount(log, /\+(\d+)\s+energia/i), description: "Energia recuperada pela vitória." },
+    { label: "Contratos", value: rewards?.heroContracts || getFirstLoggedAmount(log, /\+(\d+)\s+contrato/i), description: "Chamados diretos para recrutamento." },
   ];
 }
 
@@ -87,6 +89,43 @@ function getHeroXpGain(battle: BattleResult, entry: BattlePerformanceEntry): num
   return battle.progression?.heroXp.find((xp) => xp.heroId === entry.id || xp.heroName === entry.name)?.xp || 0;
 }
 
+function getBattleKind(battle: BattleResult): string {
+  const firstLine = battle.log?.[0] || "";
+  const eventAfterBattle = (battle.log || []).some((line) => /evento surgiu depois do combate/i.test(line));
+
+  if (battle.summary?.isBoss) return "Chefe";
+  if (/Repeti[cç][aã]o do andar/i.test(firstLine)) return "Repetição";
+  if (eventAfterBattle) return "Evento pós-combate";
+  return "Andar comum";
+}
+
+function getRiskReadout(battle: BattleResult): { label: string; tone: ResultTone; description: string } {
+  const modifierCount = battle.summary?.modifiers?.length || 0;
+  const difficultyId = battle.summary?.difficultyId || "normal";
+
+  if (difficultyId === "hardcore") {
+    return { label: "Extremo", tone: "danger", description: "Modo Hardcore aumentou risco de morte permanente e punições severas." };
+  }
+
+  if (battle.summary?.isBoss) {
+    return { label: "Alto", tone: "danger", description: "Andar de chefe com pressão acima do combate comum." };
+  }
+
+  if (difficultyId === "challenge") {
+    return { label: "Alto", tone: "warning", description: "Dificuldade de desafio elevou inimigos, recompensas e chance de desgaste." };
+  }
+
+  if (modifierCount > 1) {
+    return { label: "Moderado", tone: "warning", description: "Múltiplos modificadores alteraram o comportamento da luta." };
+  }
+
+  if (modifierCount === 1) {
+    return { label: "Atenção", tone: "warning", description: "Um modificador ativo influenciou a batalha." };
+  }
+
+  return { label: "Controlado", tone: "success", description: "Nenhum risco adicional relevante ficou registrado no resultado." };
+}
+
 function getBattleTacticalRead(
   battle: BattleResult,
   topPerformer: BattlePerformanceEntry | null,
@@ -95,22 +134,41 @@ function getBattleTacticalRead(
   deaths: BattleEvent[],
 ): string {
   const enemyNames = battle.summary?.enemyNames.join(", ") || battle.enemyTeam.map((enemy) => enemy.name).join(", ");
-  const tacticalLead = topPerformer ? `${topPerformer.name} carregou a linha com ${topPerformer.damageDealt} dano.` : "A formação não registrou um destaque claro.";
+  const tacticalLead = topPerformer ? `${topPerformer.name} foi o destaque com ${topPerformer.damageDealt} de dano.` : "Nenhum destaque individual foi registrado.";
 
   if (battle.result === "victory") {
-    const consequence = injuries.length > 0 || morale.length > 0 ? " A vitória veio com desgaste relevante." : " A equipe saiu sem consequência crítica registrada.";
-    return `A equipe superou ${enemyNames} em ${battle.rounds} turno(s). ${tacticalLead}${consequence}`;
+    const consequence = injuries.length > 0 || morale.length > 0 ? " A vitória teve custo e exige recuperação." : " A equipe saiu sem consequência crítica registrada.";
+    return `A formação superou ${enemyNames} em ${battle.rounds} turno(s). ${tacticalLead}${consequence}`;
   }
 
   if (deaths.length > 0) {
-    return `A formação foi quebrada por ${enemyNames}; houve morte permanente registrada. Reavalie moral, HP e dificuldade antes da próxima tentativa.`;
+    return `A formação foi quebrada por ${enemyNames}; houve morte permanente registrada. Reavalie dificuldade, HP e moral antes da próxima tentativa.`;
   }
 
   if (injuries.length > 0 || morale.length > 0) {
-    return `A formação caiu contra ${enemyNames} e sofreu desgaste crítico. Reduza risco, trate ferimentos ou fortaleça a equipe.`;
+    return `A formação caiu contra ${enemyNames} e sofreu desgaste crítico. Trate ferimentos, recupere moral ou fortaleça a equipe.`;
   }
 
   return `A formação não sustentou pressão contra ${enemyNames}. O resultado indica falta de dano, defesa ou preparo para o modificador ativo.`;
+}
+
+function getNextStep(
+  state: GameState,
+  battle: BattleResult,
+  injuries: BattleEvent[],
+  morale: BattleEvent[],
+  deaths: BattleEvent[],
+  levelUps: Array<{ heroName: string }>,
+  achievementsAvailable: ProgressEntry[],
+): string {
+  if (deaths.length > 0) return "Revise o memorial e a formação antes de tentar novamente.";
+  if (injuries.length > 0) return "Trate ferimentos no quartel antes de subir o risco.";
+  if (morale.length > 0) return "Recupere moral ou reduza a dificuldade do próximo combate.";
+  if (levelUps.length > 0) return "Confira os heróis que evoluíram e ajuste equipamentos.";
+  if (achievementsAvailable.length > 0) return "Colete conquistas liberadas antes da próxima luta.";
+  if (battle.result === "victory" && state.towerFloor > battle.floor) return `Continue a campanha no andar ${state.towerFloor}.`;
+  if (battle.result === "victory") return "Resultado registrado; escolha outro andar ou repita para loot.";
+  return "Reforce a formação e tente novamente quando estiver pronto.";
 }
 
 function ProgressList({ entries, empty }: { entries: ProgressEntry[]; empty: string }) {
@@ -128,8 +186,19 @@ function ProgressList({ entries, empty }: { entries: ProgressEntry[]; empty: str
   );
 }
 
+function DetailCard({ label, value, detail, tone = "neutral" }: { label: string; value: string | number; detail?: string; tone?: ResultTone }) {
+  return (
+    <article className={`battle-detail-card tone-${tone}`}>
+      <strong>{value}</strong>
+      <span>{label}</span>
+      {detail ? <small>{detail}</small> : null}
+    </article>
+  );
+}
+
 export function BattleResultPanel({ compact = false, onContinue }: BattleResultPanelProps) {
-  const battle = useGameStore((store) => store.state.lastBattle);
+  const state = useGameStore((store) => store.state);
+  const battle = state.lastBattle;
   const [speed, setSpeed] = useState<BattleSpeed>(() => getDefaultBattleSpeed());
   const [showReplay, setShowReplay] = useState(false);
   const [eventCursor, setEventCursor] = useState(1);
@@ -141,7 +210,7 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
     if (!battle) return;
     const initial = createBattlePlaybackState(battle, speed);
     setEventCursor(initial.eventCursor);
-  }, [battle, battle?.floor, battle?.rounds, battle?.result, battle?.log?.length]);
+  }, [battle, battle?.floor, battle?.rounds, battle?.result, battle?.log?.length, speed]);
 
   useEffect(() => {
     if (!battle || speed === "instant" || eventCursor >= allEvents.length) return;
@@ -158,16 +227,20 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
     return (
       <section className="battle-result-panel">
         <div className="section-heading">
-          <span>Combate React</span>
+          <span>Resultado de combate</span>
           <h2>Nenhum combate recente</h2>
-          <p>O ultimo resultado da torre aparecera aqui quando existir no save.</p>
+          <p>O último resultado da torre aparecerá aqui quando existir no save.</p>
         </div>
       </section>
     );
   }
 
   const events = visibleEvents;
-  const chapter = battle.summary ?? getTowerChapterByFloor(battle.floor);
+  const fallbackChapter = getTowerChapterByFloor(battle.floor);
+  const chapterName = battle.summary?.chapterName ?? fallbackChapter.name;
+  const chapterNumber = battle.summary?.chapterNumber ?? fallbackChapter.number;
+  const battleKind = getBattleKind(battle);
+  const riskReadout = getRiskReadout(battle);
   const topPerformer = getTopPerformer(battle.performance || {});
   const topPerformers = Object.values(battle.performance || {})
     .sort((a, b) => b.damageDealt - a.damageDealt || b.kills - a.kills)
@@ -178,6 +251,7 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
   const levelUps = battle.progression?.levelUps || [];
   const specializations = battle.progression?.specializationsAvailable || [];
   const missionUpdates = (battle.progression?.missionUpdates || []) as ProgressEntry[];
+  const completedMissions = missionUpdates.filter((mission) => Boolean(mission.complete));
   const achievementsAvailable = (battle.progression?.achievementsAvailable || []) as ProgressEntry[];
   const libraryUpdates = (battle.progression?.libraryUpdates || []) as LibraryUpdate[];
   const injuries = getConsequenceEvents(allEvents, "injury");
@@ -185,20 +259,30 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
   const deaths = getConsequenceEvents(allEvents, "death");
   const heroXpReward = getHeroXpReward(battle);
   const tacticalRead = getBattleTacticalRead(battle, topPerformer, injuries, morale, deaths);
+  const nextStep = getNextStep(state, battle, injuries, morale, deaths, levelUps, achievementsAvailable);
+  const advancedFloor = battle.result === "victory" && state.towerFloor > battle.floor;
+  const enemyNames = battle.summary?.enemyNames.join(", ") || battle.enemyTeam.map((enemy) => enemy.name).join(", ");
+  const modifiers = battle.summary?.modifiers?.length ? battle.summary.modifiers.join(", ") : "Sem modificador adicional";
+  const weeklyEvent = battle.summary?.weeklyEvent || "Sem impacto registrado";
 
   return (
     <section className={`battle-result-panel ${battle.result === "victory" ? "result-victory" : "result-defeat"}${compact ? " compact" : ""}`}>
-      <div className="battle-result-hero">
+      <header className="battle-result-hero">
         <div className="battle-result-emblem" aria-hidden="true">
-          {battle.result === "victory" ? "V" : "X"}
+          {battle.result === "victory" ? "✦" : "☠"}
         </div>
         <div className="battle-result-copy">
-          <span>Resultado de combate</span>
+          <span>{battle.result === "victory" ? "Conquista registrada" : "Alerta de derrota"}</span>
           <h2>{battle.result === "victory" ? "Vitória" : "Derrota"}</h2>
           <p>
-            Andar {battle.floor} | Capítulo {"chapterName" in chapter ? chapter.chapterName : chapter.name} |{" "}
-            {battle.summary?.difficultyName || "Normal"} | {battle.rounds} turno(s)
+            Capítulo {chapterNumber}: {chapterName} · Andar {battle.floor} · {battleKind}
           </p>
+          <div className="battle-result-tags">
+            <span>{battle.summary?.difficultyName || "Normal"}</span>
+            <span>Risco {riskReadout.label}</span>
+            <span>{battle.rounds} turno(s)</span>
+            {battle.summary?.isBoss ? <span>Chefe</span> : null}
+          </div>
           <p className="battle-result-verdict">{tacticalRead}</p>
         </div>
         <div className="battle-result-actions">
@@ -209,123 +293,96 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
             {showReplay ? "Ocultar replay/log" : "Ver replay/log"}
           </button>
         </div>
-      </div>
+      </header>
 
-      <div className="battle-result-summary-grid">
-        <div>
-          <strong>Maior destaque</strong>
-          <span>{topPerformer ? `${topPerformer.name}: ${topPerformer.damageDealt} dano, ${topPerformer.kills} abate(s)` : "Sem destaque registrado"}</span>
-        </div>
-        <div>
-          <strong>Inimigos</strong>
-          <span>{battle.summary?.enemyNames.join(", ") || battle.enemyTeam.map((enemy) => enemy.name).join(", ")}</span>
-        </div>
-        <div>
-          <strong>Modificadores</strong>
-          <span>{battle.summary?.modifiers?.join(", ") || "Sem modificador adicional"}</span>
-        </div>
-        <div>
-          <strong>Evento semanal</strong>
-          <span>{battle.summary?.weeklyEvent || "Sem impacto registrado"}</span>
-        </div>
-      </div>
+      <section className="battle-result-answer-strip" aria-label="Resumo rápido do combate">
+        <DetailCard label="O que aconteceu" value={battle.result === "victory" ? "Vitória" : "Derrota"} detail={battleKind} tone={battle.result === "victory" ? "success" : "danger"} />
+        <DetailCard label="Por quê" value={topPerformer ? topPerformer.name : "Pressão inimiga"} detail={topPerformer ? `${topPerformer.damageDealt} dano, ${topPerformer.kills} abate(s)` : "Sem destaque registrado"} />
+        <DetailCard label="Loot principal" value={formatNumber(rewardRows.reduce((total, reward) => total + reward.value, 0))} detail={`${equipmentRewards.length} equipamento(s), ${consumableRewards.length} tipo(s) de item`} tone="success" />
+        <DetailCard label="Próximo passo" value={nextStep} tone={injuries.length || deaths.length || morale.length ? "warning" : "neutral"} />
+      </section>
 
-      <div className="battle-result-impact-row">
-        <article className="tone-xp">
-          <strong>{formatNumber(heroXpReward)}</strong>
-          <span>XP por herói</span>
-          <small>{heroXpReward > 0 ? "Progressão aplicada aos sobreviventes da formação." : "Nenhum ganho de XP registrado."}</small>
-        </article>
-        <article className={levelUps.length > 0 ? "tone-success" : ""}>
-          <strong>{levelUps.length}</strong>
-          <span>Level up</span>
-          <small>{levelUps.length > 0 ? levelUps.map((item) => `${item.heroName} nível ${item.level}`).join(", ") : "Nenhum nível novo nesta luta."}</small>
-        </article>
-        <article className={injuries.length > 0 || deaths.length > 0 ? "tone-danger" : ""}>
-          <strong>{injuries.length + deaths.length}</strong>
-          <span>Ferimentos e perdas</span>
-          <small>{deaths.length > 0 ? "Morte permanente registrada." : injuries.length > 0 ? "Há ferimentos ativos para tratar." : "Sem ferimento crítico registrado."}</small>
-        </article>
-        <article className={morale.length > 0 ? "tone-warning" : ""}>
-          <strong>{morale.length}</strong>
-          <span>Moral</span>
-          <small>{morale.length > 0 ? "A moral da equipe foi alterada pelo combate." : "Sem oscilação crítica de moral."}</small>
-        </article>
-      </div>
+      <section className="battle-result-section battle-result-overview">
+        <div className="battle-result-section-head">
+          <span>Resumo da batalha</span>
+          <h3>Confronto e condições</h3>
+        </div>
+        <div className="battle-result-summary-grid">
+          <DetailCard label="Inimigos enfrentados" value={enemyNames} />
+          <DetailCard label="Duração" value={`${battle.rounds} turno(s)`} detail={`${allEvents.length} evento(s) registrados`} />
+          <DetailCard label="Modificadores ativos" value={modifiers} />
+          <DetailCard label="Risco estimado" value={riskReadout.label} detail={riskReadout.description} tone={riskReadout.tone} />
+          <DetailCard label="Evento semanal" value={weeklyEvent} />
+          <DetailCard label="Campanha" value={advancedFloor ? `Avançou para ${state.towerFloor}` : "Sem avanço detectado"} detail={battle.result === "victory" ? "Vitória registrada na Torre." : "O andar permanece disponível."} />
+        </div>
+      </section>
 
-      <div className="battle-result-section">
-        <h3>Recompensas</h3>
+      <section className="battle-result-section battle-result-loot-section">
+        <div className="battle-result-section-head">
+          <span>Loot conquistado</span>
+          <h3>Recompensas</h3>
+        </div>
         <div className="battle-reward-grid">
           {rewardRows.map((reward) => (
             <div className={reward.value > 0 ? "has-value" : ""} key={reward.label}>
               <strong>{formatNumber(reward.value)}</strong>
               <span>{reward.label}</span>
+              <small>{reward.description}</small>
             </div>
           ))}
           <div className={equipmentRewards.length > 0 ? "has-value" : ""}>
             <strong>{equipmentRewards.length}</strong>
             <span>Equipamentos</span>
+            <small>{equipmentRewards.length > 0 ? equipmentRewards.map((item) => item.name).join(", ") : "Nenhum equipamento novo."}</small>
           </div>
           <div className={consumableRewards.length > 0 ? "has-value" : ""}>
             <strong>{consumableRewards.reduce((sum, item) => sum + item.amount, 0)}</strong>
-            <span>Consumiveis</span>
+            <span>Consumíveis</span>
+            <small>{consumableRewards.length > 0 ? consumableRewards.map((item) => `${item.name} x${item.amount}`).join(", ") : "Nenhum item consumível novo."}</small>
           </div>
         </div>
-        {equipmentRewards.length > 0 ? <small>Equipamentos: {equipmentRewards.map((item) => item.name).join(", ")}</small> : null}
-        {consumableRewards.length > 0 ? <small>Consumiveis: {consumableRewards.map((item) => `${item.name} x${item.amount}`).join(", ")}</small> : null}
-      </div>
+      </section>
 
-      <div className="battle-result-section">
-        <h3>Herois</h3>
-        {topPerformers.length > 0 ? (
-          <div className="battle-performance-grid">
-          {topPerformers.map((entry) => (
-            <article className="battle-performance-card" key={entry.id}>
-              <strong>{entry.name}</strong>
-              <span>{entry.className}</span>
-              <small>
-                XP {getHeroXpGain(battle, entry)} | Dano {entry.damageDealt} | Cura {entry.healingDone}
-              </small>
-              <small>
-                Recebido {entry.damageTaken} | Abates {entry.kills} | Habilidades {entry.skillUses}
-              </small>
-            </article>
-          ))}
-          </div>
-        ) : (
-          <p>Nenhuma estatistica de heroi registrada.</p>
-        )}
-        {levelUps.length > 0 ? <small>Level up: {levelUps.map((item) => `${item.heroName} para nivel ${item.level}`).join(", ")}</small> : null}
-        {specializations.length > 0 ? <small>Especializacao disponivel: {specializations.map((item) => item.heroName).join(", ")}</small> : null}
-      </div>
-
-      <div className="battle-result-section">
-        <h3>Consequencias</h3>
-        <div className="battle-consequence-grid">
-          <div className={injuries.length > 0 ? "tone-danger" : ""}>
-            <strong>Ferimentos</strong>
-            {injuries.length > 0 ? injuries.slice(0, 3).map((event) => <span key={event.message}>{event.message}</span>) : <span>Nenhum ferimento registrado.</span>}
-          </div>
-          <div className={morale.length > 0 ? "tone-warning" : ""}>
-            <strong>Moral</strong>
-            {morale.length > 0 ? morale.slice(0, 3).map((event) => <span key={event.message}>{event.message}</span>) : <span>Sem alteracao critica registrada.</span>}
-          </div>
-          <div className={deaths.length > 0 ? "tone-danger" : ""}>
-            <strong>Hardcore</strong>
-            {deaths.length > 0 ? deaths.slice(0, 3).map((event) => <span key={event.message}>{event.message}</span>) : <span>Nenhuma morte permanente registrada.</span>}
-          </div>
-          <div>
-            <strong>Missoes</strong>
-            <ProgressList entries={missionUpdates.filter((mission) => Boolean(mission.complete))} empty="Nenhuma missao concluida agora." />
-          </div>
+      <section className="battle-result-section battle-result-progression-section">
+        <div className="battle-result-section-head">
+          <span>Progressão</span>
+          <h3>Equipe, campanha e objetivos</h3>
+        </div>
+        <div className="battle-result-impact-row">
+          <article className="tone-xp">
+            <strong>{formatNumber(heroXpReward)}</strong>
+            <span>XP por herói</span>
+            <small>{heroXpReward > 0 ? "Progressão aplicada aos heróis participantes." : "Nenhum ganho de XP registrado."}</small>
+          </article>
+          <article className={levelUps.length > 0 ? "tone-success" : ""}>
+            <strong>{levelUps.length}</strong>
+            <span>Level up</span>
+            <small>{levelUps.length > 0 ? levelUps.map((item) => `${item.heroName} nível ${item.level}`).join(", ") : "Nenhum nível novo nesta luta."}</small>
+          </article>
+          <article className={advancedFloor ? "tone-success" : ""}>
+            <strong>{advancedFloor ? state.towerFloor : battle.floor}</strong>
+            <span>Avanço da Torre</span>
+            <small>{advancedFloor ? `Próximo andar liberado: ${state.towerFloor}.` : "Sem avanço novo registrado."}</small>
+          </article>
+          <article className={completedMissions.length > 0 ? "tone-success" : ""}>
+            <strong>{completedMissions.length}</strong>
+            <span>Missões prontas</span>
+            <small>{completedMissions.length > 0 ? completedMissions.map((mission) => mission.title || mission.name).join(", ") : "Nenhuma missão concluída agora."}</small>
+          </article>
+        </div>
+        <div className="battle-progression-grid">
           <div>
             <strong>Conquistas</strong>
             <ProgressList entries={achievementsAvailable} empty="Nenhuma conquista pronta." />
           </div>
           <div>
+            <strong>Especializações</strong>
+            {specializations.length > 0 ? specializations.slice(0, 4).map((item) => <span key={item.heroId}>{item.heroName}</span>) : <span>Nenhuma especialização nova.</span>}
+          </div>
+          <div>
             <strong>Biblioteca</strong>
             {libraryUpdates.length > 0 ? (
-              libraryUpdates.slice(0, 3).map((entry, index) => (
+              libraryUpdates.slice(0, 4).map((entry, index) => (
                 <span key={`${entry.name}_${index}`}>
                   {entry.name || "Descoberta"} {entry.detailsUnlocked ? "- detalhes liberados" : ""}
                 </span>
@@ -335,7 +392,57 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
             )}
           </div>
         </div>
-      </div>
+      </section>
+
+      <section className="battle-result-section">
+        <div className="battle-result-section-head">
+          <span>Desempenho</span>
+          <h3>Heróis em combate</h3>
+        </div>
+        {topPerformers.length > 0 ? (
+          <div className="battle-performance-grid">
+            {topPerformers.map((entry) => (
+              <article className="battle-performance-card" key={entry.id}>
+                <strong>{entry.name}</strong>
+                <span>{entry.className}</span>
+                <small>
+                  XP {getHeroXpGain(battle, entry)} · Dano {entry.damageDealt} · Cura {entry.healingDone}
+                </small>
+                <small>
+                  Recebido {entry.damageTaken} · Abates {entry.kills} · Habilidades {entry.skillUses}
+                </small>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p>Nenhuma estatística de herói registrada.</p>
+        )}
+      </section>
+
+      <section className="battle-result-section battle-result-consequence-section">
+        <div className="battle-result-section-head">
+          <span>Consequências</span>
+          <h3>Ferimentos, moral e alertas</h3>
+        </div>
+        <div className="battle-consequence-grid">
+          <div className={injuries.length > 0 ? "tone-danger" : ""}>
+            <strong>Ferimentos</strong>
+            {injuries.length > 0 ? injuries.slice(0, 4).map((event) => <span key={event.message}>{event.message}</span>) : <span>Nenhum ferimento registrado.</span>}
+          </div>
+          <div className={morale.length > 0 ? "tone-warning" : ""}>
+            <strong>Moral</strong>
+            {morale.length > 0 ? morale.slice(0, 4).map((event) => <span key={event.message}>{event.message}</span>) : <span>Sem alteração crítica registrada.</span>}
+          </div>
+          <div className={deaths.length > 0 ? "tone-danger" : ""}>
+            <strong>Heróis abatidos</strong>
+            {deaths.length > 0 ? deaths.slice(0, 4).map((event) => <span key={event.message}>{event.message}</span>) : <span>Nenhuma morte permanente registrada.</span>}
+          </div>
+          <div className={nextStep.includes("Trate") || nextStep.includes("Recupere") || nextStep.includes("Revise") ? "tone-warning" : ""}>
+            <strong>Alerta importante</strong>
+            <span>{nextStep}</span>
+          </div>
+        </div>
+      </section>
 
       {showReplay ? (
         <div className="battle-event-log">
@@ -350,7 +457,7 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
                 }}
                 type="button"
               >
-                {option === "instant" ? "Instantaneo" : option}
+                {option === "instant" ? "Instantâneo" : option}
               </button>
             ))}
             <small>
