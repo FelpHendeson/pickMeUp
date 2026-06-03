@@ -3111,6 +3111,460 @@ body::before {
   margin-top: 0.9rem;
 }
 
+.tower-command-panel {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(214, 90, 90, 0.12), transparent 34rem),
+    radial-gradient(circle at 88% 8%, rgba(232, 188, 88, 0.12), transparent 28rem),
+    linear-gradient(180deg, rgba(22, 16, 21, 0.96), rgba(7, 6, 10, 0.94));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34), inset 0 0 0 1px rgba(232, 188, 88, 0.045);
+}
+
+.tower-command-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(232, 188, 88, 0.055), transparent 18%, transparent 82%, rgba(214, 90, 90, 0.05)),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 14px);
+  pointer-events: none;
+}
+
+.tower-command-panel > * {
+  position: relative;
+}
+
+.tower-campaign-hero {
+  border: 1px solid rgba(232, 188, 88, 0.22);
+  background:
+    linear-gradient(135deg, rgba(232, 188, 88, 0.11), rgba(214, 90, 90, 0.07)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(0, 0, 0, 0.18));
+  border-radius: var(--radius-lg);
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(15rem, 0.8fr);
+  gap: 1rem;
+  padding: clamp(1rem, 2.4vw, 1.35rem);
+}
+
+.tower-campaign-hero.is-boss {
+  border-color: rgba(214, 90, 90, 0.48);
+  box-shadow: inset 0 0 0 1px rgba(214, 90, 90, 0.09), 0 0 42px rgba(100, 24, 32, 0.18);
+}
+
+.tower-campaign-copy h2,
+.tower-campaign-copy p,
+.tower-campaign-progress small {
+  margin: 0.35rem 0 0;
+}
+
+.tower-campaign-copy h2 {
+  font-size: clamp(1.7rem, 4vw, 3rem);
+}
+
+.tower-campaign-copy p {
+  color: var(--muted-strong);
+  max-width: 68ch;
+}
+
+.tower-campaign-kicker {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.tower-campaign-kicker span,
+.tower-campaign-progress span {
+  color: var(--teal);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tower-campaign-kicker strong {
+  border: 1px solid rgba(214, 90, 90, 0.42);
+  background: rgba(214, 90, 90, 0.09);
+  border-radius: 999px;
+  color: #ffd0ca;
+  font-size: 0.74rem;
+  padding: 0.34rem 0.56rem;
+}
+
+.tower-campaign-meta {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.tower-campaign-meta div,
+.tower-campaign-progress {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  padding: 0.72rem;
+}
+
+.tower-campaign-meta strong,
+.tower-campaign-meta span,
+.tower-campaign-progress strong,
+.tower-campaign-progress small {
+  display: block;
+}
+
+.tower-campaign-meta strong {
+  color: var(--gold);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+}
+
+.tower-campaign-meta span {
+  color: var(--text);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.18rem;
+  font-weight: 900;
+  margin-top: 0.18rem;
+}
+
+.tower-campaign-progress {
+  grid-column: 1 / -1;
+}
+
+.tower-campaign-progress div {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.45rem;
+}
+
+.tower-campaign-progress strong {
+  color: var(--gold);
+}
+
+.tower-campaign-progress small {
+  color: var(--muted);
+}
+
+.tower-floor-map {
+  background:
+    linear-gradient(180deg, rgba(18, 14, 19, 0.95), rgba(5, 5, 8, 0.88)),
+    radial-gradient(circle at 50% 0%, rgba(232, 188, 88, 0.08), transparent 22rem);
+}
+
+.tower-floor-node {
+  position: relative;
+  overflow: hidden;
+}
+
+.tower-floor-node::after {
+  content: "";
+  position: absolute;
+  inset: auto 18% 8% 18%;
+  height: 2px;
+  background: rgba(232, 188, 88, 0.22);
+}
+
+.tower-floor-node.current::after,
+.tower-floor-node.selected::after {
+  background: rgba(232, 188, 88, 0.86);
+  box-shadow: 0 0 12px rgba(232, 188, 88, 0.44);
+}
+
+.tower-floor-node.current strong,
+.tower-floor-node.selected strong {
+  color: var(--gold);
+}
+
+.tower-floor-node.locked::after {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tower-challenge-detail {
+  position: relative;
+  overflow: hidden;
+}
+
+.tower-challenge-detail::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-left: 4px solid rgba(232, 188, 88, 0.3);
+  pointer-events: none;
+}
+
+.tower-challenge-detail.risk-danger::before,
+.tower-challenge-detail.risk-critical::before,
+.tower-challenge-detail.boss-floor::before {
+  border-left-color: rgba(214, 90, 90, 0.76);
+}
+
+.tower-challenge-detail.risk-warning::before {
+  border-left-color: rgba(232, 188, 88, 0.76);
+}
+
+.tower-challenge-detail.risk-safe::before {
+  border-left-color: rgba(86, 199, 189, 0.72);
+}
+
+.tower-state-alerts {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.85rem 0;
+}
+
+.tower-state-alerts .ui-alert-box {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.tower-state-alerts .ui-alert-box strong,
+.tower-state-alerts .ui-alert-box span {
+  display: block;
+}
+
+.tower-state-alerts .ui-alert-box strong {
+  color: currentColor;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.tower-state-alerts .ui-alert-box span {
+  color: var(--muted-strong);
+  font-size: 0.82rem;
+}
+
+.tower-challenge-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.tower-challenge-grid section {
+  grid-column: span 3;
+}
+
+.tower-challenge-grid .tower-threat-card,
+.tower-challenge-grid .tower-risk-card {
+  grid-column: span 3;
+}
+
+.tower-challenge-grid .tower-cost-card {
+  grid-column: span 2;
+}
+
+.tower-challenge-grid .tower-reward-card {
+  grid-column: span 4;
+}
+
+.tower-risk-card {
+  border-color: rgba(232, 188, 88, 0.18);
+}
+
+.tower-risk-card strong {
+  display: block;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.5rem, 3vw, 2.35rem);
+  line-height: 1;
+  margin-bottom: 0.45rem;
+}
+
+.tower-risk-card.tone-safe strong {
+  color: var(--teal);
+}
+
+.tower-risk-card.tone-warning strong {
+  color: var(--gold);
+}
+
+.tower-risk-card.tone-danger strong,
+.tower-risk-card.tone-critical strong {
+  color: #ffd0ca;
+}
+
+.tower-risk-card.tone-critical,
+.tower-risk-card.tone-danger,
+.tower-challenge-detail.boss-floor {
+  border-color: rgba(214, 90, 90, 0.38);
+}
+
+.tower-cost-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.tower-cost-grid span {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.55rem;
+}
+
+.tower-cost-grid strong {
+  color: var(--gold);
+  font-size: 1.08rem;
+}
+
+.tower-start-battle-button {
+  align-items: center;
+  display: grid;
+  gap: 0.18rem;
+  min-width: min(20rem, 100%);
+  padding: 0.78rem 1rem;
+  text-align: left;
+  text-transform: none;
+}
+
+.tower-start-battle-button strong,
+.tower-start-battle-button span {
+  display: block;
+}
+
+.tower-start-battle-button strong {
+  font-size: 1rem;
+}
+
+.tower-start-battle-button span {
+  color: rgba(25, 17, 9, 0.78);
+  font-size: 0.76rem;
+}
+
+.tower-start-battle-button:disabled span {
+  color: var(--muted);
+}
+
+.battle-result-panel {
+  background:
+    radial-gradient(circle at 15% 0%, rgba(232, 188, 88, 0.1), transparent 25rem),
+    linear-gradient(180deg, rgba(17, 13, 18, 0.96), rgba(7, 6, 10, 0.94));
+}
+
+.battle-result-hero {
+  align-items: stretch;
+  position: relative;
+  overflow: hidden;
+}
+
+.battle-result-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.035), transparent 52%);
+  pointer-events: none;
+}
+
+.battle-result-emblem {
+  align-items: center;
+  aspect-ratio: 1;
+  border: 1px solid rgba(232, 188, 88, 0.46);
+  background:
+    radial-gradient(circle, rgba(232, 188, 88, 0.24), transparent 62%),
+    rgba(0, 0, 0, 0.22);
+  border-radius: 50%;
+  color: var(--gold);
+  display: inline-flex;
+  flex: 0 0 4.25rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2rem;
+  font-weight: 900;
+  justify-content: center;
+  margin-top: 0.1rem;
+}
+
+.battle-result-panel.result-defeat .battle-result-emblem {
+  border-color: rgba(214, 90, 90, 0.62);
+  color: #ffd0ca;
+}
+
+.battle-result-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.battle-result-verdict {
+  color: var(--muted-strong);
+  max-width: 78ch;
+}
+
+.battle-result-impact-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.battle-result-impact-row article {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.8rem;
+}
+
+.battle-result-impact-row strong,
+.battle-result-impact-row span,
+.battle-result-impact-row small {
+  display: block;
+}
+
+.battle-result-impact-row strong {
+  color: var(--gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.55rem;
+}
+
+.battle-result-impact-row span {
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.battle-result-impact-row small {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.battle-result-impact-row .tone-success {
+  border-color: rgba(86, 199, 189, 0.38);
+}
+
+.battle-result-impact-row .tone-success strong,
+.battle-result-impact-row .tone-xp strong {
+  color: var(--teal);
+}
+
+.battle-result-impact-row .tone-warning {
+  border-color: rgba(232, 188, 88, 0.44);
+}
+
+.battle-result-impact-row .tone-danger {
+  border-color: rgba(214, 90, 90, 0.52);
+  background: rgba(214, 90, 90, 0.08);
+}
+
+.battle-result-impact-row .tone-danger strong {
+  color: #ffd0ca;
+}
+
+.battle-reward-grid div.has-value {
+  border-color: rgba(232, 188, 88, 0.34);
+  background: linear-gradient(180deg, rgba(232, 188, 88, 0.08), rgba(0, 0, 0, 0.16));
+}
+
+.battle-consequence-grid div.tone-danger {
+  border-color: rgba(214, 90, 90, 0.48);
+  background: rgba(214, 90, 90, 0.08);
+}
+
+.battle-consequence-grid div.tone-warning {
+  border-color: rgba(232, 188, 88, 0.44);
+  background: rgba(232, 188, 88, 0.07);
+}
+
 .roster-panel .section-heading {
   background:
     linear-gradient(90deg, rgba(232, 188, 88, 0.08), transparent),
@@ -3402,10 +3856,20 @@ body::before {
   }
 
   .tower-command-summary,
+  .tower-campaign-hero,
   .tower-command-layout,
   .tower-challenge-grid,
+  .battle-result-impact-row,
   .hero-roster-layout {
     grid-template-columns: 1fr;
+  }
+
+  .tower-challenge-grid section,
+  .tower-challenge-grid .tower-threat-card,
+  .tower-challenge-grid .tower-risk-card,
+  .tower-challenge-grid .tower-cost-card,
+  .tower-challenge-grid .tower-reward-card {
+    grid-column: 1 / -1;
   }
 
   .hero-roster-grid.compact {
@@ -3485,6 +3949,15 @@ body::before {
     padding: 0.75rem;
   }
 
+  .tower-campaign-hero {
+    padding: 0.85rem;
+  }
+
+  .tower-campaign-meta,
+  .tower-cost-grid {
+    grid-template-columns: 1fr;
+  }
+
   .tower-map-head,
   .tower-challenge-head,
   .tower-modal-head,
@@ -3502,6 +3975,19 @@ body::before {
 
   .tower-result-modal-card {
     width: min(100%, calc(100vw - 1rem));
+  }
+
+  .battle-result-hero {
+    display: grid;
+  }
+
+  .battle-result-emblem {
+    width: 3.6rem;
+  }
+
+  .battle-result-actions {
+    display: grid;
+    justify-content: stretch;
   }
 
   .hero-list-controls {
