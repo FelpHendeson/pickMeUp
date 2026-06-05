@@ -55,45 +55,73 @@ type DashboardTab =
   | "settings"
   | "about";
 
-const dashboardTabGroups: Array<{ id: string; label: string; tabs: Array<{ id: DashboardTab; label: string }> }> = [
+type DashboardTabConfig = {
+  id: DashboardTab;
+  label: string;
+  icon: string;
+};
+
+type DashboardTabGroup = {
+  id: string;
+  label: string;
+  description: string;
+  icon: string;
+  tabs: DashboardTabConfig[];
+};
+
+const dashboardTabGroups: DashboardTabGroup[] = [
   {
     id: "main",
     label: "Principal",
+    description: "Comando, campanha e equipe",
+    icon: "✦",
     tabs: [
-      { id: "base", label: "Base" },
-      { id: "tower", label: "Torre" },
-      { id: "heroes", label: "Heróis" },
-      { id: "formation", label: "Formação" },
+      { id: "base", label: "Base", icon: "⌂" },
+      { id: "tower", label: "Torre", icon: "▲" },
+      { id: "heroes", label: "Heróis", icon: "♟" },
+      { id: "formation", label: "Formação", icon: "⬡" },
     ],
   },
   {
     id: "management",
     label: "Gestão",
+    description: "Arsenal, contratos e objetivos",
+    icon: "◆",
     tabs: [
-      { id: "inventory", label: "Inventário" },
-      { id: "expeditions", label: "Expedições" },
-      { id: "missions", label: "Missões" },
-      { id: "relics", label: "Relíquias" },
+      { id: "inventory", label: "Inventário", icon: "⚔" },
+      { id: "expeditions", label: "Expedições", icon: "☽" },
+      { id: "missions", label: "Missões", icon: "✉" },
+      { id: "relics", label: "Relíquias", icon: "✧" },
     ],
   },
   {
     id: "progression",
     label: "Progressão",
+    description: "Rituais, recrutas e registros",
+    icon: "◇",
     tabs: [
-      { id: "summon", label: "Invocação" },
-      { id: "recruitment", label: "Recrutamento" },
-      { id: "library", label: "Biblioteca" },
+      { id: "summon", label: "Invocação", icon: "✺" },
+      { id: "recruitment", label: "Recrutamento", icon: "▣" },
+      { id: "library", label: "Biblioteca", icon: "☰" },
     ],
   },
   {
     id: "system",
     label: "Sistema",
+    description: "Preferências, save e informações",
+    icon: "◈",
     tabs: [
-      { id: "settings", label: "Config" },
-      { id: "about", label: "Sobre" },
+      { id: "settings", label: "Config", icon: "⚙" },
+      { id: "about", label: "Sobre", icon: "?" },
     ],
   },
 ];
+
+function getActiveNavigation(tabId: DashboardTab) {
+  const group = dashboardTabGroups.find((item) => item.tabs.some((tab) => tab.id === tabId)) || dashboardTabGroups[0];
+  const tab = group.tabs.find((item) => item.id === tabId) || group.tabs[0];
+  return { group, tab };
+}
 
 const migrationMilestones = [
   "Manter regressao do core TypeScript e fixtures estaveis sempre verdes",
@@ -537,20 +565,41 @@ function AboutPanel() {
 
 export function GameShell() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("base");
+  const activeNavigation = getActiveNavigation(activeTab);
 
   return (
     <section className="dashboard-shell">
       <SaveBootstrap />
+      <header className="dashboard-shell-header">
+        <div>
+          <span className="eyebrow">Mesa da guilda</span>
+          <h2>{activeNavigation.tab.label}</h2>
+          <p>{activeNavigation.group.description}</p>
+        </div>
+        <div className="dashboard-shell-seal" aria-label={`Área atual: ${activeNavigation.group.label}`}>
+          <span>{activeNavigation.group.icon}</span>
+          <strong>{activeNavigation.group.label}</strong>
+        </div>
+      </header>
       <ResourceHudPanel />
       <NarrativeModal />
 
       <nav className="dashboard-tabs" aria-label="Navegação principal">
         {dashboardTabGroups.map((group) => (
-          <div className="dashboard-tab-group" key={group.id}>
-            <span className="dashboard-tab-group-label">{group.label}</span>
+          <div
+            className="dashboard-tab-group"
+            data-active-group={group.id === activeNavigation.group.id ? "true" : "false"}
+            data-group={group.id}
+            key={group.id}
+          >
+            <span className="dashboard-tab-group-label">
+              <span aria-hidden="true">{group.icon}</span>
+              {group.label}
+            </span>
             <div className="dashboard-tab-list">
               {group.tabs.map((tab) => (
                 <button
+                  aria-current={activeTab === tab.id ? "page" : undefined}
                   aria-pressed={activeTab === tab.id}
                   data-active={activeTab === tab.id ? "true" : "false"}
                   data-group={group.id}
@@ -558,7 +607,10 @@ export function GameShell() {
                   onClick={() => setActiveTab(tab.id)}
                   type="button"
                 >
-                  {tab.label}
+                  <span aria-hidden="true" className="dashboard-tab-icon">
+                    {tab.icon}
+                  </span>
+                  <span className="dashboard-tab-label">{tab.label}</span>
                 </button>
               ))}
             </div>
