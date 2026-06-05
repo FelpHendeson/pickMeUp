@@ -1,5 +1,7 @@
 # GDD — Projeto Web: **Ascensão dos Ecos**
 
+> **Documento histórico.** Este é o GDD original do MVP e descreve a fase inicial do projeto (incluindo sugestões de JS puro). A fonte de design vigente é `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md`, e a stack operacional atual é Next.js, React, TypeScript e Zustand. Mantido apenas como referência histórica.
+
 ## 1. Visão geral
 
 **Ascensão dos Ecos** é um jogo web simplificado de estratégia, idle RPG e progressão por andares. O jogador assume o papel de um **Comandante**, responsável por invocar, treinar, equipar e enviar heróis para missões automáticas em uma torre dimensional.

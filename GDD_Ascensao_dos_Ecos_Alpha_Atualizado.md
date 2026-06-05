@@ -579,7 +579,7 @@ Criar migracoes formais de save por versao. O projeto vai crescer; sem migracao,
 3. Creditos.
 4. Checklist mobile.
 5. Balanceamento inicial fechado.
-6. Build final para GitHub Pages.
+6. Build final para deploy na Vercel.
 
 ---
 
@@ -635,11 +635,11 @@ Requisitos:
     - cura realizada;
     - dano recebido;
     - inimigos abatidos.
-13. Se esses dados ainda nao existirem agregados, adapte `battle.js` para retornar estatisticas resumidas sem quebrar o replay atual.
+13. Se esses dados ainda nao existirem agregados, adapte o core de batalha em `src/game/battle/` para retornar estatisticas resumidas sem quebrar o replay atual.
 14. Nao remover o log de combate existente.
 15. Nao quebrar saves atuais.
-16. Manter compatibilidade com GitHub Pages.
-17. Usar JS puro e o padrao atual `window.Echoes`.
+16. Manter compatibilidade com Next.js e o deploy planejado na Vercel.
+17. Usar React e TypeScript, com regras em `src/game/` e mutacoes via `src/store/gameStore.ts`.
 
 Criterio de aceitacao:
 Apos vencer ou perder uma batalha, eu preciso entender rapidamente por que o resultado aconteceu e o que mudou no meu progresso.

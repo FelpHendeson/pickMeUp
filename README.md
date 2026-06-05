@@ -9,8 +9,8 @@ O jogo deve abrir e funcionar localmente sem banco de dados. O PostgreSQL e opci
 - Foco atual: desenvolvimento local.
 - Deploy futuro planejado: Vercel.
 - GitHub Pages nao e mais alvo da versao atual.
-- Branch principal de trabalho da migracao: `migration/next-postgres`.
-- Runtime legado em JavaScript puro nao e mais o caminho operacional desta branch.
+- Migracao para Next.js concluida; o runtime legado em JavaScript puro foi removido.
+- A tela inicial (`/`) e o menu em React; o jogo abre em `/jogar`.
 
 ## Stack
 
