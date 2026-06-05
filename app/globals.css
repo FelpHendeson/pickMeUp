@@ -9081,3 +9081,333 @@ body.pref-compact .dashboard-tab-group {
     width: 3.2rem;
   }
 }
+
+/* ==========================================================================
+   Polimento mobile global
+   ========================================================================== */
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.dashboard-content,
+.dashboard-content > *,
+.resource-hud-panel,
+.dashboard-tabs,
+.modal-card,
+.narrative-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dashboard-content *,
+.modal-card *,
+.narrative-card * {
+  min-width: 0;
+}
+
+button,
+select,
+input,
+textarea {
+  max-width: 100%;
+}
+
+@media (max-width: 980px) {
+  .tower-command-layout,
+  .tower-challenge-grid,
+  .tower-command-summary,
+  .battle-result-impact-row,
+  .battle-result-answer-strip,
+  .battle-result-overview .battle-result-summary-grid,
+  .battle-progression-grid,
+  .battle-consequence-grid,
+  .inventory-arsenal-layout,
+  .inventory-target-card,
+  .inventory-filter-bar,
+  .inventory-card-grid,
+  .inventory-card-grid.consumable-grid,
+  .expedition-board-hero,
+  .expedition-grid,
+  .mission-columns,
+  .relic-grid,
+  .library-grid-react,
+  .library-grid-react.compact,
+  .summon-afterglow-layout,
+  .summon-grid-react,
+  .summon-result-panel,
+  .settings-control-room,
+  .about-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-detail-panel,
+  .inventory-detail-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  .shell {
+    width: 100%;
+    padding: 0.75rem 0.5rem 1.5rem;
+  }
+
+  .hero {
+    padding: 1rem;
+  }
+
+  .dashboard-shell {
+    gap: 0.68rem;
+  }
+
+  .dashboard-shell-header,
+  .resource-hud-panel,
+  .dashboard-tabs,
+  .command-next-card,
+  .command-card,
+  .tower-command-panel,
+  .tower-panel,
+  .tower-battle-panel,
+  .tower-events-panel,
+  .battle-result-panel,
+  .roster-panel,
+  .inventory-panel,
+  .formation-panel,
+  .expeditions-panel,
+  .missions-panel,
+  .relics-panel,
+  .library-panel,
+  .summon-panel-react,
+  .recruitment-panel-react,
+  .settings-panel,
+  .save-management-card,
+  .preferences-panel,
+  .about-project-panel {
+    border-radius: var(--radius-md);
+    padding: 0.75rem;
+  }
+
+  .grid,
+  .columns,
+  .mini-grid,
+  .tower-summary,
+  .tower-campaign-meta,
+  .tower-cost-grid,
+  .tower-map-head,
+  .tower-challenge-head,
+  .tower-modal-head,
+  .tower-challenge-footer,
+  .tower-challenge-actions,
+  .tower-difficulty-picker.compact,
+  .tower-event-choice-grid.compact,
+  .battle-result-hero,
+  .battle-result-summary-grid,
+  .battle-reward-grid,
+  .battle-consequence-grid,
+  .inventory-ledger,
+  .inventory-equipped-summary,
+  .inventory-equipment-sections,
+  .inventory-item-actions,
+  .inventory-compare-rows,
+  .expedition-board-ledger,
+  .expedition-contract-stats,
+  .expedition-selection-head,
+  .expedition-preset-row,
+  .expedition-sent-heroes,
+  .expedition-hero-picker,
+  .mission-columns,
+  .missions-diary-stats,
+  .mission-objective-head,
+  .relics-altar-stats,
+  .relic-artifact-head,
+  .formation-overview,
+  .formation-slot-row.front,
+  .formation-slot-row.back,
+  .formation-available-grid,
+  .team-presets-columns,
+  .team-presets-grid,
+  .memorial-grid,
+  .settings-action-row,
+  .settings-speed-row,
+  .settings-panel-hero,
+  .settings-toggle-card,
+  .recruitment-status-grid,
+  .recruitment-empty-contract,
+  .recruitment-result-card,
+  .recruitment-choice-head,
+  .about-hero-card,
+  .about-info-grid,
+  .about-alpha-scroll > div {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .resource-hud-flags,
+  .dashboard-tabs,
+  .dashboard-tab-list,
+  .resource-hud-panel .resource-primary,
+  .resource-hud-panel .resource-secondary,
+  .library-tab-row.grimoire-tabs,
+  .inventory-tab-row {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .dashboard-tabs {
+    align-items: stretch;
+    scroll-snap-type: x mandatory;
+  }
+
+  .dashboard-tab-group {
+    flex: 0 0 min(16.5rem, 82vw);
+    min-width: 0;
+  }
+
+  .dashboard-tabs button,
+  .inventory-tab-row button,
+  .library-tab-row button {
+    min-height: var(--tap-target);
+    white-space: nowrap;
+  }
+
+  .dashboard-tab-label,
+  .resource-card-label,
+  .resource-card strong,
+  .inventory-item-copy h3,
+  .hero-compact-title h3,
+  .expedition-card-head h3,
+  .mission-objective-title h3,
+  .relic-artifact-head h3,
+  .library-card-title h3,
+  .summon-card-head h3,
+  .recruitment-candidate-top h3 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  p,
+  li,
+  small,
+  .hero-action-feedback,
+  .expedition-warning,
+  .save-disabled-note,
+  .save-ready-note {
+    overflow-wrap: anywhere;
+  }
+
+  .hero-inline-action,
+  .ui-action,
+  .tower-start-battle-button,
+  .expedition-start-button,
+  .expedition-collect-button,
+  .summon-action-button,
+  .recruitment-open-button,
+  .recruitment-hire-button,
+  .settings-action-row .hero-inline-action,
+  .modal-action-row button {
+    min-height: var(--tap-target);
+    min-width: 0;
+    width: 100%;
+  }
+
+  select,
+  input,
+  textarea,
+  .hero-equipment-select,
+  .cloud-save-input {
+    min-height: var(--tap-target);
+    width: 100%;
+  }
+
+  .modal-backdrop,
+  .narrative-backdrop {
+    align-items: stretch;
+    justify-content: center;
+    padding: 0.5rem;
+  }
+
+  .modal-card,
+  .narrative-card,
+  .tower-result-modal-card,
+  .tower-history-modal-card {
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.85rem;
+    width: 100%;
+  }
+
+  .modal-action-row {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: 1fr;
+    position: sticky;
+    bottom: -0.85rem;
+    margin-right: -0.85rem;
+    margin-left: -0.85rem;
+    padding: 0.7rem 0.85rem 0.85rem;
+    background: linear-gradient(180deg, rgba(12, 10, 14, 0), rgba(12, 10, 14, 0.98) 24%);
+  }
+
+  .battle-result-actions,
+  .inventory-item-actions,
+  .inventory-detail-panel .hero-inline-action,
+  .recruitment-result-actions,
+  .summon-result-actions,
+  .hero-action-row,
+  .command-alert-actions {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: 1fr;
+  }
+
+  .tower-floor-grid,
+  .floor-strip {
+    overflow-x: auto;
+    max-width: 100%;
+    padding-bottom: 0.25rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard-shell-header h2,
+  .section-heading h2,
+  .tower-campaign-hero h2,
+  .battle-result-hero h2,
+  .inventory-hero-banner h2,
+  .expedition-board-hero h2,
+  .summon-ritual-hero h2,
+  .recruitment-board-hero h2,
+  .about-hero-card h2 {
+    font-size: clamp(1.18rem, 7vw, 1.6rem);
+  }
+
+  .resource-hud-panel .resource-primary .resource-card,
+  .resource-hud-panel .resource-secondary .resource-card {
+    flex-basis: min(9.8rem, 72vw);
+  }
+
+  .dashboard-tab-group {
+    flex-basis: min(15rem, 86vw);
+  }
+
+  .hero-compact-card,
+  .inventory-item-card,
+  .inventory-consumable-card,
+  .expedition-card,
+  .mission-objective-card,
+  .relic-artifact-card,
+  .library-discovery-card,
+  .summon-card-react,
+  .recruitment-option-card,
+  .settings-section-card,
+  .about-info-grid article,
+  .about-grimoire-card,
+  .about-alpha-scroll {
+    padding: 0.72rem;
+  }
+}

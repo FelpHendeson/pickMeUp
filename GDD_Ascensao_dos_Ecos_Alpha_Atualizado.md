@@ -529,6 +529,10 @@ O `GameShell` organiza a experiencia em cabecalho de contexto, HUD global, naveg
 
 A tela Sobre deve funcionar como um arquivo curto da Torre, nao como README colado na UI. Ela apresenta nome, versao real de `GAME_CONFIG.gameVersion`, objetivo do jogador, sistemas atuais, stack operacional, status de save/cloud save e notas de alpha em blocos curtos com visual de grimorio/pergaminho responsivo.
 
+### Responsividade mobile global
+
+Mobile deve ser tratado como fluxo jogavel, nao apenas como encolhimento do desktop. A UI deve impedir overflow horizontal da pagina, empilhar grids complexos, preservar tabs/HUD com rolagem interna controlada, manter botoes com area minima de toque e garantir que modais usem altura da viewport com rolagem interna e acoes visiveis.
+
 ### Proximas melhorias de UX
 
 - Tela de resultado de combate.
