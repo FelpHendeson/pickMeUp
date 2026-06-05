@@ -8814,3 +8814,270 @@ body.pref-compact .dashboard-tab-group {
     display: grid;
   }
 }
+
+.about-project-panel {
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(232, 188, 88, 0.14), transparent 34%),
+    radial-gradient(circle at 86% 10%, rgba(155, 127, 232, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(33, 27, 30, 0.96), rgba(10, 8, 12, 0.94));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+  overflow: hidden;
+  padding: 1.1rem;
+  position: relative;
+  isolation: isolate;
+}
+
+.about-project-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(232, 188, 88, 0.16), transparent 18%, transparent 82%, rgba(86, 199, 189, 0.12)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 38%);
+  z-index: -1;
+}
+
+.about-hero-card {
+  align-items: center;
+  border: 1px solid rgba(232, 188, 88, 0.28);
+  background:
+    linear-gradient(180deg, rgba(68, 47, 32, 0.34), rgba(0, 0, 0, 0.2)),
+    rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius-lg);
+  display: grid;
+  gap: 0.95rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: clamp(0.9rem, 2.5vw, 1.25rem);
+  position: relative;
+}
+
+.about-hero-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-left: 3px solid rgba(232, 188, 88, 0.62);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.about-project-seal {
+  align-items: center;
+  border: 1px solid rgba(232, 188, 88, 0.42);
+  background:
+    radial-gradient(circle, rgba(232, 188, 88, 0.22), rgba(0, 0, 0, 0.2)),
+    rgba(0, 0, 0, 0.26);
+  border-radius: 999px;
+  color: var(--gold);
+  display: inline-flex;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.75rem;
+  height: 4rem;
+  justify-content: center;
+  line-height: 1;
+  text-shadow: 0 0 18px rgba(232, 188, 88, 0.26);
+  width: 4rem;
+}
+
+.about-hero-card span,
+.about-info-grid span,
+.about-grimoire-card > span,
+.about-alpha-scroll > span,
+.about-version-mark span {
+  color: var(--teal);
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.11em;
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+}
+
+.about-hero-card h2,
+.about-grimoire-card h3,
+.about-alpha-scroll h3 {
+  color: var(--text);
+  font-family: Georgia, "Times New Roman", serif;
+  margin: 0;
+}
+
+.about-hero-card h2 {
+  font-size: clamp(1.55rem, 3vw, 2.35rem);
+}
+
+.about-hero-card p,
+.about-info-grid p,
+.about-credit-note p,
+.about-alpha-scroll p {
+  color: var(--muted);
+  margin: 0.35rem 0 0;
+}
+
+.about-version-mark {
+  border: 1px solid rgba(232, 188, 88, 0.32);
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: 0.08rem;
+  min-width: 8.5rem;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.about-version-mark span {
+  margin: 0;
+}
+
+.about-version-mark strong {
+  color: var(--gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.42rem;
+  line-height: 1;
+}
+
+.about-version-mark small {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.about-info-grid,
+.about-content-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.about-info-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.about-content-grid {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+}
+
+.about-info-grid article,
+.about-grimoire-card,
+.about-alpha-scroll {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.18)),
+    rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px rgba(255, 244, 205, 0.025);
+  padding: 0.85rem;
+}
+
+.about-info-grid article {
+  min-height: 8rem;
+}
+
+.about-info-grid strong {
+  color: var(--gold);
+  display: block;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.08rem;
+}
+
+.about-grimoire-card ul {
+  display: grid;
+  gap: 0.45rem;
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+.about-grimoire-card li {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-sm);
+  color: var(--muted-strong);
+  line-height: 1.45;
+  padding: 0.5rem 0.6rem;
+}
+
+.about-stack-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+.about-stack-list span {
+  border: 1px solid rgba(232, 188, 88, 0.22);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 999px;
+  color: var(--muted-strong);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  padding: 0.32rem 0.5rem;
+  text-transform: uppercase;
+}
+
+.about-credit-note {
+  border-top: 1px solid rgba(232, 188, 88, 0.14);
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+}
+
+.about-credit-note strong {
+  color: var(--gold);
+}
+
+.about-alpha-scroll > div {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0.75rem;
+}
+
+.about-alpha-scroll p {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius-sm);
+  line-height: 1.55;
+  padding: 0.65rem;
+}
+
+@media (max-width: 980px) {
+  .about-info-grid,
+  .about-content-grid,
+  .about-alpha-scroll > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .about-hero-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .about-version-mark {
+    grid-column: 1 / -1;
+    justify-items: start;
+    text-align: left;
+  }
+}
+
+@media (max-width: 640px) {
+  .about-project-panel {
+    padding: 0.85rem;
+  }
+
+  .about-hero-card,
+  .about-info-grid,
+  .about-content-grid,
+  .about-alpha-scroll > div {
+    grid-template-columns: 1fr;
+  }
+
+  .about-project-seal {
+    height: 3.2rem;
+    width: 3.2rem;
+  }
+}

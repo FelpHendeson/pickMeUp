@@ -123,14 +123,6 @@ function getActiveNavigation(tabId: DashboardTab) {
   return { group, tab };
 }
 
-const migrationMilestones = [
-  "Manter regressao do core TypeScript e fixtures estaveis sempre verdes",
-  "Completar QA manual do fluxo React-only",
-  "Validar snapshots PostgreSQL com save normalizado",
-  "Evoluir sincronizacao de nuvem sem remover o fallback local",
-  "Normalizar novos sistemas em tabelas proprias quando o JSON estabilizar",
-];
-
 const currentSystems = [
   "Torre com capitulos e dificuldade",
   "Combate automatico e resultado 2.0",
@@ -140,6 +132,21 @@ const currentSystems = [
   "Narrativa, preferencias, HUD e export/import de save",
   "Regressao automatizada do core TypeScript, fixtures e banco",
 ];
+
+const projectStackItems = ["Next.js", "React", "TypeScript", "Zustand", "localStorage", "Prisma/PostgreSQL opcional"];
+
+const projectAlphaNotes = [
+  "Alpha jogavel: sistemas podem evoluir, mas o save local continua protegido como fluxo principal.",
+  "Cloud save e PostgreSQL seguem experimentais e opcionais; o jogo deve abrir sem banco.",
+  "Deploy futuro continua orientado a Vercel, nao GitHub Pages.",
+];
+
+function getSaveSourceLabel(source: ReturnType<typeof useGameStore.getState>["source"]): string {
+  if (source === "local-storage") return "Save local";
+  if (source === "cloud-postgres") return "Cloud save";
+  if (source === "manual") return "Sessao atual";
+  return "Estado inicial";
+}
 
 type BaseAlert = {
   label: string;
@@ -539,26 +546,89 @@ function SettingsPanel() {
 }
 
 function AboutPanel() {
+  const { state, source } = useGameStore();
+  const cloudSaveEnabled = process.env.NEXT_PUBLIC_ENABLE_CLOUD_SAVE === "true";
+  const floorLabel = state.towerFloor > GAME_CONFIG.towerMaxFloor ? `${GAME_CONFIG.towerMaxFloor}/${GAME_CONFIG.towerMaxFloor}` : String(state.towerFloor);
+
   return (
-    <section className="columns dashboard-roadmap">
-      <div>
-        <span className="eyebrow">Sobre</span>
-        <h2>Alpha atual</h2>
-        <ul>
-          {currentSystems.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
+    <section className="about-project-panel">
+      <div className="about-hero-card">
+        <div className="about-project-seal" aria-hidden="true">
+          Æ
+        </div>
+        <div>
+          <span>Arquivo da Torre</span>
+          <h2>Ascensão dos Ecos</h2>
+          <p>
+            RPG web single-player dark fantasy sobre uma guilda que escala a Torre, recruta aventureiros, sobrevive a
+            ferimentos e transforma ecos em poder permanente.
+          </p>
+        </div>
+        <div className="about-version-mark">
+          <span>Versão</span>
+          <strong>{GAME_CONFIG.gameVersion}</strong>
+          <small>Alpha jogável</small>
+        </div>
       </div>
-      <div>
-        <span className="eyebrow">Migracao</span>
-        <h2>Proximos passos</h2>
-        <ol>
-          {migrationMilestones.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ol>
+
+      <div className="about-info-grid">
+        <article>
+          <span>Objetivo</span>
+          <strong>Subir a Torre</strong>
+          <p>Preparar formação, avaliar risco, vencer chefes e expandir a guilda.</p>
+        </article>
+        <article>
+          <span>Progresso</span>
+          <strong>Andar {floorLabel}</strong>
+          <p>Campanha por capítulos com eventos, recompensas e repetição de andares.</p>
+        </article>
+        <article>
+          <span>Save</span>
+          <strong>{getSaveSourceLabel(source)}</strong>
+          <p>Save principal no navegador via `localStorage`, com exportação/importação manual.</p>
+        </article>
+        <article>
+          <span>Cloud</span>
+          <strong>{cloudSaveEnabled ? "Experimental" : "Desativado"}</strong>
+          <p>Snapshot PostgreSQL opcional; não é requisito para jogar localmente.</p>
+        </article>
       </div>
+
+      <div className="about-content-grid">
+        <article className="about-grimoire-card">
+          <span>Alpha atual</span>
+          <h3>Sistemas em jogo</h3>
+          <ul>
+            {currentSystems.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </article>
+
+        <article className="about-grimoire-card">
+          <span>Stack</span>
+          <h3>Base técnica</h3>
+          <div className="about-stack-list">
+            {projectStackItems.map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+          <div className="about-credit-note">
+            <strong>Créditos</strong>
+            <p>Projeto original em desenvolvimento, com interface e sistemas mantidos no repositório atual.</p>
+          </div>
+        </article>
+      </div>
+
+      <article className="about-alpha-scroll">
+        <span>Notas de produção</span>
+        <h3>O que esta tela precisa deixar claro</h3>
+        <div>
+          {projectAlphaNotes.map((item) => (
+            <p key={item}>{item}</p>
+          ))}
+        </div>
+      </article>
     </section>
   );
 }

@@ -525,6 +525,10 @@ O HUD de recursos deve funcionar como uma vigilia compacta da conta. Ele exibe o
 
 O `GameShell` organiza a experiencia em cabecalho de contexto, HUD global, navegacao por grupos e area de conteudo. As tabs devem manter a lista logica atual, mas precisam parecer parte da interface da guilda: grupos visuais, estado ativo forte, icones simples sem dependencia externa, scroll horizontal confortavel no mobile e espaco suficiente para o conteudo principal nao ficar esmagado.
 
+### Sobre / informacoes do projeto
+
+A tela Sobre deve funcionar como um arquivo curto da Torre, nao como README colado na UI. Ela apresenta nome, versao real de `GAME_CONFIG.gameVersion`, objetivo do jogador, sistemas atuais, stack operacional, status de save/cloud save e notas de alpha em blocos curtos com visual de grimorio/pergaminho responsivo.
+
 ### Proximas melhorias de UX
 
 - Tela de resultado de combate.
