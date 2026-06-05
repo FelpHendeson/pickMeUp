@@ -79,7 +79,7 @@ A torre ja possui capitulos, chefes, eventos e narrativa. Ela deve evoluir como 
 
 Na UI atual, a Torre deve priorizar uma leitura mestre-detalhe: o jogador escolhe o andar liberado no mapa, vê inimigos/recompensas/risco no painel de desafio e abre combate, resultado ou histórico em modal para evitar excesso de informação persistente na tela.
 
-A primeira etapa de feedback visual adiciona toast in-app global, modal reutilizavel de UI e eventos pendentes da Torre resolvidos em modal. Acoes rapidas devem comunicar sucesso/bloqueio sem notificacao real do navegador, e eventos importantes nao devem ficar escondidos como texto solto na tela.
+A infraestrutura de feedback visual usa toast in-app global, modal reutilizavel de UI, eventos pendentes da Torre resolvidos em modal e resultado de combate em modal grande com abas. Acoes rapidas devem comunicar sucesso/bloqueio sem notificacao real do navegador, eventos importantes nao devem ficar escondidos como texto solto na tela e resultados de ciclo devem separar resumo, recompensas, herois, consequencias e log.
 
 ### 4.4 Progressao horizontal e vertical
 O jogo ja possui progressao vertical: nivel, andar, poder, equipamentos. Agora precisa fortalecer progressao horizontal: biblioteca, bestiario, relíquias, afinidades e escolhas permanentes.

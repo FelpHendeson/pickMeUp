@@ -40,6 +40,15 @@ type LibraryUpdate = {
 };
 
 type ResultTone = "success" | "warning" | "danger" | "neutral";
+type BattleResultTab = "summary" | "rewards" | "heroes" | "consequences" | "log";
+
+const battleResultTabs: Array<{ id: BattleResultTab; label: string }> = [
+  { id: "summary", label: "Resumo" },
+  { id: "rewards", label: "Recompensas" },
+  { id: "heroes", label: "Heróis" },
+  { id: "consequences", label: "Consequências" },
+  { id: "log", label: "Log" },
+];
 
 function formatNumber(value: number | undefined): string {
   return new Intl.NumberFormat("pt-BR").format(Number(value || 0));
@@ -200,7 +209,7 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
   const state = useGameStore((store) => store.state);
   const battle = state.lastBattle;
   const [speed, setSpeed] = useState<BattleSpeed>(() => getDefaultBattleSpeed());
-  const [showReplay, setShowReplay] = useState(false);
+  const [activeTab, setActiveTab] = useState<BattleResultTab>("summary");
   const [eventCursor, setEventCursor] = useState(1);
 
   const allEvents = useMemo(() => (battle ? getBattleEvents(battle) : []), [battle]);
@@ -211,6 +220,10 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
     const initial = createBattlePlaybackState(battle, speed);
     setEventCursor(initial.eventCursor);
   }, [battle, battle?.floor, battle?.rounds, battle?.result, battle?.log?.length, speed]);
+
+  useEffect(() => {
+    setActiveTab("summary");
+  }, [battle?.floor, battle?.rounds, battle?.result, battle?.log?.length]);
 
   useEffect(() => {
     if (!battle || speed === "instant" || eventCursor >= allEvents.length) return;
@@ -264,6 +277,16 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
   const enemyNames = battle.summary?.enemyNames.join(", ") || battle.enemyTeam.map((enemy) => enemy.name).join(", ");
   const modifiers = battle.summary?.modifiers?.length ? battle.summary.modifiers.join(", ") : "Sem modificador adicional";
   const weeklyEvent = battle.summary?.weeklyEvent || "Sem impacto registrado";
+  const rewardTabCount =
+    rewardRows.filter((reward) => reward.value > 0).length + equipmentRewards.length + consumableRewards.reduce((sum, item) => sum + item.amount, 0);
+  const heroTabCount = topPerformers.length + levelUps.length;
+  const consequenceTabCount = injuries.length + morale.length + deaths.length + completedMissions.length + achievementsAvailable.length + libraryUpdates.length;
+  const tabCounts: Partial<Record<BattleResultTab, number>> = {
+    rewards: rewardTabCount,
+    heroes: heroTabCount,
+    consequences: consequenceTabCount,
+    log: allEvents.length,
+  };
 
   return (
     <section className={`battle-result-panel ${battle.result === "victory" ? "result-victory" : "result-defeat"}${compact ? " compact" : ""}`}>
@@ -289,8 +312,8 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
           <button className="hero-inline-action primary" onClick={() => onContinue?.()} type="button">
             Continuar
           </button>
-          <button className="hero-inline-action" onClick={() => setShowReplay((current) => !current)} type="button">
-            {showReplay ? "Ocultar replay/log" : "Ver replay/log"}
+          <button className="hero-inline-action" onClick={() => setActiveTab("log")} type="button">
+            Ver replay/log
           </button>
         </div>
       </header>
@@ -302,7 +325,17 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
         <DetailCard label="Próximo passo" value={nextStep} tone={injuries.length || deaths.length || morale.length ? "warning" : "neutral"} />
       </section>
 
-      <section className="battle-result-section battle-result-overview">
+      <nav className="battle-result-tabs" aria-label="Seções do resultado de combate">
+        {battleResultTabs.map((tab) => (
+          <button aria-pressed={activeTab === tab.id} className={activeTab === tab.id ? "active" : ""} key={tab.id} onClick={() => setActiveTab(tab.id)} type="button">
+            <strong>{tab.label}</strong>
+            {tabCounts[tab.id] ? <span>{tabCounts[tab.id]}</span> : null}
+          </button>
+        ))}
+      </nav>
+
+      {activeTab === "summary" ? (
+        <section className="battle-result-section battle-result-overview">
         <div className="battle-result-section-head">
           <span>Resumo da batalha</span>
           <h3>Confronto e condições</h3>
@@ -315,9 +348,11 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
           <DetailCard label="Evento semanal" value={weeklyEvent} />
           <DetailCard label="Campanha" value={advancedFloor ? `Avançou para ${state.towerFloor}` : "Sem avanço detectado"} detail={battle.result === "victory" ? "Vitória registrada na Torre." : "O andar permanece disponível."} />
         </div>
-      </section>
+        </section>
+      ) : null}
 
-      <section className="battle-result-section battle-result-loot-section">
+      {activeTab === "rewards" ? (
+        <section className="battle-result-section battle-result-loot-section">
         <div className="battle-result-section-head">
           <span>Loot conquistado</span>
           <h3>Recompensas</h3>
@@ -341,12 +376,14 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
             <small>{consumableRewards.length > 0 ? consumableRewards.map((item) => `${item.name} x${item.amount}`).join(", ") : "Nenhum item consumível novo."}</small>
           </div>
         </div>
-      </section>
+        </section>
+      ) : null}
 
-      <section className="battle-result-section battle-result-progression-section">
+      {activeTab === "heroes" ? (
+        <section className="battle-result-section battle-result-progression-section">
         <div className="battle-result-section-head">
-          <span>Progressão</span>
-          <h3>Equipe, campanha e objetivos</h3>
+          <span>Heróis</span>
+          <h3>XP, level up e desempenho</h3>
         </div>
         <div className="battle-result-impact-row">
           <article className="tone-xp">
@@ -359,45 +396,6 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
             <span>Level up</span>
             <small>{levelUps.length > 0 ? levelUps.map((item) => `${item.heroName} nível ${item.level}`).join(", ") : "Nenhum nível novo nesta luta."}</small>
           </article>
-          <article className={advancedFloor ? "tone-success" : ""}>
-            <strong>{advancedFloor ? state.towerFloor : battle.floor}</strong>
-            <span>Avanço da Torre</span>
-            <small>{advancedFloor ? `Próximo andar liberado: ${state.towerFloor}.` : "Sem avanço novo registrado."}</small>
-          </article>
-          <article className={completedMissions.length > 0 ? "tone-success" : ""}>
-            <strong>{completedMissions.length}</strong>
-            <span>Missões prontas</span>
-            <small>{completedMissions.length > 0 ? completedMissions.map((mission) => mission.title || mission.name).join(", ") : "Nenhuma missão concluída agora."}</small>
-          </article>
-        </div>
-        <div className="battle-progression-grid">
-          <div>
-            <strong>Conquistas</strong>
-            <ProgressList entries={achievementsAvailable} empty="Nenhuma conquista pronta." />
-          </div>
-          <div>
-            <strong>Especializações</strong>
-            {specializations.length > 0 ? specializations.slice(0, 4).map((item) => <span key={item.heroId}>{item.heroName}</span>) : <span>Nenhuma especialização nova.</span>}
-          </div>
-          <div>
-            <strong>Biblioteca</strong>
-            {libraryUpdates.length > 0 ? (
-              libraryUpdates.slice(0, 4).map((entry, index) => (
-                <span key={`${entry.name}_${index}`}>
-                  {entry.name || "Descoberta"} {entry.detailsUnlocked ? "- detalhes liberados" : ""}
-                </span>
-              ))
-            ) : (
-              <span>Nenhuma nova descoberta destacada.</span>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="battle-result-section">
-        <div className="battle-result-section-head">
-          <span>Desempenho</span>
-          <h3>Heróis em combate</h3>
         </div>
         {topPerformers.length > 0 ? (
           <div className="battle-performance-grid">
@@ -417,9 +415,11 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
         ) : (
           <p>Nenhuma estatística de herói registrada.</p>
         )}
-      </section>
+        </section>
+      ) : null}
 
-      <section className="battle-result-section battle-result-consequence-section">
+      {activeTab === "consequences" ? (
+        <section className="battle-result-section battle-result-consequence-section">
         <div className="battle-result-section-head">
           <span>Consequências</span>
           <h3>Ferimentos, moral e alertas</h3>
@@ -442,9 +442,40 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
             <span>{nextStep}</span>
           </div>
         </div>
-      </section>
+        <div className="battle-progression-grid">
+          <div className={advancedFloor ? "tone-success" : ""}>
+            <strong>Avanço da Torre</strong>
+            <span>{advancedFloor ? `Próximo andar liberado: ${state.towerFloor}.` : "Sem avanço novo registrado."}</span>
+          </div>
+          <div className={completedMissions.length > 0 ? "tone-success" : ""}>
+            <strong>Missões prontas</strong>
+            <ProgressList entries={completedMissions} empty="Nenhuma missão concluída agora." />
+          </div>
+          <div>
+            <strong>Conquistas</strong>
+            <ProgressList entries={achievementsAvailable} empty="Nenhuma conquista pronta." />
+          </div>
+          <div>
+            <strong>Especializações</strong>
+            {specializations.length > 0 ? specializations.slice(0, 4).map((item) => <span key={item.heroId}>{item.heroName}</span>) : <span>Nenhuma especialização nova.</span>}
+          </div>
+          <div>
+            <strong>Biblioteca</strong>
+            {libraryUpdates.length > 0 ? (
+              libraryUpdates.slice(0, 4).map((entry, index) => (
+                <span key={`${entry.name}_${index}`}>
+                  {entry.name || "Descoberta"} {entry.detailsUnlocked ? "- detalhes liberados" : ""}
+                </span>
+              ))
+            ) : (
+              <span>Nenhuma nova descoberta destacada.</span>
+            )}
+          </div>
+        </div>
+        </section>
+      ) : null}
 
-      {showReplay ? (
+      {activeTab === "log" ? (
         <div className="battle-event-log">
           <div className="battle-speed-row">
             {speedOptions.map((option) => (

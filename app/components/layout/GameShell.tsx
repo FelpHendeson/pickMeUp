@@ -693,7 +693,7 @@ export function GameShell() {
         {activeTab === "tower" ? (
           <>
             <ChapterCompletionPanel />
-            <TowerChallengePanel />
+          <TowerChallengePanel onNavigate={setActiveTab} />
           </>
         ) : null}
         {activeTab === "heroes" ? (

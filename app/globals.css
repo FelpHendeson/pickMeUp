@@ -5701,8 +5701,30 @@ body::before {
   margin: 0.25rem 0 0;
 }
 
+.ui-modal-subtitle {
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0.4rem 0 0;
+}
+
+.ui-modal-body {
+  margin-top: 0.85rem;
+}
+
+.ui-modal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
 .ui-modal-card {
   position: relative;
+}
+
+.ui-modal-card.size-large {
+  width: min(1060px, calc(100vw - 2rem));
 }
 
 .ui-modal-card::before {
@@ -5760,9 +5782,23 @@ body::before {
   color: var(--text);
   display: grid;
   gap: 0.8rem;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   padding: 0.8rem 0.85rem;
   pointer-events: auto;
+}
+
+.toast-icon {
+  align-items: center;
+  border: 1px solid rgba(232, 188, 88, 0.22);
+  background: rgba(0, 0, 0, 0.24);
+  border-radius: 999px;
+  color: var(--gold);
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 900;
+  height: 1.85rem;
+  justify-content: center;
+  width: 1.85rem;
 }
 
 .toast-card strong {
@@ -5795,9 +5831,18 @@ body::before {
   border-color: rgba(83, 227, 213, 0.38);
 }
 
+.toast-card.tone-info {
+  border-color: rgba(155, 127, 232, 0.38);
+}
+
 .toast-card.tone-warning,
 .toast-card.tone-arcane {
   border-color: rgba(232, 188, 88, 0.38);
+}
+
+.toast-card.tone-reward {
+  border-color: rgba(232, 188, 88, 0.52);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.48), 0 0 28px rgba(232, 188, 88, 0.08);
 }
 
 .toast-card.tone-danger {
@@ -6673,6 +6718,56 @@ body::before {
   grid-template-columns: 0.78fr 1fr 0.78fr 1fr;
   gap: 0.7rem;
   margin-top: 1rem;
+}
+
+.battle-result-tabs {
+  border: 1px solid rgba(232, 188, 88, 0.14);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-lg);
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-top: 1rem;
+  padding: 0.45rem;
+}
+
+.battle-result-tabs button {
+  align-items: center;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.035);
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  gap: 0.45rem;
+  justify-content: center;
+  min-height: var(--tap-target);
+  padding: 0.55rem 0.65rem;
+}
+
+.battle-result-tabs button.active {
+  border-color: rgba(232, 188, 88, 0.42);
+  background: linear-gradient(135deg, rgba(232, 188, 88, 0.16), rgba(83, 227, 213, 0.07));
+  color: var(--text);
+}
+
+.battle-result-tabs strong {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.battle-result-tabs span {
+  align-items: center;
+  border: 1px solid rgba(232, 188, 88, 0.24);
+  border-radius: 999px;
+  color: var(--gold);
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 900;
+  justify-content: center;
+  min-width: 1.45rem;
+  padding: 0.12rem 0.34rem;
 }
 
 .battle-detail-card {
@@ -9498,6 +9593,21 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .ui-modal-card.size-large {
+    width: 100%;
+  }
+
+  .ui-modal-footer {
+    display: grid;
+    grid-template-columns: 1fr;
+    position: sticky;
+    bottom: -0.85rem;
+    margin-right: -0.85rem;
+    margin-left: -0.85rem;
+    padding: 0.7rem 0.85rem 0.85rem;
+    background: linear-gradient(180deg, rgba(12, 10, 14, 0), rgba(12, 10, 14, 0.98) 24%);
+  }
+
   .toast-region {
     bottom: 0.65rem;
     left: 0.65rem;
@@ -9511,6 +9621,19 @@ textarea {
 
   .tower-event-choice-grid.modal {
     grid-template-columns: 1fr;
+  }
+
+  .battle-result-tabs {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 0.55rem;
+    scroll-snap-type: x proximity;
+  }
+
+  .battle-result-tabs button {
+    flex: 0 0 auto;
+    min-width: 8.2rem;
+    scroll-snap-align: start;
   }
 
   .battle-result-actions,

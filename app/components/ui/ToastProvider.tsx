@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 export const GAME_TOAST_EVENT = "ascensao:toast";
 
-export type ToastTone = "default" | "success" | "warning" | "danger" | "arcane";
+export type ToastTone = "default" | "info" | "success" | "warning" | "danger" | "reward" | "arcane";
 
 export type ToastOptions = {
   message: string;
@@ -28,11 +28,23 @@ function createToastId(): string {
 }
 
 function getToastTitle(tone: ToastTone): string {
+  if (tone === "info") return "Informação";
   if (tone === "success") return "Ação concluída";
   if (tone === "warning") return "Atenção";
   if (tone === "danger") return "Ação bloqueada";
+  if (tone === "reward") return "Recompensa";
   if (tone === "arcane") return "Eco registrado";
   return "Registro";
+}
+
+function getToastIcon(tone: ToastTone): string {
+  if (tone === "info") return "i";
+  if (tone === "success") return "✓";
+  if (tone === "warning") return "!";
+  if (tone === "danger") return "×";
+  if (tone === "reward") return "✦";
+  if (tone === "arcane") return "◆";
+  return "•";
 }
 
 export function useToast(): ToastContextValue {
@@ -94,6 +106,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div aria-live="polite" aria-relevant="additions text" className="toast-region">
         {toasts.map((toast) => (
           <article className={`toast-card tone-${toast.tone}`} key={toast.id} role="status">
+            <span className="toast-icon" aria-hidden="true">
+              {getToastIcon(toast.tone)}
+            </span>
             <div>
               <strong>{toast.title}</strong>
               <span>{toast.message}</span>

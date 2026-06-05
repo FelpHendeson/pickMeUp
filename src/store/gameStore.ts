@@ -51,7 +51,7 @@ import {
 type InjuryTreatmentResource = keyof typeof import("@/src/game/hero-status/injuries").INJURY_CONFIG.treatmentCosts;
 
 type ActionResult = { ok: boolean; message: string };
-type FeedbackToastTone = "default" | "success" | "warning" | "danger" | "arcane";
+type FeedbackToastTone = "default" | "info" | "success" | "warning" | "danger" | "reward" | "arcane";
 
 const GAME_TOAST_EVENT = "ascensao:toast";
 

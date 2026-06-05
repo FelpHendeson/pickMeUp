@@ -36,6 +36,16 @@ import { BattleResultPanel } from "./BattleResultPanel";
 const difficultyModes = ["normal", "challenge", "hardcore"] as const;
 const maxTowerFloor = TOWER_FLOORS.at(-1)?.floor ?? GAME_CONFIG.towerMaxFloor;
 
+type TowerChallengePanelProps = {
+  onNavigate?: (tab: "formation") => void;
+};
+
+type TowerEventOutcome = {
+  message: string;
+  title: string;
+  tone: "default" | "danger" | "ritual" | "arcane";
+};
+
 function clampFloor(floor: number): number {
   return Math.min(maxTowerFloor, Math.max(1, Math.floor(Number(floor) || 1)));
 }
@@ -168,7 +178,7 @@ function getRiskProfile(options: {
   return { label: "Controlado", tone: "safe", description: "A formação parece preparada para este andar." };
 }
 
-export function TowerChallengePanel() {
+export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {}) {
   const state = useGameStore((store) => store.state);
   const startTowerBattle = useGameStore((store) => store.startTowerBattle);
   const startRepeatTowerBattle = useGameStore((store) => store.startRepeatTowerBattle);
@@ -179,6 +189,9 @@ export function TowerChallengePanel() {
   const [selectedFloor, setSelectedFloor] = useState(highestAvailableFloor);
   const [difficultyMode, setDifficultyMode] = useState<TowerDifficultyModeId>("normal");
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [hasUnseenBattleResult, setHasUnseenBattleResult] = useState(false);
+  const [lastOpenedEventId, setLastOpenedEventId] = useState<string | null>(null);
+  const [towerEventOutcome, setTowerEventOutcome] = useState<TowerEventOutcome | null>(null);
   const [showTowerEventModal, setShowTowerEventModal] = useState(false);
   const [showBattleModal, setShowBattleModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -307,6 +320,13 @@ export function TowerChallengePanel() {
     setSelectedFloor(highestAvailableFloor);
   }, [highestAvailableFloor]);
 
+  useEffect(() => {
+    if (!pendingEvent || lastOpenedEventId === pendingEvent.id) return;
+    setTowerEventOutcome(null);
+    setLastOpenedEventId(pendingEvent.id);
+    setShowTowerEventModal(true);
+  }, [lastOpenedEventId, pendingEvent]);
+
   async function confirmHardcore(): Promise<boolean> {
     if (normalizedDifficulty !== "hardcore") return true;
     return confirmDialog({
@@ -315,6 +335,22 @@ export function TowerChallengePanel() {
       confirmLabel: "Iniciar Hardcore",
       tone: "danger",
     });
+  }
+
+  function openBattleResult() {
+    if (!lastBattle) return;
+    setHasUnseenBattleResult(false);
+    setShowBattleModal(true);
+  }
+
+  function closeBattleResult() {
+    setHasUnseenBattleResult(false);
+    setShowBattleModal(false);
+  }
+
+  function openPendingEvent() {
+    setTowerEventOutcome(null);
+    setShowTowerEventModal(true);
   }
 
   async function handleChallenge() {
@@ -342,9 +378,11 @@ export function TowerChallengePanel() {
       tone: result.ok && "event" in result && result.event ? "arcane" : result.ok ? "success" : "warning",
     });
     if (result.ok && "event" in result && result.event) {
+      setTowerEventOutcome(null);
       setShowTowerEventModal(true);
     }
     if (result.ok && "battle" in result) {
+      setHasUnseenBattleResult(true);
       setShowBattleModal(true);
     }
   }
@@ -352,13 +390,92 @@ export function TowerChallengePanel() {
   function handleEventChoice(choiceId: string) {
     const result = resolveEvent(choiceId);
     setFeedback(result.message);
-    if (result.ok) {
-      setShowTowerEventModal(false);
-    }
+    if (!result.ok) return;
+
     if (result.battleStarted) {
+      setTowerEventOutcome(null);
+      setShowTowerEventModal(false);
+      setHasUnseenBattleResult(true);
       setShowBattleModal(true);
+      return;
     }
+
+    setTowerEventOutcome({
+      title: "Consequência do evento",
+      message: result.message,
+      tone: "arcane",
+    });
+    setShowTowerEventModal(true);
   }
+
+  const primaryAction = (() => {
+    if (pendingEvent) {
+      return {
+        label: "Resolver evento",
+        detail: `${pendingEventDefinition?.title ?? "Evento pendente"} | combate bloqueado`,
+        disabled: false,
+        onClick: openPendingEvent,
+      };
+    }
+
+    if (hasUnseenBattleResult && lastBattle) {
+      return {
+        label: "Ver resultado",
+        detail: "Combate recente ainda precisa ser revisado",
+        disabled: false,
+        onClick: openBattleResult,
+      };
+    }
+
+    if (heroCount === 0) {
+      return {
+        label: "Ajustar formação",
+        detail: "Nenhum herói escalado para a Torre",
+        disabled: false,
+        onClick: () => {
+          if (onNavigate) {
+            onNavigate("formation");
+            return;
+          }
+          showToast({
+            title: "Formação incompleta",
+            message: "Abra a aba Formação e escale heróis antes de desafiar a Torre.",
+            tone: "warning",
+          });
+        },
+      };
+    }
+
+    if (energy < GAME_CONFIG.towerEnergyCost) {
+      return {
+        label: "Recuperar energia",
+        detail: `Energia atual ${energy}/${GAME_CONFIG.towerEnergyCost}`,
+        disabled: false,
+        onClick: () =>
+          showToast({
+            title: "Energia insuficiente",
+            message: `A Torre exige ${GAME_CONFIG.towerEnergyCost} energia. Aguarde regenerar antes de desafiar.`,
+            tone: "warning",
+          }),
+      };
+    }
+
+    if (!canChallenge) {
+      return {
+        label: actionLabel,
+        detail: statusMessage,
+        disabled: true,
+        onClick: () => undefined,
+      };
+    }
+
+    return {
+      label: actionLabel,
+      detail: `${GAME_CONFIG.towerEnergyCost} energia | risco ${riskProfile.label}`,
+      disabled: false,
+      onClick: () => void handleChallenge(),
+    };
+  })();
 
   return (
     <section className={`tower-command-panel risk-${riskProfile.tone}`}>
@@ -446,7 +563,7 @@ export function TowerChallengePanel() {
               </p>
             </div>
             <div className="tower-challenge-actions">
-              <button className="hero-inline-action" disabled={!lastBattle} onClick={() => setShowBattleModal(true)} type="button">
+              <button className={hasUnseenBattleResult ? "hero-inline-action primary" : "hero-inline-action"} disabled={!lastBattle} onClick={openBattleResult} type="button">
                 Último resultado
               </button>
               <button className="hero-inline-action" onClick={() => setShowHistoryModal(true)} type="button">
@@ -483,7 +600,7 @@ export function TowerChallengePanel() {
                 <strong>Andar {pendingEvent.floor}</strong>
               </div>
               <p>{pendingEventDefinition.description}</p>
-              <button className="tower-start-battle-button tower-event-open-button" onClick={() => setShowTowerEventModal(true)} type="button">
+              <button className="tower-start-battle-button tower-event-open-button" onClick={openPendingEvent} type="button">
                 <strong>Resolver evento</strong>
                 <span>
                   {pendingEventDefinition.choices.length} escolha(s) disponível(is) | combate bloqueado
@@ -569,9 +686,9 @@ export function TowerChallengePanel() {
 
           <div className="tower-challenge-footer">
             <p className="tower-event-next-step">{statusMessage}</p>
-            <button className="tower-start-battle-button" disabled={!canChallenge} onClick={() => void handleChallenge()} type="button">
-              <strong>{actionLabel}</strong>
-              <span>{GAME_CONFIG.towerEnergyCost} energia · risco {riskProfile.label}</span>
+            <button className="tower-start-battle-button" disabled={primaryAction.disabled} onClick={() => void primaryAction.onClick()} type="button">
+              <strong>{primaryAction.label}</strong>
+              <span>{primaryAction.detail}</span>
             </button>
           </div>
 
@@ -579,7 +696,28 @@ export function TowerChallengePanel() {
         </article>
       </div>
 
-      {showTowerEventModal && pendingEvent && pendingEventDefinition ? (
+      {showTowerEventModal && towerEventOutcome ? (
+        <UiModal
+          actions={
+            <button className="ui-action primary" onClick={() => setShowTowerEventModal(false)} type="button">
+              Continuar
+            </button>
+          }
+          className="tower-event-modal-card"
+          labelledBy="towerEventOutcomeTitle"
+          onClose={() => setShowTowerEventModal(false)}
+          overline="Evento resolvido"
+          title={towerEventOutcome.title}
+          tone={towerEventOutcome.tone}
+        >
+          <div className="tower-event-modal-body">
+            <p>{towerEventOutcome.message}</p>
+            <p className="tower-event-next-step">A consequência foi aplicada e registrada no histórico da Torre.</p>
+          </div>
+        </UiModal>
+      ) : null}
+
+      {showTowerEventModal && !towerEventOutcome && pendingEvent && pendingEventDefinition ? (
         <UiModal
           className={`tower-event-modal-card tone-${pendingEventDefinition.tone}`}
           labelledBy="towerEventModalTitle"
@@ -621,49 +759,48 @@ export function TowerChallengePanel() {
       ) : null}
 
       {showBattleModal ? (
-        <section className="modal-backdrop tower-result-backdrop" role="dialog" aria-modal="true" aria-labelledby="towerResultTitle">
-          <article className="modal-card tower-result-modal-card">
-            <div className="tower-modal-head">
-              <span>Resultado de combate</span>
-              <button className="hero-inline-action" onClick={() => setShowBattleModal(false)} type="button">
-                Fechar
-              </button>
-            </div>
-            <h2 id="towerResultTitle">Resultado da Torre</h2>
-            <BattleResultPanel onContinue={() => setShowBattleModal(false)} />
-          </article>
-        </section>
+        <UiModal
+          className="tower-result-modal-card"
+          labelledBy="towerResultTitle"
+          onClose={closeBattleResult}
+          overline="Resultado de combate"
+          size="large"
+          subtitle="Resumo, recompensas, heróis, consequências e log ficam separados para leitura rápida."
+          title="Resultado da Torre"
+          tone={lastBattle?.result === "victory" ? "ritual" : "danger"}
+        >
+          <BattleResultPanel onContinue={closeBattleResult} />
+        </UiModal>
       ) : null}
 
       {showHistoryModal ? (
-        <section className="modal-backdrop tower-history-backdrop" role="dialog" aria-modal="true" aria-labelledby="towerHistoryTitle">
-          <article className="modal-card tower-history-modal-card">
-            <div className="tower-modal-head">
-              <span>Registro da Torre</span>
-              <button className="hero-inline-action" onClick={() => setShowHistoryModal(false)} type="button">
-                Fechar
-              </button>
-            </div>
-            <h2 id="towerHistoryTitle">Histórico recente</h2>
-            <p>{getBattleSummary(lastBattle)}</p>
-            <div className="tower-history-modal-list">
-              {recentHistory.length > 0 ? (
-                recentHistory.map((entry) => (
-                  <div className="tower-history-item" key={entry.id}>
-                    <strong>
-                      {entry.title} | Andar {entry.floor}
-                    </strong>
-                    <span>
-                      {entry.choice}: {entry.message}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <span>Nenhum evento recente registrado.</span>
-              )}
-            </div>
-          </article>
-        </section>
+        <UiModal
+          className="tower-history-modal-card"
+          labelledBy="towerHistoryTitle"
+          onClose={() => setShowHistoryModal(false)}
+          overline="Registro da Torre"
+          size="large"
+          subtitle={getBattleSummary(lastBattle)}
+          title="Histórico recente"
+          tone="arcane"
+        >
+          <div className="tower-history-modal-list">
+            {recentHistory.length > 0 ? (
+              recentHistory.map((entry) => (
+                <div className="tower-history-item" key={entry.id}>
+                  <strong>
+                    {entry.title} | Andar {entry.floor}
+                  </strong>
+                  <span>
+                    {entry.choice}: {entry.message}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <span>Nenhum evento recente registrado.</span>
+            )}
+          </div>
+        </UiModal>
       ) : null}
     </section>
   );
