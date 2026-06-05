@@ -233,9 +233,8 @@ Criar memoria individual: historico de batalhas, chefes vencidos, titulos, relac
 ### Lacunas
 
 - Falta sistema de garantia/pity.
-- Falta recrutamento por contrato.
-- Falta escolha entre candidatos.
-- Falta heroi tematico por capítulo.
+- Recrutamento por contrato ja existe como alternativa controlada a invocacao.
+- Veteranias tematicas por capitulo podem ser expandidas com novos candidatos e origens.
 
 ---
 
@@ -513,6 +512,10 @@ A Base deve responder rapidamente "o que eu faco agora?". Ela resume o estado da
 - melhorar reliquias;
 - invocar/recrutar quando houver recursos ou contratos;
 - voltar para a Torre quando a equipe estiver pronta.
+
+### Recrutamento / contratos de guilda
+
+Recrutamento deve se diferenciar da invocacao. A tela representa um quadro de contratos da guilda: o jogador usa contrato para revelar candidatos, compara classe, raridade, poder, atributos principais, custo ja pago e traco/passiva, escolhe apenas um aventureiro e recebe confirmacao com atalhos para Heróis ou Formacao. Sem contrato, o estado deve comunicar custo insuficiente sem parecer erro.
 
 ### HUD de recursos
 

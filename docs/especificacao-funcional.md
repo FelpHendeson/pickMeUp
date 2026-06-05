@@ -14,6 +14,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 ### Heróis, recrutamento e progressão
 - `src/game/heroes/` define classes, raridades, atributos, XP, níveis e geracao procedimental de herois.
 - `src/game/recruitment/` controla contratos de heroi, selecao entre tres candidatos, veteranos tematicos e recrutamento alternativo.
+- A tela de Recrutamento deve parecer um quadro de contratos da guilda, diferenciando-se da Invocacao por escolha estrategica entre candidatos com classe, raridade, poder, atributos, custo e traco/passiva.
 - `src/game/relics/` gerencia relíquias permanentes da conta, custos em Fragmentos de Eco e bonus globais.
 - `src/game/specializations/` disponibiliza especializacoes por classe, requisitos de nivel e bonus permanentes.
 - `src/game/hero-status/` controla ferimentos, tratamento, moral, estados temporarios e efeitos de desempenho.
@@ -74,7 +75,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 - Energia regenera com o tempo e deve permitir teste rapido de composicoes sem bloquear o jogador.
 - A equipe evolui por XP, equipamento, especializacao, moral, ferimentos, recrutamento e relíquias.
 - Relíquias permanentes aumentam a conta de forma global e devem ser persistidas no save.
-- Contratos de heroi complementam a invocacao e oferecem recrutamento alternativo com escolhas curtas.
+- Contratos de heroi complementam a invocacao e oferecem recrutamento alternativo com escolhas curtas, confirmacao clara e atalhos para revisar Heróis ou Formacao.
 - O sistema de UI deve comunicar risco, modificadores, recompensas, dificuldade escolhida, resultado da batalha e o estado da equipe de forma clara.
 - Morte permanente nunca deve ocorrer fora do modo Hardcore.
 - A especificacao deve ser sincronizada com o GDD atualizado em `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md`.
