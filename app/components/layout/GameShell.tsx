@@ -10,10 +10,12 @@ import {
   getFormationHeroCount,
   getFormationPower,
   getInjuredHeroes,
+  getSummonCost,
   getRelicState,
   getRelicUpgradeCost,
   getHeroMoraleState,
   getTowerChapterByFloor,
+  getUnequippedInventory,
   isExpeditionComplete,
   isRelicUnlocked,
   type GameState,
@@ -139,35 +141,77 @@ function getRelicUpgradeableCount(state: GameState): number {
   }).length;
 }
 
-function getBaseNextAction(
-  state: GameState,
-  formationCount: number,
-  completeExpeditions: number,
-): { title: string; description: string; cta: string; tab: DashboardTab } {
-  if (completeExpeditions > 0) {
+type BaseNextAction = {
+  title: string;
+  description: string;
+  cta: string;
+  tab: DashboardTab;
+  tone: BaseAlert["tone"];
+  detail: string;
+};
+
+type BaseSituation = {
+  formationCount: number;
+  completeExpeditions: number;
+  injuredCount: number;
+  lowMoraleCount: number;
+  claimableMissions: number;
+  upgradeableRelics: number;
+  unequippedItems: number;
+  canSummonCommon: boolean;
+};
+
+const baseShortcuts: Array<{ tab: DashboardTab; title: string; description: string }> = [
+  { tab: "tower", title: "Torre", description: "Avancar campanha" },
+  { tab: "formation", title: "Formacao", description: "Ajustar equipe" },
+  { tab: "heroes", title: "Herois", description: "Tratar e revisar" },
+  { tab: "expeditions", title: "Expedicoes", description: "Enviar patrulhas" },
+  { tab: "missions", title: "Missoes", description: "Coletar ordens" },
+  { tab: "inventory", title: "Inventario", description: "Equipar arsenal" },
+];
+
+function getBaseNextAction(state: GameState, situation: BaseSituation): BaseNextAction {
+  if (situation.completeExpeditions > 0) {
     return {
       title: "Colete expedicoes prontas",
-      description: `${completeExpeditions} expedicao(oes) aguardam coleta. Pegue as recompensas antes do proximo combate.`,
+      description: `${situation.completeExpeditions} expedicao(oes) aguardam coleta. Pegue as recompensas antes do proximo combate.`,
       cta: "Coletar Expedicao",
       tab: "expeditions",
+      tone: "success",
+      detail: "Retorno da guilda",
     };
   }
 
-  if (state.heroes.length === 0) {
+  if (situation.injuredCount > 0) {
     return {
-      title: "Recrute seu primeiro heroi",
-      description: "Use invocacao ou contrato para formar uma equipe antes de desafiar a torre.",
-      cta: state.heroContracts > 0 ? "Usar Contrato" : "Invocar Heroi",
-      tab: state.heroContracts > 0 ? "recruitment" : "summon",
+      title: "Trate herois feridos",
+      description: `${situation.injuredCount} heroi(s) carregam ferimentos. Reduza o risco antes de entrar em combate dificil.`,
+      cta: "Abrir Herois",
+      tab: "heroes",
+      tone: "danger",
+      detail: "Enfermaria necessaria",
     };
   }
 
-  if (formationCount === 0) {
+  if (situation.claimableMissions > 0) {
     return {
-      title: "Monte uma formacao",
-      description: "Escolha ate cinco herois para liberar o proximo combate da torre.",
-      cta: "Montar Formacao",
-      tab: "formation",
+      title: "Colete missoes concluidas",
+      description: `${situation.claimableMissions} recompensa(s) de missao aguardam registro no quadro de ordens.`,
+      cta: "Coletar Missoes",
+      tab: "missions",
+      tone: "success",
+      detail: "Ordens concluidas",
+    };
+  }
+
+  if (situation.upgradeableRelics > 0) {
+    return {
+      title: "Melhore uma reliquia",
+      description: `${situation.upgradeableRelics} reliquia(s) podem ser aprimoradas com os Fragmentos de Eco atuais.`,
+      cta: "Abrir Reliquias",
+      tab: "relics",
+      tone: "arcane",
+      detail: "Poder permanente",
     };
   }
 
@@ -177,6 +221,41 @@ function getBaseNextAction(
       description: `Um evento aguarda no andar ${state.pendingTowerEvent.floor}. Va para Torre e escolha como prosseguir.`,
       cta: "Resolver Evento",
       tab: "tower",
+      tone: "warning",
+      detail: "Torre bloqueada",
+    };
+  }
+
+  if (state.heroes.length === 0) {
+    return {
+      title: "Recrute seu primeiro heroi",
+      description: "Use invocacao ou contrato para formar uma equipe antes de desafiar a torre.",
+      cta: state.heroContracts > 0 ? "Usar Contrato" : "Invocar Heroi",
+      tab: state.heroContracts > 0 ? "recruitment" : "summon",
+      tone: "gold",
+      detail: "Guilda vazia",
+    };
+  }
+
+  if (situation.formationCount === 0) {
+    return {
+      title: "Monte uma formacao",
+      description: "Escolha ate cinco herois para liberar o proximo combate da torre.",
+      cta: "Montar Formacao",
+      tab: "formation",
+      tone: "warning",
+      detail: "Equipe ausente",
+    };
+  }
+
+  if (situation.unequippedItems > 0) {
+    return {
+      title: "Revise o arsenal",
+      description: `${situation.unequippedItems} item(ns) estao no inventario sem uso. Confira se algum melhora a formacao.`,
+      cta: "Abrir Inventario",
+      tab: "inventory",
+      tone: "gold",
+      detail: "Arsenal disponivel",
     };
   }
 
@@ -186,6 +265,19 @@ function getBaseNextAction(
       description: "Colete a recompensa especial para registrar o avancao da campanha.",
       cta: "Ir para Torre",
       tab: "tower",
+      tone: "gold",
+      detail: "Marco de campanha",
+    };
+  }
+
+  if (state.heroContracts > 0 || situation.canSummonCommon) {
+    return {
+      title: "Amplie o elenco",
+      description: state.heroContracts > 0 ? "Ha contratos disponiveis para reforcar a guilda antes da proxima subida." : "Recursos suficientes para uma invocacao comum.",
+      cta: state.heroContracts > 0 ? "Usar Contrato" : "Invocar Heroi",
+      tab: state.heroContracts > 0 ? "recruitment" : "summon",
+      tone: "gold",
+      detail: "Reforco possivel",
     };
   }
 
@@ -194,7 +286,27 @@ function getBaseNextAction(
     description: `Prepare a equipe e inicie o combate do andar ${Math.min(state.towerFloor, GAME_CONFIG.towerMaxFloor)}.`,
     cta: "Ir para Torre",
     tab: "tower",
+    tone: "arcane",
+    detail: "Marcha recomendada",
   };
+}
+
+function BaseResourceStat({ label, value, tone }: { label: string; value: string | number; tone?: BaseAlert["tone"] }) {
+  return (
+    <span className={tone ? `tone-${tone}` : ""}>
+      <strong>{value}</strong>
+      {label}
+    </span>
+  );
+}
+
+function BaseShortcutButton({ description, onNavigate, tab, title }: { description: string; onNavigate: (tab: DashboardTab) => void; tab: DashboardTab; title: string }) {
+  return (
+    <button className="base-shortcut-card" onClick={() => onNavigate(tab)} type="button">
+      <strong>{title}</strong>
+      <span>{description}</span>
+    </button>
+  );
 }
 
 function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) {
@@ -207,65 +319,111 @@ function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) 
   const injuredCount = getInjuredHeroes(state).length;
   const claimableMissions = getClaimableMissionCount(state);
   const completeExpeditions = state.activeExpeditions.filter((expedition) => isExpeditionComplete(expedition)).length;
-  const criticalMoraleCount = state.heroes.filter((hero) => getHeroMoraleState(hero).tone === "collapse").length;
+  const lowMoraleCount = state.heroes.filter((hero) => {
+    const tone = getHeroMoraleState(hero).tone;
+    return tone === "collapse" || tone === "shaken";
+  }).length;
   const upgradeableRelics = getRelicUpgradeableCount(state);
-  const nextAction = getBaseNextAction(state, formationCount, completeExpeditions);
+  const unequippedItems = getUnequippedInventory(state).length;
+  const commonSummonCost = getSummonCost(state, "common");
+  const canSummonCommon = state.resources[commonSummonCost.resource] >= commonSummonCost.amount;
+  const energyFull = state.resources.energy >= state.resources.maxEnergy;
+  const situation: BaseSituation = {
+    formationCount,
+    completeExpeditions,
+    injuredCount,
+    lowMoraleCount,
+    claimableMissions,
+    upgradeableRelics,
+    unequippedItems,
+    canSummonCommon,
+  };
+  const nextAction = getBaseNextAction(state, situation);
   const floorProgress = `${Math.min(state.towerFloor, GAME_CONFIG.towerMaxFloor)}/${GAME_CONFIG.towerMaxFloor}`;
   const alertCandidates: Array<BaseAlert | null> = [
-    completeExpeditions > 0 ? { label: `${completeExpeditions} expedição(ões) concluída(s)`, tab: "expeditions" as const, tone: "success" } : null,
-    injuredCount > 0 ? { label: `${injuredCount} herói(s) ferido(s)`, tab: "heroes" as const, tone: "danger" } : null,
-    criticalMoraleCount > 0 ? { label: `${criticalMoraleCount} herói(s) com moral crítica`, tab: "heroes" as const, tone: "danger" } : null,
-    claimableMissions > 0 ? { label: `${claimableMissions} missão(ões) pronta(s)`, tab: "missions" as const, tone: "success" } : null,
-    upgradeableRelics > 0 ? { label: `${upgradeableRelics} relíquia(s) aprimorável(is)`, tab: "relics" as const, tone: "arcane" } : null,
-    state.heroContracts > 0 ? { label: `${state.heroContracts} contrato(s) disponível(is)`, tab: "recruitment" as const, tone: "gold" } : null,
+    completeExpeditions > 0 ? { label: `${completeExpeditions} expedicao(oes) concluida(s)`, tab: "expeditions" as const, tone: "success" } : null,
+    injuredCount > 0 ? { label: `${injuredCount} heroi(s) ferido(s)`, tab: "heroes" as const, tone: "danger" } : null,
+    lowMoraleCount > 0 ? { label: `${lowMoraleCount} heroi(s) com moral baixa`, tab: "heroes" as const, tone: "danger" } : null,
+    claimableMissions > 0 ? { label: `${claimableMissions} missao(oes) pronta(s)`, tab: "missions" as const, tone: "success" } : null,
+    upgradeableRelics > 0 ? { label: `${upgradeableRelics} reliquia(s) aprimoravel(is)`, tab: "relics" as const, tone: "arcane" } : null,
+    energyFull ? { label: "Energia cheia", tab: "tower" as const, tone: "gold" } : null,
+    unequippedItems > 0 ? { label: `${unequippedItems} item(ns) sem uso`, tab: "inventory" as const, tone: "warning" } : null,
+    state.heroContracts > 0 ? { label: `${state.heroContracts} contrato(s) disponivel(is)`, tab: "recruitment" as const, tone: "gold" } : null,
     state.pendingTowerEvent ? { label: "Evento da torre pendente", tab: "tower" as const, tone: "warning" } : null,
   ];
   const alerts = alertCandidates.filter((alert): alert is BaseAlert => Boolean(alert));
   const campaignProgress = Math.min(100, (Math.min(state.towerFloor, GAME_CONFIG.towerMaxFloor) / GAME_CONFIG.towerMaxFloor) * 100);
+  const chapterProgress = Math.min(
+    100,
+    Math.max(0, ((state.towerFloor - chapter.startFloor + 1) / Math.max(1, chapter.endFloor - chapter.startFloor + 1)) * 100),
+  );
 
   return (
-    <section className="command-center-panel">
-      <article className="command-next-card">
-        <span>Central de Comando</span>
-        <h2>{nextAction.title}</h2>
-        <p>{nextAction.description}</p>
-        <button className="hero-inline-action primary command-cta" onClick={() => onNavigate(nextAction.tab)} type="button">
-          {nextAction.cta}
-        </button>
+    <section className="command-center-panel base-hub-panel">
+      <article className={`command-next-card base-war-room tone-${nextAction.tone}`}>
+        <div className="base-war-room-copy">
+          <span>Sala de comando | {nextAction.detail}</span>
+          <h2>{nextAction.title}</h2>
+          <p>{nextAction.description}</p>
+          <button className="hero-inline-action primary command-cta" onClick={() => onNavigate(nextAction.tab)} type="button">
+            {nextAction.cta}
+          </button>
+        </div>
+        <div className="base-war-room-map" aria-hidden="true">
+          <strong>{Math.min(state.towerFloor, GAME_CONFIG.towerMaxFloor)}</strong>
+          <span>Andar</span>
+        </div>
       </article>
 
-      <div className="command-grid">
-        <article className="command-card">
-          <span>Campanha</span>
-          <h3>{chapter.name}</h3>
+      <div className="base-status-ledger">
+        <BaseResourceStat label="Andar atual" value={floorProgress} tone="gold" />
+        <BaseResourceStat label="Capitulo" value={chapter.name} tone="arcane" />
+        <BaseResourceStat label="Poder da formacao" value={formationPower} tone="success" />
+        <BaseResourceStat label="Energia" value={`${state.resources.energy}/${state.resources.maxEnergy}`} tone={energyFull ? "gold" : undefined} />
+        <BaseResourceStat label="Ouro" value={state.resources.gold} />
+        <BaseResourceStat label="Cristais" value={state.resources.crystals} />
+      </div>
+
+      <div className="base-command-layout">
+        <article className="command-card base-map-card">
+          <div className="base-card-head">
+            <span>Mesa de guerra</span>
+            <h3>{chapter.name}</h3>
+          </div>
           <p>{chapter.description}</p>
           <UiProgressBar label={`Progresso da torre ${floorProgress}`} value={campaignProgress} />
-          <div className="command-metrics">
-            <span>Andar {floorProgress}</span>
+          <UiProgressBar label={`Progresso do capitulo ${chapter.startFloor}-${chapter.endFloor}`} value={chapterProgress} />
+          <div className="command-metrics base-pill-row">
             <span>Chefe: {chapter.finalBoss}</span>
+            <span>{chapter.regionalModifier.label}: {chapter.regionalModifier.description}</span>
           </div>
         </article>
 
         <article className={`command-card weekly tone-${weeklyEvent.tone}`}>
-          <span>Evento semanal | Semana {weeklyEvent.weekNumber}</span>
-          <h3>{weeklyEvent.name}</h3>
+          <div className="base-card-head">
+            <span>Evento semanal | Semana {weeklyEvent.weekNumber}</span>
+            <h3>{weeklyEvent.name}</h3>
+          </div>
           <p>{weeklyEvent.summary}</p>
           <div className="weekly-event-effects compact">
-            {weeklyEvent.effects.slice(0, 2).map((effect) => (
+            {weeklyEvent.effects.slice(0, 3).map((effect) => (
               <small key={effect}>{effect}</small>
             ))}
           </div>
         </article>
 
-        <article className="command-card">
-          <span>Equipe principal</span>
-          <h3>{formationCount}/{GAME_CONFIG.maxFormationSize} herois</h3>
+        <article className="command-card base-team-card">
+          <div className="base-card-head">
+            <span>Equipe principal</span>
+            <h3>{formationCount}/{GAME_CONFIG.maxFormationSize} herois</h3>
+          </div>
           <p>Poder total {formationPower}. Revise ferimentos e moral antes de desafios mais arriscados.</p>
           <div className="command-team-list">
             {formationHeroes.length > 0 ? (
               formationHeroes.slice(0, 5).map((hero) => (
                 <span key={hero.id}>
-                  {hero.name} | Lv. {hero.level} | {getHeroMoraleState(hero).label}
+                  <strong>{hero.name}</strong>
+                  Lv. {hero.level} | {getHeroMoraleState(hero).label}
                 </span>
               ))
             ) : (
@@ -274,9 +432,11 @@ function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) 
           </div>
         </article>
 
-        <article className="command-card">
-          <span>Alertas</span>
-          <h3>{alerts.length > 0 ? `${alerts.length} ponto(s) de atencao` : "Tudo sob controle"}</h3>
+        <article className="command-card base-alert-card">
+          <div className="base-card-head">
+            <span>Alertas da base</span>
+            <h3>{alerts.length > 0 ? `${alerts.length} ponto(s) de atencao` : "Tudo sob controle"}</h3>
+          </div>
           <div className="command-alert-list">
             {alerts.length > 0 ? (
               alerts.map((alert) => (
@@ -304,6 +464,31 @@ function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) 
                 Reliquias
               </button>
             ) : null}
+          </div>
+        </article>
+
+        <article className="command-card base-resources-card">
+          <div className="base-card-head">
+            <span>Cofres e suprimentos</span>
+            <h3>Recursos principais</h3>
+          </div>
+          <div className="base-resource-grid">
+            <BaseResourceStat label="Essencia" value={state.resources.essence} />
+            <BaseResourceStat label="Fragmentos" value={state.resources.fragments} />
+            <BaseResourceStat label="Frag. Eco" value={state.echoFragments} tone="arcane" />
+            <BaseResourceStat label="Contratos" value={state.heroContracts} tone={state.heroContracts > 0 ? "gold" : undefined} />
+          </div>
+        </article>
+
+        <article className="command-card base-shortcuts-card">
+          <div className="base-card-head">
+            <span>Atalhos de comando</span>
+            <h3>Para onde ir agora</h3>
+          </div>
+          <div className="base-shortcut-grid">
+            {baseShortcuts.map((shortcut) => (
+              <BaseShortcutButton description={shortcut.description} key={shortcut.tab} onNavigate={onNavigate} tab={shortcut.tab} title={shortcut.title} />
+            ))}
           </div>
         </article>
       </div>

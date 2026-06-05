@@ -129,7 +129,7 @@ O jogo usa Next.js, React, TypeScript e Zustand. O runtime antigo em JavaScript 
 
 1. Abrir a home.
 2. Entrar no jogo.
-3. Ver recursos e evento semanal.
+3. Ler a Base como sala de comando: proxima acao, alertas, recursos, energia, capitulo, equipe e atalhos.
 4. Invocar ou gerenciar herois.
 5. Montar formacao ou aplicar preset.
 6. Equipar personagens.
@@ -501,6 +501,18 @@ A narrativa deve permanecer curta. O jogo nao deve virar visual novel; 2 a 4 fra
 - Torre.
 - Combate.
 - Config.
+
+### Base / Hub principal
+
+A Base deve responder rapidamente "o que eu faco agora?". Ela resume o estado da conta, destaca a proxima acao recomendada e aponta alertas acionaveis:
+
+- coletar expedicoes;
+- tratar herois feridos ou com moral baixa;
+- coletar missoes;
+- revisar inventario e equipamentos;
+- melhorar reliquias;
+- invocar/recrutar quando houver recursos ou contratos;
+- voltar para a Torre quando a equipe estiver pronta.
 
 ### Proximas melhorias de UX
 
