@@ -3598,6 +3598,355 @@ article,
   justify-self: end;
 }
 
+.grimoire-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.grimoire-panel::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background:
+    radial-gradient(circle at 14% 6%, rgba(155, 127, 232, 0.14), transparent 18rem),
+    radial-gradient(circle at 86% 12%, rgba(232, 188, 88, 0.11), transparent 20rem),
+    linear-gradient(135deg, rgba(58, 36, 22, 0.18), transparent 42%);
+}
+
+.library-hero,
+.library-ledger,
+.grimoire-tabs,
+.grimoire-page {
+  position: relative;
+  z-index: 1;
+}
+
+.library-hero {
+  align-items: center;
+  border: 1px solid rgba(232, 188, 88, 0.24);
+  background:
+    linear-gradient(135deg, rgba(232, 188, 88, 0.12), transparent 46%),
+    linear-gradient(180deg, rgba(33, 25, 28, 0.96), rgba(10, 9, 13, 0.92));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+  padding: 1rem;
+}
+
+.library-hero span,
+.library-section-head span,
+.library-card-head span {
+  color: var(--teal);
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.library-hero h2,
+.library-section-head h3,
+.library-card-head h4 {
+  margin: 0.25rem 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.library-hero p,
+.library-section-head p,
+.library-lore-card p {
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0.4rem 0 0;
+}
+
+.library-overview-rune {
+  width: 4.6rem;
+  height: 4.6rem;
+  border: 1px solid rgba(232, 188, 88, 0.4);
+  background:
+    radial-gradient(circle, rgba(232, 188, 88, 0.24), transparent 62%),
+    rgba(0, 0, 0, 0.24);
+  border-radius: 999px;
+  color: var(--gold);
+  display: grid;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.45rem;
+  font-weight: 900;
+  place-items: center;
+  text-shadow: 0 0 18px rgba(232, 188, 88, 0.36);
+}
+
+.library-ledger {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.6rem), 1fr));
+  gap: 0.55rem;
+  margin-bottom: 0.95rem;
+}
+
+.library-ledger span {
+  border: 1px solid rgba(232, 188, 88, 0.15);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.65rem;
+}
+
+.library-ledger strong {
+  color: var(--gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.05rem;
+}
+
+.library-tab-row.grimoire-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: 0.55rem;
+  margin: 0.85rem 0 1rem;
+}
+
+.library-tab-row.grimoire-tabs button {
+  align-items: flex-start;
+  display: grid;
+  gap: 0.18rem;
+  justify-items: start;
+  min-height: 4.4rem;
+  padding: 0.65rem;
+  text-align: left;
+}
+
+.library-tab-row.grimoire-tabs button small {
+  color: var(--teal);
+  font-size: 0.62rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.library-tab-row.grimoire-tabs button strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.02rem;
+}
+
+.library-tab-row.grimoire-tabs button.active small {
+  color: rgba(25, 17, 9, 0.72);
+}
+
+.grimoire-page {
+  border: 1px solid rgba(232, 188, 88, 0.18);
+  background:
+    linear-gradient(90deg, rgba(232, 188, 88, 0.065), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(0, 0, 0, 0.16));
+  border-radius: var(--radius-lg);
+  padding: 0.9rem;
+}
+
+.grimoire-page .library-section-head {
+  border-bottom: 1px solid rgba(232, 188, 88, 0.14);
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.75rem;
+}
+
+.library-grid-react.collection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 0.8rem;
+}
+
+.library-grid-react.compact.collection {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+
+.library-lore-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 14rem;
+  border: 1px solid rgba(232, 188, 88, 0.18);
+  background:
+    linear-gradient(145deg, rgba(232, 188, 88, 0.07), transparent 48%),
+    linear-gradient(180deg, rgba(23, 18, 22, 0.98), rgba(8, 7, 10, 0.94));
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.24);
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem;
+}
+
+.library-lore-card::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 1.7rem 1.7rem;
+  opacity: 0.12;
+}
+
+.library-lore-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.library-lore-card.tone-discovered {
+  border-color: rgba(86, 199, 189, 0.34);
+}
+
+.library-lore-card.tone-partial {
+  border-color: rgba(232, 188, 88, 0.36);
+}
+
+.library-lore-card.tone-locked {
+  border-color: rgba(255, 255, 255, 0.09);
+  background:
+    radial-gradient(circle at 80% 0%, rgba(155, 127, 232, 0.1), transparent 14rem),
+    linear-gradient(180deg, rgba(19, 17, 22, 0.9), rgba(7, 7, 10, 0.94));
+  filter: saturate(0.74);
+}
+
+.library-card-head {
+  align-items: flex-start;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.65rem;
+}
+
+.library-card-head h4 {
+  color: var(--text);
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.library-card-head em {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: 999px;
+  color: var(--muted-strong);
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  padding: 0.28rem 0.45rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.library-lore-card.tone-discovered .library-card-head em {
+  border-color: rgba(86, 199, 189, 0.34);
+  color: var(--teal);
+}
+
+.library-lore-card.tone-partial .library-card-head em {
+  border-color: rgba(232, 188, 88, 0.34);
+  color: var(--gold);
+}
+
+.library-arcane-seal {
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid rgba(232, 188, 88, 0.38);
+  background:
+    radial-gradient(circle, rgba(232, 188, 88, 0.22), transparent 62%),
+    rgba(0, 0, 0, 0.22);
+  border-radius: 0.85rem;
+  color: var(--gold);
+  display: grid;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.15rem;
+  font-weight: 900;
+  place-items: center;
+  text-transform: uppercase;
+}
+
+.library-arcane-seal.locked {
+  border-color: rgba(155, 127, 232, 0.26);
+  color: rgba(216, 204, 189, 0.48);
+}
+
+.library-card-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.library-card-meta span {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  display: grid;
+  gap: 0.12rem;
+  font-size: 0.72rem;
+  padding: 0.5rem;
+}
+
+.library-card-meta strong {
+  color: var(--gold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-revealed-lines {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.library-revealed-lines span,
+.library-lore-card > em {
+  border: 1px solid rgba(86, 199, 189, 0.14);
+  background: rgba(86, 199, 189, 0.055);
+  border-radius: var(--radius-sm);
+  color: var(--muted-strong);
+  display: block;
+  font-size: 0.76rem;
+  font-style: normal;
+  line-height: 1.45;
+  padding: 0.48rem;
+}
+
+.library-lore-card.tone-locked > em {
+  border-color: rgba(155, 127, 232, 0.2);
+  background: rgba(155, 127, 232, 0.06);
+}
+
+@media (max-width: 760px) {
+  .library-hero,
+  .library-card-head {
+    grid-template-columns: 1fr;
+  }
+
+  .library-overview-rune {
+    width: 3.6rem;
+    height: 3.6rem;
+  }
+
+  .library-tab-row.grimoire-tabs {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
+  }
+
+  .library-tab-row.grimoire-tabs button {
+    min-width: min(54vw, 12rem);
+  }
+
+  .library-card-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .grimoire-page,
+  .library-lore-card {
+    padding: 0.75rem;
+  }
+}
+
 .recruitment-choice-card h3 {
   margin: 0.25rem 0 0.8rem;
   font-family: Georgia, "Times New Roman", serif;

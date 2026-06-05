@@ -64,6 +64,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 - O progresso e salvo localmente no navegador com `localStorage`, `saveVersion` e normalizacao ao carregar.
 - A torre e o eixo principal do jogo, com capitulos marcados, chefes, modificadores por regiao e modos de dificuldade por tentativa.
 - Descobertas do jogador devem ser persistidas na Biblioteca e evoluir conforme uso real dos sistemas.
+- A Biblioteca deve apresentar essas descobertas como grimorio/arquivo arcano, separando inimigos, chefes, capitulos, eventos, reliquias e memoria da guilda sem alterar os dados salvos.
 - Eventos semanais locais, eventos aleatorios da torre e narrativas curtas mantem o jogo vivo sem backend.
 - Recursos principais incluem ouro, cristais, essencia, fragmentos, Fragmentos de Eco e energia.
 - Energia regenera com o tempo e deve permitir teste rapido de composicoes sem bloquear o jogador.

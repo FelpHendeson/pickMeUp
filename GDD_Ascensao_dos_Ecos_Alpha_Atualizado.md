@@ -426,7 +426,24 @@ Futuro: expedicoes raras, eventos de retorno e contratos de heroi.
 
 ---
 
-## 19. Missoes e conquistas
+## 19. Biblioteca
+
+A Biblioteca funciona como grimorio e arquivo arcano da jornada. Ela registra descobertas sem alterar regras de progressao.
+
+Registros atuais:
+
+- Inimigos comuns, com encontros, vitorias e detalhes revelados por repeticao.
+- Chefes de capitulo, tentativas, melhor resultado e recompensas especiais quando houver.
+- Capitulos da Torre, com regiao, chefe, modificador, inimigos predominantes e eventos associados.
+- Eventos da Torre, com encontros e resultados de escolhas ja vistas.
+- Reliquias, com nivel, desbloqueio e efeito atual.
+- Memoria da guilda, com classes, raridades e tracos descobertos por herois recrutados.
+
+Estados bloqueados devem parecer misteriosos e oferecer pistas curtas sem revelar conteudo completo.
+
+---
+
+## 20. Missoes e conquistas
 
 ### Missoes diarias atuais
 
@@ -450,7 +467,7 @@ Futuro: conquistas por capítulo, classe, evento raro e chefe.
 
 ---
 
-## 20. Narrativa
+## 21. Narrativa
 
 Cenas curtas aparecem apenas uma vez e ficam registradas como vistas.
 
@@ -467,7 +484,7 @@ A narrativa deve permanecer curta. O jogo nao deve virar visual novel; 2 a 4 fra
 
 ---
 
-## 21. UI e experiencia
+## 22. UI e experiencia
 
 ### Abas atuais
 
@@ -477,7 +494,10 @@ A narrativa deve permanecer curta. O jogo nao deve virar visual novel; 2 a 4 fra
 - Inventario.
 - Expedicoes.
 - Missoes.
+- Reliquias.
 - Invocacao.
+- Recrutamento.
+- Biblioteca.
 - Torre.
 - Combate.
 - Config.
@@ -494,7 +514,7 @@ A narrativa deve permanecer curta. O jogo nao deve virar visual novel; 2 a 4 fra
 
 ---
 
-## 22. Save e configuracoes
+## 23. Save e configuracoes
 
 ### Save atual
 
@@ -519,7 +539,7 @@ Criar migracoes formais de save por versao. O projeto vai crescer; sem migracao,
 
 ---
 
-## 23. Riscos atuais
+## 24. Riscos atuais
 
 | Risco | Impacto | Mitigacao |
 |---|---|---|
@@ -532,7 +552,7 @@ Criar migracoes formais de save por versao. O projeto vai crescer; sem migracao,
 
 ---
 
-## 24. Roadmap recomendado
+## 25. Roadmap recomendado
 
 ### Alpha 0.5 - Clareza e consolidacao
 
@@ -583,7 +603,7 @@ Criar migracoes formais de save por versao. O projeto vai crescer; sem migracao,
 
 ---
 
-## 25. Proxima prioridade recomendada
+## 26. Proxima prioridade recomendada
 
 A proxima feature deve ser **Tela de Resultado de Combate**.
 
@@ -606,7 +626,7 @@ Sem isso, a complexidade do jogo vira magia negra de planilha. Funciona, mas nin
 
 ---
 
-## 26. Prompt recomendado para o agente
+## 27. Prompt recomendado para o agente
 
 ```md
 O projeto atual deixou de ser MVP e agora deve ser tratado como Alpha jogavel.
@@ -647,7 +667,7 @@ Apos vencer ou perder uma batalha, eu preciso entender rapidamente por que o res
 
 ---
 
-## 27. Conclusao
+## 28. Conclusao
 
 Ascensao dos Ecos ja tem base suficiente para ser tratado como projeto indie web em Alpha. O foco agora deve ser clareza, progressao permanente, apego aos herois, descoberta e robustez tecnica.
 
