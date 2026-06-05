@@ -49,6 +49,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 - `app/components/` renderiza as abas da base, herois, formacao, inventario, expedicoes, missoes, invocacao, torre, combate e configuracoes.
 - A Base funciona como hub de comando: recomenda proxima acao, resume conta/campanha/equipe/recursos e oferece atalhos para Torre, Formacao, Herois, Expedicoes, Missoes e Inventario.
 - A interface deve destacar poder do time, risco do andar, ferimentos, moral e modificadores ativos.
+- Configuracoes deve separar preferencias, save local, importacao/exportacao, cloud save experimental, reset e informacoes do jogo; acoes destrutivas ou de sobrescrita exigem confirmacao clara.
 - A versão atual deve ter identidade Dark Fantasy consistente, design system interno e responsividade real em mobile.
 - A tela da Torre usa layout mestre-detalhe: mapa de andares selecionável à esquerda, dados do desafio à direita e resultado/histórico em modal.
 

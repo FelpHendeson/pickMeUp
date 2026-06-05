@@ -5347,6 +5347,258 @@ body::before {
   }
 }
 
+.settings-control-room {
+  grid-template-columns: minmax(0, 0.95fr) minmax(380px, 1.05fr);
+}
+
+.settings-page-hero {
+  position: relative;
+  overflow: hidden;
+  grid-column: 1 / -1;
+  border: 1px solid rgba(232, 188, 88, 0.24);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(232, 188, 88, 0.12), transparent 18rem),
+    radial-gradient(circle at 88% 24%, rgba(86, 199, 189, 0.08), transparent 16rem),
+    linear-gradient(180deg, rgba(28, 23, 29, 0.96), rgba(8, 7, 10, 0.92));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 1rem;
+}
+
+.settings-page-hero span,
+.settings-panel-hero span,
+.settings-section-copy span {
+  color: var(--teal);
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.settings-page-hero h2,
+.settings-panel-hero h2,
+.settings-section-copy h3 {
+  margin: 0.28rem 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.settings-page-hero p,
+.settings-panel-hero p,
+.settings-section-copy p {
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0.42rem 0 0;
+}
+
+.settings-save-panel,
+.settings-preferences-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.settings-save-panel::before,
+.settings-preferences-panel::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background:
+    linear-gradient(135deg, rgba(232, 188, 88, 0.055), transparent 34%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 16px);
+}
+
+.settings-save-panel > *,
+.settings-preferences-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.settings-panel-hero {
+  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.settings-panel-hero.compact {
+  grid-template-columns: 1fr;
+}
+
+.settings-status-seal {
+  min-width: 8rem;
+  border: 1px solid rgba(232, 188, 88, 0.34);
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.75rem;
+  text-align: right;
+}
+
+.settings-status-seal strong {
+  color: var(--gold);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.settings-status-seal span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-feedback-banner,
+.settings-feedback-inline {
+  border: 1px solid rgba(86, 199, 189, 0.24);
+  background: rgba(86, 199, 189, 0.07);
+  border-radius: var(--radius-md);
+  color: var(--muted-strong);
+  display: grid;
+  gap: 0.2rem;
+  line-height: 1.45;
+  margin-bottom: 0.9rem;
+  padding: 0.7rem;
+}
+
+.settings-feedback-banner strong {
+  color: var(--teal);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.settings-save-grid,
+.settings-preference-grid,
+.settings-toggle-grid,
+.settings-range-grid {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.settings-section-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(232, 188, 88, 0.16);
+  background:
+    linear-gradient(145deg, rgba(232, 188, 88, 0.055), transparent 48%),
+    rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-lg);
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem;
+}
+
+.settings-section-card.tone-danger {
+  border-color: rgba(214, 90, 90, 0.46);
+  background:
+    linear-gradient(145deg, rgba(214, 90, 90, 0.12), transparent 48%),
+    rgba(0, 0, 0, 0.2);
+}
+
+.settings-section-card.tone-warning {
+  border-color: rgba(232, 188, 88, 0.36);
+}
+
+.settings-section-card.tone-success {
+  border-color: rgba(86, 199, 189, 0.34);
+}
+
+.settings-section-card.tone-arcane {
+  border-color: rgba(155, 127, 232, 0.34);
+}
+
+.settings-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.settings-info-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.settings-info-list span,
+.settings-field,
+.settings-toggle-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  padding: 0.55rem;
+}
+
+.settings-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.settings-toggle-card {
+  align-items: flex-start;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.6rem;
+}
+
+.settings-toggle-card input {
+  margin-top: 0.2rem;
+}
+
+.settings-toggle-card strong,
+.settings-toggle-card small {
+  display: block;
+}
+
+.settings-toggle-card strong {
+  color: var(--text);
+}
+
+.settings-toggle-card small {
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+
+.settings-speed-row {
+  margin: 0;
+}
+
+.settings-range {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius-md);
+  margin: 0;
+  padding: 0.6rem;
+}
+
+.settings-range span {
+  color: var(--muted-strong);
+}
+
+@media (max-width: 980px) {
+  .settings-control-room,
+  .settings-panel-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-status-seal {
+    text-align: left;
+  }
+}
+
+@media (max-width: 760px) {
+  .settings-action-row,
+  .settings-speed-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}
+
 .ui-progress-bar,
 .command-progress-bar,
 .progress-track,

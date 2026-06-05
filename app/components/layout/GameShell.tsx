@@ -498,9 +498,14 @@ function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) 
 
 function SettingsPanel() {
   return (
-    <section className="settings-panel">
-      <SaveManagementPanel />
+    <section className="settings-panel settings-control-room">
+      <div className="settings-page-hero">
+        <span>Configuracoes</span>
+        <h2>Menu seguro da guilda</h2>
+        <p>Preferencias, backup, cloud save experimental e acoes destrutivas ficam separados para evitar erro acidental.</p>
+      </div>
       <PreferencesPanel />
+      <SaveManagementPanel />
     </section>
   );
 }

@@ -538,6 +538,20 @@ A Base deve responder rapidamente "o que eu faco agora?". Ela resume o estado da
 - Importar save com validacao.
 - Resetar save.
 
+### Tela de configuracoes
+
+A tela de Config deve parecer um menu de sistema confiavel dentro do RPG, separando claramente:
+
+- preferencias de combate;
+- preferencias de interface;
+- audio preparado;
+- save local como fonte principal;
+- importacao/exportacao JSON;
+- cloud save experimental;
+- reset local em zona de risco.
+
+Acoes destrutivas ou de sobrescrita precisam usar modal de confirmacao e explicar impacto antes da execucao. Cloud save deve continuar comunicado como experimental e opcional.
+
 ### Preferencias atuais
 
 - Velocidade padrao de combate.
