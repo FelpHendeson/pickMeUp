@@ -53,6 +53,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 - O GameShell agrupa a navegacao principal por areas, exibe contexto da aba ativa e usa tabs com estado ativo evidente e scroll horizontal no mobile.
 - Sobre apresenta nome, versao, objetivo, stack, creditos/notas de alpha e status de save/cloud save em blocos curtos integrados ao tema dark fantasy.
 - O polimento mobile global deve impedir overflow horizontal da pagina, empilhar grids complexos, manter modais rolaveis com acoes visiveis e preservar area de toque confortavel.
+- O polimento visual global deve padronizar cores, cards, botoes, badges, alertas, barras, modais, tabs e estados com estética Dark Fantasy legivel.
 - A interface deve destacar poder do time, risco do andar, ferimentos, moral e modificadores ativos.
 - Configuracoes deve separar preferencias, save local, importacao/exportacao, cloud save experimental, reset e informacoes do jogo; acoes destrutivas ou de sobrescrita exigem confirmacao clara.
 - A versão atual deve ter identidade Dark Fantasy consistente, design system interno e responsividade real em mobile.

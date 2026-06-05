@@ -533,6 +533,10 @@ A tela Sobre deve funcionar como um arquivo curto da Torre, nao como README cola
 
 Mobile deve ser tratado como fluxo jogavel, nao apenas como encolhimento do desktop. A UI deve impedir overflow horizontal da pagina, empilhar grids complexos, preservar tabs/HUD com rolagem interna controlada, manter botoes com area minima de toque e garantir que modais usem altura da viewport com rolagem interna e acoes visiveis.
 
+### Polimento visual Dark Fantasy
+
+A camada visual global deve manter a identidade coesa de RPG Dark Fantasy: fundos escuros, dourado para recompensa/destaque, vermelho escuro para perigo, roxo/ciano para energia arcana, textos secundarios neutros, cards com bordas metalicas discretas, modais com moldura de grimorio e raridades com brilho moderado. O acabamento nao deve prejudicar legibilidade, responsividade ou clareza dos estados.
+
 ### Proximas melhorias de UX
 
 - Tela de resultado de combate.

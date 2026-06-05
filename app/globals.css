@@ -9411,3 +9411,351 @@ textarea {
     padding: 0.72rem;
   }
 }
+
+/* ==========================================================================
+   Polimento visual final Dark Fantasy
+   ========================================================================== */
+
+:root {
+  --surface-rune: linear-gradient(145deg, rgba(232, 188, 88, 0.055), transparent 42%),
+    linear-gradient(180deg, rgba(36, 29, 36, 0.96), rgba(9, 8, 12, 0.94));
+  --surface-card: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.2));
+  --surface-danger: linear-gradient(145deg, rgba(214, 90, 90, 0.13), transparent 44%), rgba(0, 0, 0, 0.22);
+  --surface-arcane: linear-gradient(145deg, rgba(155, 127, 232, 0.13), transparent 44%), rgba(0, 0, 0, 0.2);
+  --surface-success: linear-gradient(145deg, rgba(86, 199, 189, 0.11), transparent 44%), rgba(0, 0, 0, 0.2);
+  --glow-gold: 0 0 26px rgba(232, 188, 88, 0.14);
+  --glow-arcane: 0 0 28px rgba(155, 127, 232, 0.16);
+  --glow-danger: 0 0 24px rgba(214, 90, 90, 0.14);
+  --line-subtle: rgba(255, 255, 255, 0.095);
+  --text-shadow-title: 0 1px 0 rgba(0, 0, 0, 0.5), 0 0 24px rgba(232, 188, 88, 0.08);
+}
+
+::selection {
+  background: rgba(232, 188, 88, 0.28);
+  color: var(--text);
+}
+
+* {
+  scrollbar-color: rgba(232, 188, 88, 0.42) rgba(0, 0, 0, 0.26);
+  scrollbar-width: thin;
+}
+
+body {
+  background:
+    radial-gradient(circle at 12% -4%, rgba(232, 188, 88, 0.08), transparent 22rem),
+    radial-gradient(circle at 82% 6%, rgba(155, 127, 232, 0.08), transparent 24rem),
+    radial-gradient(circle at 50% 110%, rgba(86, 199, 189, 0.055), transparent 26rem),
+    linear-gradient(145deg, var(--bg), #141016 52%, var(--bg-deep));
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.48), transparent 72%);
+}
+
+h1,
+h2,
+h3 {
+  color: var(--text);
+  text-shadow: var(--text-shadow-title);
+}
+
+.eyebrow,
+.section-heading span,
+.dashboard-tab-group-label,
+.resource-hud-header span,
+.settings-page-hero span,
+.settings-panel-hero span,
+.about-hero-card span,
+.recruitment-board-hero span,
+.summon-ritual-hero span,
+.inventory-hero-banner span,
+.expedition-board-hero span,
+.library-hero span,
+.tower-campaign-hero span {
+  color: var(--teal);
+  text-shadow: 0 0 18px rgba(86, 199, 189, 0.12);
+}
+
+.hero,
+.resource-hud-panel,
+.dashboard-shell-header,
+.dashboard-tabs,
+.tower-command-panel,
+.tower-panel,
+.tower-battle-panel,
+.tower-events-panel,
+.battle-result-panel,
+.team-presets-panel,
+.roster-panel,
+.inventory-panel,
+.expeditions-panel,
+.missions-panel,
+.relics-panel,
+.recruitment-panel-react,
+.formation-panel,
+.library-panel,
+.summon-panel-react,
+.chapter-completion-panel,
+.repeat-floors-panel,
+.memorial-panel,
+.preferences-panel,
+.save-management-card,
+.command-next-card,
+.command-card,
+.ui-panel,
+.about-project-panel {
+  border-color: rgba(232, 188, 88, 0.24);
+  background: var(--surface-rune);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 0 0 1px rgba(255, 244, 205, 0.028);
+}
+
+.command-card,
+.settings-section-card,
+.ui-alert-box,
+.ui-empty-state,
+.hero-compact-card,
+.hero-detail-panel,
+.inventory-item-card,
+.inventory-consumable-card,
+.inventory-detail-panel,
+.inventory-empty-state,
+.expedition-card,
+.mission-objective-card,
+.mission-list-card,
+.relic-card,
+.relic-artifact-card,
+.library-discovery-card,
+.library-lore-card,
+.summon-card-react,
+.summon-result-panel,
+.summon-history-react,
+.recruitment-option-card,
+.recruitment-empty-contract,
+.recruitment-result-card,
+.about-info-grid article,
+.about-grimoire-card,
+.about-alpha-scroll,
+.tower-threat-card,
+.tower-risk-card,
+.tower-cost-card,
+.tower-reward-card,
+.current-floor-card,
+.tower-event-card {
+  border-color: var(--line-subtle);
+  background: var(--surface-card), rgba(0, 0, 0, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 244, 205, 0.02);
+}
+
+.hero-inline-action,
+.ui-action,
+.tower-start-battle-button,
+.inventory-tab-row button,
+.library-tab-row button,
+.dashboard-tabs button {
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.hero-inline-action:hover:not(:disabled),
+.ui-action:hover:not(:disabled),
+.tower-start-battle-button:hover:not(:disabled),
+.inventory-tab-row button:hover:not(:disabled),
+.library-tab-row button:hover:not(:disabled),
+.dashboard-tabs button:hover:not(:disabled) {
+  border-color: rgba(232, 188, 88, 0.52);
+  box-shadow: var(--glow-gold);
+}
+
+.hero-inline-action.primary,
+.ui-action.primary,
+.tower-start-battle-button,
+.inventory-tab-row button.active,
+.library-tab-row button.active,
+.dashboard-tabs button[data-active="true"] {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 244, 205, 0.12),
+    var(--glow-gold);
+}
+
+.ui-action.danger,
+.hero-inline-action.danger,
+.settings-section-card.tone-danger {
+  background: var(--surface-danger);
+  box-shadow: var(--glow-danger);
+}
+
+.hero-inline-action:disabled,
+.ui-action:disabled,
+.tower-start-battle-button:disabled,
+.dashboard-tabs button:disabled {
+  filter: grayscale(0.25);
+  opacity: 0.48;
+}
+
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 2px solid rgba(86, 199, 189, 0.78);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgba(86, 199, 189, 0.12);
+}
+
+.command-alert-chip,
+.ui-badge,
+.resource-status-chip,
+.hero-tags span,
+.inventory-item-tags span,
+.battle-result-tags span,
+.recruitment-candidate-meta span,
+.about-stack-list span {
+  box-shadow: inset 0 0 0 1px rgba(255, 244, 205, 0.022);
+}
+
+.command-alert-chip.tone-danger,
+.ui-badge.tone-danger,
+.ui-alert-box.tone-danger,
+.tone-injured,
+.risk-danger,
+.status-blocked {
+  background: rgba(214, 90, 90, 0.09);
+}
+
+.command-alert-chip.tone-warning,
+.ui-badge.tone-warning,
+.ui-alert-box.tone-warning,
+.tone-gold,
+.tone-warning {
+  background: rgba(232, 188, 88, 0.08);
+}
+
+.command-alert-chip.tone-success,
+.ui-badge.tone-success,
+.ui-alert-box.tone-success,
+.tone-success,
+.tone-formation,
+.tone-expedition {
+  background: rgba(86, 199, 189, 0.075);
+}
+
+.command-alert-chip.tone-arcane,
+.ui-badge.tone-arcane,
+.tone-arcane,
+.rarity-epic {
+  background: rgba(155, 127, 232, 0.075);
+}
+
+.rarity-4,
+.rarity-5,
+.rarity-legendary,
+.inventory-item-card.rarity-4,
+.inventory-item-card.rarity-5,
+.summon-result-panel.rarity-4,
+.summon-result-panel.rarity-5,
+.recruitment-option-card.rarity-4,
+.recruitment-option-card.rarity-5,
+.hero-compact-card.rarity-4,
+.hero-compact-card.rarity-5,
+.relic-artifact-card.upgradeable {
+  border-color: rgba(232, 188, 88, 0.42);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 244, 205, 0.05),
+    0 0 30px rgba(232, 188, 88, 0.1);
+}
+
+.rarity-5,
+.rarity-legendary,
+.inventory-item-card.rarity-5,
+.summon-result-panel.rarity-5,
+.recruitment-option-card.rarity-5,
+.hero-compact-card.rarity-5 {
+  border-color: rgba(232, 188, 88, 0.62);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 244, 205, 0.07),
+    0 0 34px rgba(232, 188, 88, 0.16);
+}
+
+.ui-progress-bar,
+.command-progress-bar,
+.progress-track,
+.expedition-progress,
+.library-discovery-progress,
+.hero-compact-life,
+.resource-card-meter {
+  border-color: rgba(255, 255, 255, 0.11);
+  background: rgba(0, 0, 0, 0.38);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.42);
+}
+
+.ui-progress-bar i,
+.command-progress-bar i,
+.progress-track div,
+.expedition-progress i,
+.library-discovery-progress i,
+.hero-compact-life i,
+.resource-card-meter span {
+  box-shadow: 0 0 16px rgba(86, 199, 189, 0.16);
+}
+
+.modal-backdrop,
+.narrative-backdrop {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(155, 127, 232, 0.14), transparent 24rem),
+    rgba(3, 3, 5, 0.82);
+}
+
+.modal-card,
+.narrative-card,
+.tower-result-modal-card,
+.tower-history-modal-card {
+  border-color: rgba(232, 188, 88, 0.36);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(232, 188, 88, 0.11), transparent 18rem),
+    linear-gradient(180deg, rgba(34, 27, 34, 0.99), rgba(8, 7, 10, 0.99));
+  box-shadow:
+    0 28px 110px rgba(0, 0, 0, 0.68),
+    inset 0 0 0 1px rgba(255, 244, 205, 0.035);
+}
+
+input,
+select,
+textarea,
+.hero-equipment-select,
+.cloud-save-input {
+  border: 1px solid rgba(232, 188, 88, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(0, 0, 0, 0.22)),
+    rgba(0, 0, 0, 0.18);
+  color: var(--text);
+  border-radius: var(--radius-md);
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.56;
+}
+
+body.pref-reduce-motion *,
+body.pref-reduce-motion *::before,
+body.pref-reduce-motion *::after {
+  transition-duration: 0.01ms !important;
+}
