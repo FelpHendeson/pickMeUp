@@ -3095,6 +3095,432 @@ article,
   font-style: normal;
 }
 
+.relics-altar-banner {
+  border: 1px solid rgba(155, 127, 232, 0.28);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(155, 127, 232, 0.14), transparent 42%),
+    radial-gradient(circle at 88% 12%, rgba(86, 199, 189, 0.12), transparent 38%),
+    linear-gradient(180deg, rgba(21, 21, 33, 0.94), rgba(9, 9, 16, 0.9));
+  border-radius: var(--radius-lg);
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1rem;
+  padding: 1rem;
+}
+
+.relics-altar-shrine {
+  align-items: center;
+  display: flex;
+  gap: 0.85rem;
+}
+
+.relics-altar-glyph {
+  align-items: center;
+  border: 1px solid rgba(155, 127, 232, 0.42);
+  background:
+    radial-gradient(circle at 35% 30%, rgba(232, 188, 88, 0.28), rgba(0, 0, 0, 0.24)),
+    linear-gradient(180deg, rgba(21, 21, 33, 0.95), rgba(9, 9, 16, 0.92));
+  border-radius: 999px;
+  color: var(--gold);
+  display: grid;
+  flex-shrink: 0;
+  font-size: 1.2rem;
+  height: 52px;
+  place-items: center;
+  width: 52px;
+}
+
+.relics-altar-shrine span {
+  color: var(--teal);
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.relics-altar-shrine strong {
+  color: var(--gold);
+  display: block;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+  margin-top: 0.25rem;
+}
+
+.relics-altar-shrine p {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin: 0.35rem 0 0;
+}
+
+.relics-altar-stats {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.relics-altar-stats div {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: var(--radius-md);
+  padding: 0.65rem;
+}
+
+.relics-altar-stats strong,
+.relics-altar-stats span {
+  display: block;
+}
+
+.relics-altar-stats strong {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.relics-altar-stats span {
+  color: var(--gold);
+  font-size: 1.15rem;
+  font-weight: 900;
+  margin-top: 0.2rem;
+}
+
+.relics-altar-priority {
+  align-items: center;
+  border: 1px dashed rgba(232, 188, 88, 0.32);
+  background: rgba(232, 188, 88, 0.06);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: space-between;
+  margin-top: 0.85rem;
+  padding: 0.65rem 0.75rem;
+}
+
+.relics-altar-priority > span {
+  color: var(--gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.relics-altar-sections {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.relics-altar-sections > .ui-alert-box strong,
+.relics-altar-sections > .ui-alert-box span {
+  display: block;
+}
+
+.relics-altar-sections > .ui-alert-box span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin-top: 0.25rem;
+}
+
+.relic-artifact-group-head h4 {
+  font-family: Georgia, "Times New Roman", serif;
+  margin: 0;
+}
+
+.relic-artifact-group-head small {
+  color: var(--muted);
+  display: block;
+  font-size: 0.76rem;
+  margin-top: 0.2rem;
+}
+
+.relic-artifact-list {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+  margin-top: 0.65rem;
+}
+
+.relic-artifact-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.22)),
+    rgba(0, 0, 0, 0.14);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  padding: 0.9rem;
+  position: relative;
+}
+
+.relic-artifact-card::before {
+  border-left: 3px solid rgba(86, 199, 189, 0.35);
+  content: "";
+  inset: 0.75rem auto 0.75rem 0.55rem;
+  position: absolute;
+  width: 0;
+}
+
+.relic-artifact-card.tier-forged::before {
+  border-left-color: rgba(232, 188, 88, 0.45);
+}
+
+.relic-artifact-card.tier-ancient::before {
+  border-left-color: rgba(155, 127, 232, 0.5);
+}
+
+.relic-artifact-card.tier-mythic {
+  border-color: rgba(155, 127, 232, 0.32);
+  box-shadow: inset 0 0 24px rgba(155, 127, 232, 0.06);
+}
+
+.relic-artifact-card.tier-mythic::before {
+  border-left-color: rgba(232, 188, 88, 0.62);
+}
+
+.relic-artifact-card.upgradeable {
+  animation: relic-upgradeable-pulse 2.6s ease-in-out infinite;
+  border-color: rgba(232, 188, 88, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(232, 188, 88, 0.12),
+    0 12px 32px rgba(155, 127, 232, 0.12);
+}
+
+.relic-artifact-card.locked {
+  filter: saturate(0.55);
+  opacity: 0.82;
+}
+
+.relic-artifact-card.maxed {
+  border-color: rgba(232, 188, 88, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(232, 188, 88, 0.08);
+}
+
+.relic-artifact-rune {
+  background: linear-gradient(180deg, rgba(86, 199, 189, 0.18), transparent);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  inset: 0 0 auto;
+  height: 3px;
+  position: absolute;
+  width: 100%;
+}
+
+.relic-artifact-card.tier-mythic .relic-artifact-rune {
+  background: linear-gradient(90deg, rgba(155, 127, 232, 0.35), rgba(232, 188, 88, 0.35));
+}
+
+.relic-artifact-veil {
+  background:
+    radial-gradient(circle at 50% 35%, rgba(155, 127, 232, 0.12), transparent 55%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.28));
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.relic-artifact-head {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.65rem;
+  justify-content: space-between;
+}
+
+.relic-artifact-kind {
+  color: var(--teal);
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.relic-artifact-head h4 {
+  color: var(--gold);
+  font-family: Georgia, "Times New Roman", serif;
+  margin: 0.2rem 0 0;
+}
+
+.relic-artifact-desc {
+  color: var(--muted-strong);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin: 0.55rem 0 0;
+}
+
+.relic-artifact-level {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-md);
+  margin-top: 0.7rem;
+  padding: 0.65rem;
+}
+
+.relic-artifact-level-head {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.relic-artifact-level-head span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.relic-artifact-level-head strong {
+  color: var(--gold);
+  font-size: 0.88rem;
+}
+
+.relic-artifact-effect {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius-md);
+  margin-top: 0.65rem;
+  padding: 0.65rem;
+}
+
+.relic-artifact-effect.current {
+  border-color: rgba(86, 199, 189, 0.24);
+  background: rgba(86, 199, 189, 0.05);
+}
+
+.relic-artifact-effect.next {
+  border-color: rgba(232, 188, 88, 0.22);
+  background: rgba(232, 188, 88, 0.05);
+}
+
+.relic-artifact-effect.ascended {
+  border-color: rgba(232, 188, 88, 0.35);
+  background: linear-gradient(90deg, rgba(232, 188, 88, 0.08), transparent);
+}
+
+.relic-artifact-effect strong {
+  color: var(--gold);
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.relic-artifact-effect span,
+.relic-artifact-effect small {
+  color: var(--muted-strong);
+  display: block;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin-top: 0.25rem;
+}
+
+.relic-artifact-effect small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.relic-artifact-seal {
+  border: 1px dashed rgba(155, 127, 232, 0.32);
+  background: rgba(155, 127, 232, 0.06);
+  border-radius: var(--radius-md);
+  margin-top: 0.7rem;
+  padding: 0.65rem;
+}
+
+.relic-artifact-seal strong {
+  color: #d7c7ff;
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.relic-artifact-seal span {
+  color: var(--muted);
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  margin-top: 0.25rem;
+}
+
+.relic-artifact-cost {
+  border: 1px solid rgba(232, 188, 88, 0.18);
+  background:
+    linear-gradient(90deg, rgba(232, 188, 88, 0.07), transparent),
+    rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius-md);
+  margin-top: 0.7rem;
+  padding: 0.65rem;
+}
+
+.relic-artifact-cost strong {
+  color: var(--gold);
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.relic-artifact-cost span {
+  color: var(--muted-strong);
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  margin-top: 0.25rem;
+}
+
+.relic-upgrade-button {
+  justify-content: center;
+  margin-top: 0.75rem;
+  min-height: 46px;
+  width: 100%;
+}
+
+.relic-artifact-hint {
+  color: var(--teal);
+  font-size: 0.76rem;
+  margin: 0.65rem 0 0;
+}
+
+.relics-altar .ui-alert-box:last-child {
+  margin-top: 1rem;
+}
+
+.relics-altar .ui-alert-box strong,
+.relics-altar .ui-alert-box span {
+  display: block;
+}
+
+.relic-upgrade-feedback-effect {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted-strong) !important;
+  font-size: 0.78rem !important;
+  line-height: 1.5 !important;
+  margin-top: 0.55rem !important;
+  padding-top: 0.55rem;
+}
+
+@keyframes relic-upgradeable-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(232, 188, 88, 0.12),
+      0 12px 32px rgba(155, 127, 232, 0.1);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(232, 188, 88, 0.24),
+      0 14px 36px rgba(86, 199, 189, 0.14);
+  }
+}
+
 .library-section-head {
   align-items: center;
   display: flex;
@@ -4402,6 +4828,7 @@ body::before {
 .mission-row,
 .mission-list-card,
 .relic-card,
+.relic-artifact-card,
 .library-entry,
 .summon-card-react,
 .summon-history-react,
@@ -4419,14 +4846,16 @@ body::before {
 }
 
 .mission-row.complete,
-.relic-card.upgradeable {
+.relic-card.upgradeable,
+.relic-artifact-card.upgradeable {
   border-color: rgba(86, 199, 189, 0.5);
   box-shadow: inset 0 0 0 1px rgba(86, 199, 189, 0.08);
 }
 
 .relic-card.locked,
 .library-entry.locked,
-.mission-row.claimed {
+.mission-row.claimed,
+.relic-artifact-card.locked {
   filter: saturate(0.7);
   opacity: 0.72;
 }
@@ -5813,6 +6242,15 @@ body::before {
 
   .missions-diary-stats {
     grid-template-columns: 1fr;
+  }
+
+  .relics-altar-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .relic-artifact-head {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .mission-objective-head {
