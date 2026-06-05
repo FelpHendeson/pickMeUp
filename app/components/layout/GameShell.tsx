@@ -161,7 +161,7 @@ function SaveBootstrap() {
   useEffect(() => {
     if (didLoadRef.current) return;
     didLoadRef.current = true;
-    loadLocalSave();
+    loadLocalSave({ silent: true });
   }, [loadLocalSave]);
 
   return null;

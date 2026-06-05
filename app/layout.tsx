@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ConfirmDialogProvider } from "./components/ui";
+import { ConfirmDialogProvider, ToastProvider } from "./components/ui";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,7 +11,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="pt-BR">
       <body>
-        <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
+        <ToastProvider>
+          <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
+        </ToastProvider>
       </body>
     </html>
   );

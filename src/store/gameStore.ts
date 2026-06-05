@@ -51,11 +51,14 @@ import {
 type InjuryTreatmentResource = keyof typeof import("@/src/game/hero-status/injuries").INJURY_CONFIG.treatmentCosts;
 
 type ActionResult = { ok: boolean; message: string };
+type FeedbackToastTone = "default" | "success" | "warning" | "danger" | "arcane";
+
+const GAME_TOAST_EVENT = "ascensao:toast";
 
 type GameStore = {
   state: GameState;
   source: "initial" | "local-storage" | "manual" | "cloud-postgres";
-  loadLocalSave: () => { ok: true; state: GameState } | { ok: false; message: string };
+  loadLocalSave: (options?: { silent?: boolean }) => { ok: true; state: GameState } | { ok: false; message: string };
   replaceState: (state: PartialGameState) => void;
   resetLocalState: () => void;
   persistLocalSave: () => void;
@@ -112,6 +115,21 @@ function writeLocalSave(state: GameState): void {
   );
 }
 
+function emitFeedbackToast(result: ActionResult, options?: { title?: string; tone?: FeedbackToastTone }): void {
+  if (typeof window === "undefined" || !result.message) return;
+
+  const tone = options?.tone ?? (result.ok ? "success" : "warning");
+  window.dispatchEvent(
+    new CustomEvent(GAME_TOAST_EVENT, {
+      detail: {
+        message: result.message,
+        title: options?.title ?? (result.ok ? "Ação concluída" : "Ação indisponível"),
+        tone,
+      },
+    }),
+  );
+}
+
 function commitState(state: GameState): GameState {
   const normalized = ensureStateShape(state);
   writeLocalSave(normalized);
@@ -135,23 +153,31 @@ function mutateState<T extends ActionResult>(
     const nextState = commitState(current);
     set({ state: nextState, source: "manual" });
   }
+  emitFeedbackToast(result);
   return result;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
   state: createInitialState(),
   source: "initial",
-  loadLocalSave: () => {
+  loadLocalSave: (options) => {
     try {
       const raw = readLocalSave();
-      if (!raw) return { ok: false, message: "Nenhum save local encontrado neste navegador." };
+      if (!raw) {
+        const result = { ok: false, message: "Nenhum save local encontrado neste navegador." } as const;
+        if (!options?.silent) emitFeedbackToast(result);
+        return result;
+      }
 
       const state = hydrateLoadedState(raw as PartialGameState);
       set({ state, source: "local-storage" });
       applyPreferencesToDocument();
+      if (!options?.silent) emitFeedbackToast({ ok: true, message: "Save local carregado deste navegador." });
       return { ok: true, state };
     } catch {
-      return { ok: false, message: "Save local existe, mas nao pode ser lido como JSON valido." };
+      const result = { ok: false, message: "Save local existe, mas nao pode ser lido como JSON valido." } as const;
+      if (!options?.silent) emitFeedbackToast(result);
+      return result;
     }
   },
   replaceState: (state) => {
@@ -162,10 +188,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const state = createInitialState();
     writeLocalSave(state);
     set({ state, source: "initial" });
+    emitFeedbackToast({ ok: true, message: "Save reiniciado. Uma nova jornada começou." }, { tone: "danger", title: "Save resetado" });
   },
   persistLocalSave: () => {
     const state = commitState(get().state);
     set({ state, source: "manual" });
+    emitFeedbackToast({ ok: true, message: "Save local persistido no navegador." });
   },
   refreshSession: () => {
     const current = get().state;
@@ -178,24 +206,33 @@ export const useGameStore = create<GameStore>((set, get) => ({
   clearChapterCompletion: () => mutateState(get, set, (state) => clearChapterCompletion(state)),
   exportSave: () => {
     downloadGameStateExport(get().state);
-    return { ok: true, message: "Save exportado para download." };
+    const result = { ok: true, message: "Save exportado para download." };
+    emitFeedbackToast(result);
+    return result;
   },
   importSave: (text) => {
     const parsed = importGameStateFromText(text);
-    if (!parsed.ok) return parsed;
+    if (!parsed.ok) {
+      emitFeedbackToast(parsed);
+      return parsed;
+    }
     initializeNarrativeForSession(parsed.state);
     const state = commitState(parsed.state);
     set({ state, source: "manual" });
-    return { ok: true, message: "Save importado e normalizado." };
+    const result = { ok: true, message: "Save importado e normalizado." };
+    emitFeedbackToast(result);
+    return result;
   },
   updatePreference: (path, value) => {
     const result = updateStoredPreference(path, value);
     if (result.preferences) applyPreferencesToDocument(result.preferences);
+    emitFeedbackToast(result);
     return result;
   },
   resetPreferences: () => {
     resetStoredPreferences();
     applyPreferencesToDocument();
+    emitFeedbackToast({ ok: true, message: "Preferências restauradas para o padrão." });
   },
   applyPreferences: () => {
     applyPreferencesToDocument();
@@ -203,7 +240,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   resolveTowerEventChoice: (choiceId) => {
     const current = get().state;
     const result = resolveTowerEventChoice(current, choiceId);
-    if (!result.ok) return result;
+    if (!result.ok) {
+      emitFeedbackToast(result);
+      return result;
+    }
 
     let nextState = commitState(current);
     set({ state: nextState, source: "manual" });
@@ -215,14 +255,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
       });
       nextState = commitState(nextState);
       set({ state: nextState, source: "manual" });
-      return {
+      const completedResult = {
         ok: true,
         message: `${result.message} ${battleResult.ok && "battle" in battleResult ? (battleResult.battle.result === "victory" ? "Combate vencido." : "Combate perdido.") : "event" in battleResult && battleResult.event ? battleResult.message : !battleResult.ok ? battleResult.message : "Combate concluido."}`,
         startBattle: true,
         battleStarted: true,
       };
+      emitFeedbackToast(completedResult, { title: "Evento resolvido", tone: "arcane" });
+      return completedResult;
     }
 
+    emitFeedbackToast(result, { title: "Evento resolvido", tone: "arcane" });
     return result;
   },
   startTowerBattle: (options) => {
@@ -270,21 +313,35 @@ export const useGameStore = create<GameStore>((set, get) => ({
   loadCloudSave: async (playerId) => {
     try {
       const response = await fetch(`/api/saves/${encodeURIComponent(playerId)}`);
-      if (response.status === 404) return { ok: false, message: "Nenhum save encontrado no PostgreSQL para este jogador." };
+      if (response.status === 404) {
+        const result = { ok: false, message: "Nenhum save encontrado no PostgreSQL para este jogador." };
+        emitFeedbackToast(result);
+        return result;
+      }
       if (!response.ok) {
         const body = (await response.json().catch(() => null)) as { message?: string } | null;
-        return { ok: false, message: body?.message || "Falha ao carregar save da nuvem." };
+        const result = { ok: false, message: body?.message || "Falha ao carregar save da nuvem." };
+        emitFeedbackToast(result);
+        return result;
       }
 
       const body = (await response.json()) as { payload?: PartialGameState };
-      if (!body.payload) return { ok: false, message: "Resposta da nuvem sem payload valido." };
+      if (!body.payload) {
+        const result = { ok: false, message: "Resposta da nuvem sem payload valido." };
+        emitFeedbackToast(result);
+        return result;
+      }
 
       const state = commitState(hydrateLoadedState(body.payload));
       set({ state, source: "cloud-postgres" });
       applyPreferencesToDocument();
-      return { ok: true, message: "Save carregado do PostgreSQL e sincronizado com o navegador." };
+      const result = { ok: true, message: "Save carregado do PostgreSQL e sincronizado com o navegador." };
+      emitFeedbackToast(result);
+      return result;
     } catch {
-      return { ok: false, message: "Nao foi possivel conectar a API de save." };
+      const result = { ok: false, message: "Nao foi possivel conectar a API de save." };
+      emitFeedbackToast(result);
+      return result;
     }
   },
   saveCloudSave: async (playerId) => {
@@ -300,13 +357,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       if (!response.ok) {
         const body = (await response.json().catch(() => null)) as { message?: string } | null;
-        return { ok: false, message: body?.message || "Falha ao salvar na nuvem." };
+        const result = { ok: false, message: body?.message || "Falha ao salvar na nuvem." };
+        emitFeedbackToast(result);
+        return result;
       }
 
       set({ state, source: "cloud-postgres" });
-      return { ok: true, message: "Save enviado para o PostgreSQL." };
+      const result = { ok: true, message: "Save enviado para o PostgreSQL." };
+      emitFeedbackToast(result);
+      return result;
     } catch {
-      return { ok: false, message: "Nao foi possivel conectar a API de save." };
+      const result = { ok: false, message: "Nao foi possivel conectar a API de save." };
+      emitFeedbackToast(result);
+      return result;
     }
   },
 }));

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { UiModal } from "./UiModal";
 
 export type ConfirmDialogTone = "default" | "danger" | "ritual";
 
@@ -69,26 +70,23 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
     <ConfirmDialogContext.Provider value={contextValue}>
       {children}
       {pendingDialog ? (
-        <section
-          aria-labelledby="confirmDialogTitle"
-          aria-modal="true"
-          className={`modal-backdrop confirm-dialog-backdrop tone-${pendingDialog.tone}`}
-          role="dialog"
+        <UiModal
+          className="confirm-dialog-card"
+          labelledBy="confirmDialogTitle"
+          overline={pendingDialog.tone === "danger" ? "Ação irreversível" : "Confirmação"}
+          title={pendingDialog.title}
+          tone={pendingDialog.tone}
         >
-          <article className="modal-card confirm-dialog-card">
-            <span>{pendingDialog.tone === "danger" ? "Ação irreversível" : "Confirmação"}</span>
-            <h2 id="confirmDialogTitle">{pendingDialog.title}</h2>
-            <p>{pendingDialog.description}</p>
-            <div className="modal-action-row">
-              <button className="ui-action secondary" onClick={() => closeDialog(false)} type="button">
-                {pendingDialog.cancelLabel}
-              </button>
-              <button className={`ui-action ${pendingDialog.tone === "danger" ? "danger" : "primary"}`} onClick={() => closeDialog(true)} type="button">
-                {pendingDialog.confirmLabel}
-              </button>
-            </div>
-          </article>
-        </section>
+          <p>{pendingDialog.description}</p>
+          <div className="modal-action-row">
+            <button className="ui-action secondary" onClick={() => closeDialog(false)} type="button">
+              {pendingDialog.cancelLabel}
+            </button>
+            <button className={`ui-action ${pendingDialog.tone === "danger" ? "danger" : "primary"}`} onClick={() => closeDialog(true)} type="button">
+              {pendingDialog.confirmLabel}
+            </button>
+          </div>
+        </UiModal>
       ) : null}
     </ConfirmDialogContext.Provider>
   );

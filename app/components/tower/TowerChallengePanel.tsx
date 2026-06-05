@@ -30,7 +30,7 @@ import {
   type TowerFloor,
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
-import { useConfirmDialog, UiAlertBox, UiProgressBar } from "../ui";
+import { useConfirmDialog, useToast, UiAlertBox, UiModal, UiProgressBar } from "../ui";
 import { BattleResultPanel } from "./BattleResultPanel";
 
 const difficultyModes = ["normal", "challenge", "hardcore"] as const;
@@ -101,6 +101,13 @@ function getFormationReadiness(state: Pick<GameState, "formation" | "heroes">) {
   };
 }
 
+function getTowerEventModalTone(tone: string): "default" | "danger" | "ritual" | "arcane" {
+  if (tone === "danger") return "danger";
+  if (tone === "reward" || tone === "merchant") return "ritual";
+  if (tone === "support" || tone === "choice") return "arcane";
+  return "default";
+}
+
 function formatHeroNames(heroes: Hero[]): string {
   if (heroes.length === 0) return "";
   const names = heroes.slice(0, 3).map((hero) => hero.name).join(", ");
@@ -167,10 +174,12 @@ export function TowerChallengePanel() {
   const startRepeatTowerBattle = useGameStore((store) => store.startRepeatTowerBattle);
   const resolveEvent = useGameStore((store) => store.resolveTowerEventChoice);
   const confirmDialog = useConfirmDialog();
+  const { showToast } = useToast();
   const highestAvailableFloor = clampFloor(state.towerFloor);
   const [selectedFloor, setSelectedFloor] = useState(highestAvailableFloor);
   const [difficultyMode, setDifficultyMode] = useState<TowerDifficultyModeId>("normal");
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [showTowerEventModal, setShowTowerEventModal] = useState(false);
   const [showBattleModal, setShowBattleModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const normalizedDifficulty = normalizeTowerDifficultyMode(difficultyMode);
@@ -311,6 +320,11 @@ export function TowerChallengePanel() {
   async function handleChallenge() {
     if (!canChallenge) {
       setFeedback(statusMessage);
+      showToast({
+        title: "Ação indisponível",
+        message: statusMessage,
+        tone: "warning",
+      });
       return;
     }
 
@@ -322,6 +336,14 @@ export function TowerChallengePanel() {
       : startRepeatTowerBattle(selectedFloor, { difficultyMode: normalizedDifficulty });
 
     setFeedback(formatBattleMessage(result));
+    showToast({
+      title: result.ok && "event" in result && result.event ? "Evento revelado" : result.ok ? "Ação concluída" : "Ação indisponível",
+      message: formatBattleMessage(result),
+      tone: result.ok && "event" in result && result.event ? "arcane" : result.ok ? "success" : "warning",
+    });
+    if (result.ok && "event" in result && result.event) {
+      setShowTowerEventModal(true);
+    }
     if (result.ok && "battle" in result) {
       setShowBattleModal(true);
     }
@@ -330,6 +352,9 @@ export function TowerChallengePanel() {
   function handleEventChoice(choiceId: string) {
     const result = resolveEvent(choiceId);
     setFeedback(result.message);
+    if (result.ok) {
+      setShowTowerEventModal(false);
+    }
     if (result.battleStarted) {
       setShowBattleModal(true);
     }
@@ -449,7 +474,7 @@ export function TowerChallengePanel() {
           ) : null}
 
           {pendingEvent && pendingEventDefinition ? (
-            <section className={`tower-event-card tower-event-compact tone-${pendingEventDefinition.tone}`}>
+            <section className={`tower-event-card tower-event-compact tower-event-cta tone-${pendingEventDefinition.tone}`}>
               <div className="tower-event-head">
                 <div>
                   <span>{getTowerEventPhaseLabel(pendingEvent.phase)}</span>
@@ -458,29 +483,12 @@ export function TowerChallengePanel() {
                 <strong>Andar {pendingEvent.floor}</strong>
               </div>
               <p>{pendingEventDefinition.description}</p>
-              <div className="tower-event-choice-grid compact">
-                {pendingEventDefinition.choices.map((choice) => {
-                  const availability = canChooseTowerEventOption(state, pendingEvent, choice.id);
-                  const costText = choice.cost ? ` (${choice.cost.amount} ${getTowerEventResourceName(choice.cost.resource)})` : "";
-
-                  return (
-                    <button
-                      className="tower-event-choice"
-                      disabled={!availability.ok}
-                      key={choice.id}
-                      onClick={() => handleEventChoice(choice.id)}
-                      type="button"
-                    >
-                      <strong>{choice.label}</strong>
-                      <span>
-                        {choice.description}
-                        {costText}
-                      </span>
-                      {!availability.ok && availability.message ? <em>{availability.message}</em> : null}
-                    </button>
-                  );
-                })}
-              </div>
+              <button className="tower-start-battle-button tower-event-open-button" onClick={() => setShowTowerEventModal(true)} type="button">
+                <strong>Resolver evento</strong>
+                <span>
+                  {pendingEventDefinition.choices.length} escolha(s) disponível(is) | combate bloqueado
+                </span>
+              </button>
             </section>
           ) : null}
 
@@ -570,6 +578,47 @@ export function TowerChallengePanel() {
           {feedback ? <p className="tower-battle-feedback">{feedback}</p> : null}
         </article>
       </div>
+
+      {showTowerEventModal && pendingEvent && pendingEventDefinition ? (
+        <UiModal
+          className={`tower-event-modal-card tone-${pendingEventDefinition.tone}`}
+          labelledBy="towerEventModalTitle"
+          onClose={() => setShowTowerEventModal(false)}
+          overline={getTowerEventPhaseLabel(pendingEvent.phase)}
+          title={pendingEventDefinition.title}
+          tone={getTowerEventModalTone(pendingEventDefinition.tone)}
+        >
+          <div className="tower-event-modal-body">
+            <p>{pendingEventDefinition.description}</p>
+            <p className="tower-event-next-step">
+              Escolha como a guilda vai reagir. O combate da Torre permanece bloqueado até este evento ser resolvido.
+            </p>
+            <div className="tower-event-choice-grid modal">
+              {pendingEventDefinition.choices.map((choice) => {
+                const availability = canChooseTowerEventOption(state, pendingEvent, choice.id);
+                const costText = choice.cost ? ` (${choice.cost.amount} ${getTowerEventResourceName(choice.cost.resource)})` : "";
+
+                return (
+                  <button
+                    className="tower-event-choice"
+                    disabled={!availability.ok}
+                    key={choice.id}
+                    onClick={() => handleEventChoice(choice.id)}
+                    type="button"
+                  >
+                    <strong>{choice.label}</strong>
+                    <span>
+                      {choice.description}
+                      {costText}
+                    </span>
+                    {!availability.ok && availability.message ? <em>{availability.message}</em> : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </UiModal>
+      ) : null}
 
       {showBattleModal ? (
         <section className="modal-backdrop tower-result-backdrop" role="dialog" aria-modal="true" aria-labelledby="towerResultTitle">
