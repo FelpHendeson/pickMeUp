@@ -514,6 +514,10 @@ A Base deve responder rapidamente "o que eu faco agora?". Ela resume o estado da
 - invocar/recrutar quando houver recursos ou contratos;
 - voltar para a Torre quando a equipe estiver pronta.
 
+### HUD de recursos
+
+O HUD de recursos deve funcionar como uma vigilia compacta da conta. Ele exibe ouro, cristais, essencia, fragmentos e energia em leitura rapida, com cores/selos consistentes por recurso, estado de energia cheia ou baixa e destaque discreto quando valores mudam. Recursos secundarios e status operacionais ficam recolhidos para reduzir poluicao visual, especialmente no mobile.
+
 ### Proximas melhorias de UX
 
 - Tela de resultado de combate.
