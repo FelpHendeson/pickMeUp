@@ -1,6 +1,6 @@
 {
   "name": "ascensao-dos-ecos",
-  "version": "0.10.0-migration",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "scripts": {
