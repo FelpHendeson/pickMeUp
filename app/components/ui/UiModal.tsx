@@ -1,6 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 export type UiModalTone = "default" | "danger" | "ritual" | "arcane";
 export type UiModalSize = "normal" | "large";
@@ -32,7 +33,13 @@ export function UiModal({
   title,
   tone = "default",
 }: UiModalProps) {
-  return (
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const modal = (
     <section aria-labelledby={labelledBy} aria-modal="true" className={`modal-backdrop ui-modal-backdrop tone-${tone}`} role="dialog">
       <article className={`modal-card ui-modal-card size-${size} ${className}`.trim()}>
         <div className="ui-modal-head">
@@ -52,4 +59,8 @@ export function UiModal({
       </article>
     </section>
   );
+
+  if (!mounted) return null;
+
+  return createPortal(modal, document.body);
 }
