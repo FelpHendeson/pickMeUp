@@ -19,4 +19,17 @@ export {
   unequipItem,
   type EquipmentActionResult,
 } from "./equipmentActions";
+export {
+  analyzeEquipmentForHero,
+  getEquipmentComparison,
+  getEquipmentCompatibility,
+  getEquipmentPowerImpact,
+  getStatLabel,
+  type EquipmentComparison,
+  type EquipmentComparisonRow,
+  type EquipmentComparisonTone,
+  type EquipmentCompatibility,
+  type EquipmentCompatibilityLevel,
+  type EquipmentHeroAnalysis,
+} from "./equipmentAnalysis";
 export type { GenerateEquipmentOptions } from "./equipmentFactory";

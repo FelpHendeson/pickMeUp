@@ -23,6 +23,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 ### Formação e equipamentos
 - `src/game/formation/` organiza a equipe ativa, limites de slots, posicoes de frente/retaguarda e presets de time.
 - `src/game/equipment/` gera, normaliza, equipa e calcula efeitos de equipamentos, recalculando bonus derivados de raridade e andar.
+- O painel de herois equipa itens pelo modal Arsenal da Guilda, com cards, comparacao contra o slot atual, impacto estimado de poder e compatibilidade flexivel. Classe pouco afinada gera aviso e permite equipar mesmo assim; bloqueio real fica reservado para regra tecnica, como slot diferente ou item ja equipado no mesmo slot.
 - `src/game/consumables/` define consumiveis, quantidades, alvos permitidos, validacao de uso e efeitos de preparacao.
 - Itens obtidos por eventos, recompensas ou drops raros devem ser normalizados para evitar discrepancia entre raridade, nome e bonus efetivo.
 

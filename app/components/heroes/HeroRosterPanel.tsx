@@ -3,20 +3,23 @@
 import {
   CONSUMABLE_DEFINITIONS,
   EQUIPMENT_SLOTS,
+  analyzeEquipmentForHero,
+  findEquipmentOwner,
   getClassSpecializations,
   getEquipmentBonusLabel,
   getEquipmentTypeName,
   getHeroActiveInjuries,
   getHeroAffinitySummaries,
   getHeroExpedition,
+  getHeroEffectiveStats,
   getHeroInjurySummary,
   getHeroInjuryTreatmentCost,
   getHeroMoraleState,
-  getHeroPower,
+  getHeroPowerWithEquipment,
   getHeroSpecialization,
   getHeroXpForNextLevel,
   getInjuryDefinition,
-  getUnequippedInventory,
+  getStatLabel,
   hasHeroInjuries,
   INJURY_CONFIG,
   isHeroInFormation,
@@ -29,6 +32,7 @@ import {
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
 import { useMemo, useState } from "react";
+import { UiModal, useToast } from "../ui";
 
 function getRarityStars(rarity: number): string {
   return "\u2605".repeat(rarity) + "\u2606".repeat(Math.max(0, 5 - rarity));
@@ -48,9 +52,9 @@ function heroMatchesStatus(hero: Hero, state: GameState, status: HeroStatusFilte
   return true;
 }
 
-function sortHeroesForDisplay(heroes: Hero[], sortBy: HeroSort): Hero[] {
+function sortHeroesForDisplay(heroes: Hero[], sortBy: HeroSort, state: GameState): Hero[] {
   return [...heroes].sort((a, b) => {
-    const powerDifference = getHeroPower(b) - getHeroPower(a);
+    const powerDifference = getHeroPowerWithEquipment(state, b) - getHeroPowerWithEquipment(state, a);
     const rarityDifference = b.rarity - a.rarity;
     const levelDifference = b.level - a.level;
 
@@ -66,17 +70,44 @@ function getActiveInjuryCount(hero: Hero): number {
   return getHeroActiveInjuries(hero).length;
 }
 
-function getEquippedItems(hero: Hero, inventory: EquipmentItem[]): EquipmentItem[] {
-  const ids = new Set(Object.values(hero.equipment || {}).filter(Boolean));
-  return inventory.filter((item) => ids.has(item.id));
-}
-
 function getRarityLabel(rarity: number): string {
   if (rarity >= 5) return "Lendário";
   if (rarity === 4) return "Épico";
   if (rarity === 3) return "Raro";
   if (rarity === 2) return "Incomum";
   return "Comum";
+}
+
+function getEquipmentSlotLabel(slot: EquipmentSlot): string {
+  if (slot === "accessory") return "Relíquia/Acessório";
+  return getEquipmentTypeName(slot);
+}
+
+function getEquipmentSlotNoun(slot: EquipmentSlot): string {
+  if (slot === "weapon") return "arma";
+  if (slot === "armor") return "armadura";
+  return "relíquia";
+}
+
+function getEmptySlotLabel(slot: EquipmentSlot): string {
+  if (slot === "weapon") return "Nenhuma arma equipada";
+  if (slot === "armor") return "Nenhuma armadura equipada";
+  return "Nenhuma relíquia equipada";
+}
+
+function getSlotPluralLabel(slot: EquipmentSlot): string {
+  if (slot === "weapon") return "armas";
+  if (slot === "armor") return "armaduras";
+  return "relíquias";
+}
+
+function formatSignedValue(value: number): string {
+  return value > 0 ? `+${value}` : `${value}`;
+}
+
+function getEquippedItemForSlot(hero: Hero, inventory: EquipmentItem[], slot: EquipmentSlot): EquipmentItem | null {
+  const itemId = hero.equipment?.[slot];
+  return itemId ? inventory.find((item) => item.id === itemId) ?? null : null;
 }
 
 function HeroCompactCard({
@@ -101,7 +132,7 @@ function HeroCompactCard({
   const onExpedition = isHeroOnExpedition(state, hero.id);
   const expedition = getHeroExpedition(state, hero.id);
   const specializationAvailable = hero.level >= SPECIALIZATION_LEVEL && !hero.specializationKey;
-  const power = getHeroPower(hero);
+  const power = getHeroPowerWithEquipment(state, hero);
   const availabilityTone = injuryCount > 0 ? "injured" : onExpedition ? "expedition" : inFormation ? "formation" : "available";
 
   return (
@@ -157,7 +188,184 @@ function HeroCompactCard({
   );
 }
 
+function GuildArsenalItemCard({
+  currentItem,
+  hero,
+  item,
+  onEquip,
+  owner,
+  slot,
+}: {
+  currentItem: EquipmentItem | null;
+  hero: Hero;
+  item: EquipmentItem;
+  onEquip: (item: EquipmentItem) => void;
+  owner: Hero | null;
+  slot: EquipmentSlot;
+}) {
+  const analysis = analyzeEquipmentForHero({ currentItem, hero, item, slot });
+  const powerTone = analysis.powerDelta > 0 ? "upgrade" : analysis.powerDelta < 0 ? "downgrade" : "equal";
+  const ownerLabel = owner ? (owner.id === hero.id ? "Com este herói" : `Com ${owner.name}; será transferido`) : "Livre no Arsenal";
+  const warning = analysis.blockedReason || analysis.compatibility.warning;
+  const compatibilityClass = analysis.blockedReason ? "blocked" : analysis.compatibility.level;
+
+  return (
+    <article className={`guild-arsenal-card rarity-${item.rarity} compatibility-${compatibilityClass}${!analysis.canEquip ? " blocked" : ""}`}>
+      <div className="guild-arsenal-card-head">
+        <div className="guild-arsenal-sigil" aria-hidden="true">
+          {getEquipmentSlotLabel(item.type).slice(0, 1)}
+        </div>
+        <div className="guild-arsenal-card-title">
+          <span>{getEquipmentSlotLabel(item.type)} · {getRarityLabel(item.rarity)}</span>
+          <h3>{item.name}</h3>
+          <small>{getRarityStars(item.rarity)}</small>
+        </div>
+      </div>
+
+      <div className="guild-arsenal-stat-row">
+        <span>
+          <strong>{getStatLabel(item.bonusStat)}</strong>
+          +{item.bonusValue}
+        </span>
+        <span>
+          <strong>Poder</strong>
+          +{analysis.itemPower}
+        </span>
+      </div>
+
+      <div className="guild-arsenal-badges">
+        <span className={`tone-compat-${compatibilityClass}`}>
+          {analysis.blockedReason ? "Incompatível real" : analysis.compatibility.badge}
+        </span>
+        <span>{ownerLabel}</span>
+        <span className={`tone-${powerTone}`}>Poder {formatSignedValue(analysis.powerDelta)}</span>
+      </div>
+
+      <div className="guild-arsenal-compare inventory-compare-box">
+        <strong>Comparação</strong>
+        <small>{analysis.comparison.label}</small>
+        <div className="inventory-compare-rows">
+          {analysis.comparison.rows.map((row) => (
+            <span className={`tone-${row.tone}`} key={`${item.id}-${row.stat}-${row.label}`}>
+              <strong>{getStatLabel(row.stat)}</strong>
+              {formatSignedValue(row.value)}
+              <em>{row.label}</em>
+            </span>
+          ))}
+          <span className={`tone-${powerTone}`}>
+            <strong>Poder</strong>
+            {formatSignedValue(analysis.powerDelta)}
+            <em>impacto estimado</em>
+          </span>
+        </div>
+      </div>
+
+      <p className="guild-arsenal-recommendation">{analysis.compatibility.recommendation}</p>
+      {warning ? <p className="guild-arsenal-warning">{warning}</p> : null}
+
+      <button className="hero-inline-action primary" disabled={!analysis.canEquip} onClick={() => onEquip(item)} type="button">
+        {analysis.blockedReason ? "Bloqueado" : analysis.actionLabel}
+      </button>
+    </article>
+  );
+}
+
+function GuildArsenalModal({
+  hero,
+  inventory,
+  onClose,
+  onEquip,
+  slot,
+  state,
+}: {
+  hero: Hero;
+  inventory: EquipmentItem[];
+  onClose: () => void;
+  onEquip: (item: EquipmentItem) => void;
+  slot: EquipmentSlot;
+  state: GameState;
+}) {
+  const currentItem = getEquippedItemForSlot(hero, inventory, slot);
+  const matchingItems = inventory
+    .filter((item) => item.type === slot)
+    .sort((a, b) => b.rarity - a.rarity || b.bonusValue - a.bonusValue || a.name.localeCompare(b.name));
+  const blockedSlotItems = inventory
+    .filter((item) => item.type !== slot)
+    .sort((a, b) => b.rarity - a.rarity || a.name.localeCompare(b.name));
+
+  return (
+    <UiModal
+      className="guild-arsenal-modal-card"
+      labelledBy={`guildArsenalTitle-${hero.id}-${slot}`}
+      onClose={onClose}
+      overline="Arsenal da Guilda"
+      size="large"
+      subtitle="Compare bônus, poder estimado e compatibilidade antes de mudar a build."
+      title={`Escolher ${getEquipmentSlotNoun(slot)} para ${hero.name}`}
+      tone="arcane"
+    >
+      <div className="guild-arsenal-intro">
+        <span>
+          <strong>{matchingItems.length}</strong>
+          {getSlotPluralLabel(slot)} do slot
+        </span>
+        <span>
+          <strong>{currentItem ? currentItem.name : "Vazio"}</strong>
+          equipado agora
+        </span>
+        <span>
+          <strong>{inventory.length}</strong>
+          item(ns) no baú
+        </span>
+      </div>
+
+      {matchingItems.length === 0 ? (
+        <article className="guild-arsenal-empty">
+          <span>Arsenal vazio</span>
+          <h3>Não há {getSlotPluralLabel(slot)} disponíveis no Arsenal da Guilda.</h3>
+          <p>Desafie a Torre, conclua expedições ou colete recompensas para encontrar novos equipamentos.</p>
+        </article>
+      ) : (
+        <div className="guild-arsenal-grid">
+          {matchingItems.map((item) => (
+            <GuildArsenalItemCard
+              currentItem={currentItem}
+              hero={hero}
+              item={item}
+              key={item.id}
+              onEquip={onEquip}
+              owner={findEquipmentOwner(state, item.id)}
+              slot={slot}
+            />
+          ))}
+        </div>
+      )}
+
+      {blockedSlotItems.length > 0 ? (
+        <div className="guild-arsenal-blocked-section">
+          <h3>Outros itens no baú</h3>
+          <p>Visíveis para leitura, mas bloqueados por slot diferente nesta escolha.</p>
+          <div className="guild-arsenal-grid compact">
+            {blockedSlotItems.map((item) => (
+              <GuildArsenalItemCard
+                currentItem={currentItem}
+                hero={hero}
+                item={item}
+                key={item.id}
+                onEquip={onEquip}
+                owner={findEquipmentOwner(state, item.id)}
+                slot={slot}
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </UiModal>
+  );
+}
+
 function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameState; inventory: EquipmentItem[] }) {
+  const { showToast } = useToast();
   const addHeroToFormation = useGameStore((store) => store.addHeroToFormation);
   const removeHeroFromFormation = useGameStore((store) => store.removeHeroFromFormation);
   const equipItemOnHero = useGameStore((store) => store.equipItem);
@@ -165,13 +373,13 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
   const chooseHeroSpecializationAction = useGameStore((store) => store.chooseHeroSpecialization);
   const treatHeroInjuriesAction = useGameStore((store) => store.treatHeroInjuries);
   const useConsumableAction = useGameStore((store) => store.useConsumable);
-  const [selectedBySlot, setSelectedBySlot] = useState<Partial<Record<EquipmentSlot, string>>>({});
+  const [arsenalSlot, setArsenalSlot] = useState<EquipmentSlot | null>(null);
   const [selectedConsumableId, setSelectedConsumableId] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const xpNeeded = getHeroXpForNextLevel(hero.level);
-  const equippedItems = getEquippedItems(hero, inventory);
-  const unequippedItems = getUnequippedInventory(state);
+  const effectiveStats = getHeroEffectiveStats(state, hero);
+  const heroPower = getHeroPowerWithEquipment(state, hero);
   const moraleState = getHeroMoraleState(hero);
   const injurySummary = getHeroInjurySummary(hero);
   const specialization = getHeroSpecialization(hero);
@@ -188,6 +396,26 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
     (definition) => definition.target === "hero" && (state.consumables[definition.id] || 0) > 0,
   );
 
+  function equipFromArsenal(item: EquipmentItem) {
+    if (!arsenalSlot) return;
+
+    const currentItem = getEquippedItemForSlot(hero, inventory, arsenalSlot);
+    const analysis = analyzeEquipmentForHero({ currentItem, hero, item, slot: arsenalSlot });
+
+    if (!analysis.canEquip) {
+      const message = analysis.blockedReason || "Este item já está equipado.";
+      setFeedback(message);
+      showToast({ message, tone: "danger" });
+      return;
+    }
+
+    const result = equipItemOnHero(hero.id, item.id);
+    const message = result.ok ? `${hero.name} equipou ${item.name}.` : result.message;
+    setFeedback(message);
+    showToast({ message, tone: result.ok ? "success" : "danger" });
+    if (result.ok) setArsenalSlot(null);
+  }
+
   return (
     <aside className="hero-detail-panel">
       <div className="hero-detail-head">
@@ -198,7 +426,7 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
           <div>
           <span>{hero.className} | {getRarityLabel(hero.rarity)}</span>
           <h3>{hero.name}</h3>
-          <small>{getRarityStars(hero.rarity)} | {moraleState.label} | Poder {getHeroPower(hero)}</small>
+          <small>{getRarityStars(hero.rarity)} | {moraleState.label} | Poder {heroPower}</small>
           </div>
         </div>
         <button
@@ -225,19 +453,19 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
         <div className="hero-stat-grid hero-stat-grid-featured">
           <span><strong>Lv.</strong>{hero.level}</span>
           <span><strong>XP</strong>{hero.xp}/{xpNeeded}</span>
-          <span><strong>Poder</strong>{getHeroPower(hero)}</span>
-          <span><strong>HP</strong>{hero.currentHp ?? hero.stats.hp}/{hero.stats.hp}</span>
+          <span><strong>Poder</strong>{heroPower}</span>
+          <span><strong>HP</strong>{hero.currentHp ?? effectiveStats.hp}/{effectiveStats.hp}</span>
         </div>
       </div>
 
       <div className="hero-detail-section hero-detail-block">
         <strong>Combate</strong>
         <div className="hero-stat-grid">
-          <span><strong>ATK</strong>{hero.stats.atk}</span>
-          <span><strong>DEF</strong>{hero.stats.def}</span>
-          <span><strong>SPD</strong>{hero.stats.spd}</span>
-          <span><strong>FOCUS</strong>{hero.stats.focus}</span>
-          <span><strong>LUCK</strong>{hero.stats.luck}</span>
+          <span><strong>ATK</strong>{effectiveStats.atk}</span>
+          <span><strong>DEF</strong>{effectiveStats.def}</span>
+          <span><strong>SPD</strong>{effectiveStats.spd}</span>
+          <span><strong>FOCUS</strong>{effectiveStats.focus}</span>
+          <span><strong>LUCK</strong>{effectiveStats.luck}</span>
           <span><strong>Moral</strong>{hero.morale}</span>
         </div>
       </div>
@@ -252,47 +480,31 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
       <div className="hero-detail-section hero-detail-block">
         <strong>Equipamentos</strong>
         {EQUIPMENT_SLOTS.map((slot) => {
-          const equipped = equippedItems.find((item) => item.type === slot);
-          const options = unequippedItems.filter((item) => item.type === slot);
+          const equipped = getEquippedItemForSlot(hero, inventory, slot);
 
           return (
             <div className="hero-equipment-row" key={slot}>
-              <span>
-                {getEquipmentTypeName(slot)}: {equipped ? `${equipped.name} (${getEquipmentBonusLabel(equipped)})` : "vazio"}
-              </span>
+              <div className="hero-equipment-copy">
+                <span>{getEquipmentSlotLabel(slot)}</span>
+                <strong>{equipped ? equipped.name : getEmptySlotLabel(slot)}</strong>
+                <small>{equipped ? `${getRarityLabel(equipped.rarity)} · ${getEquipmentBonusLabel(equipped)}` : "Slot vazio no Arsenal da Guilda"}</small>
+              </div>
               <div className="hero-equipment-actions">
+                <button className="hero-inline-action primary" onClick={() => setArsenalSlot(slot)} type="button">
+                  Escolher
+                </button>
                 {equipped ? (
-                  <button className="hero-inline-action" onClick={() => setFeedback(unequipItemFromHero(hero.id, slot).message)} type="button">
+                  <button
+                    className="hero-inline-action"
+                    onClick={() => {
+                      const result = unequipItemFromHero(hero.id, slot);
+                      setFeedback(result.message);
+                      showToast({ message: result.message, tone: result.ok ? "info" : "danger" });
+                    }}
+                    type="button"
+                  >
                     Remover
                   </button>
-                ) : null}
-                {options.length > 0 ? (
-                  <>
-                    <select
-                      className="hero-equipment-select"
-                      onChange={(event) => setSelectedBySlot((current) => ({ ...current, [slot]: event.target.value }))}
-                      value={selectedBySlot[slot] || ""}
-                    >
-                      <option value="">Escolher item</option>
-                      {options.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.name} ({getEquipmentBonusLabel(item)})
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      className="hero-inline-action"
-                      disabled={!selectedBySlot[slot]}
-                      onClick={() => {
-                        const equipmentId = selectedBySlot[slot];
-                        if (!equipmentId) return;
-                        setFeedback(equipItemOnHero(hero.id, equipmentId).message);
-                      }}
-                      type="button"
-                    >
-                      Equipar
-                    </button>
-                  </>
                 ) : null}
               </div>
             </div>
@@ -392,6 +604,17 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
         <span>Combates, expedicoes e eventos detalhados ainda nao possuem historico individual persistido.</span>
       </div>
 
+      {arsenalSlot ? (
+        <GuildArsenalModal
+          hero={hero}
+          inventory={inventory}
+          onClose={() => setArsenalSlot(null)}
+          onEquip={equipFromArsenal}
+          slot={arsenalSlot}
+          state={state}
+        />
+      ) : null}
+
       {feedback ? <p className="hero-action-feedback">{feedback}</p> : null}
     </aside>
   );
@@ -408,9 +631,10 @@ export function HeroRosterPanel() {
   const filteredHeroes = sortHeroesForDisplay(
     state.heroes.filter((hero) => (classKey === "all" || hero.classKey === classKey) && heroMatchesStatus(hero, state, status)),
     sortBy,
+    state,
   );
   const selectedHero = state.heroes.find((hero) => hero.id === (selectedHeroId || filteredHeroes[0]?.id)) ?? null;
-  const totalPower = filteredHeroes.reduce((sum, hero) => sum + getHeroPower(hero), 0);
+  const totalPower = filteredHeroes.reduce((sum, hero) => sum + getHeroPowerWithEquipment(state, hero), 0);
 
   return (
     <section className="roster-panel">

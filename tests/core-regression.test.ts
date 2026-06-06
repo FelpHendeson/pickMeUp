@@ -5,6 +5,7 @@ import {
   addConsumable,
   addEquipmentToInventory,
   addHeroToFormation,
+  analyzeEquipmentForHero,
   applyExpeditionPresetToExpeditionSelection,
   applyTowerPresetToFormation,
   claimDailyMissionReward,
@@ -27,7 +28,7 @@ import {
   summonHero,
   useConsumable,
 } from "../src/game/index.ts";
-import type { GameState, Hero } from "../src/game/index.ts";
+import type { EquipmentItem, GameState, Hero } from "../src/game/index.ts";
 
 function createFixedHero(id: string, classKey = "warrior", rarity = 3): Hero {
   const hero = generateHero({
@@ -143,6 +144,46 @@ test("presets de torre e expedicao preservam selecoes validas", () => {
   assert.equal(expeditionPreset.ok, true);
   if (!expeditionPreset.ok) return;
   assert.deepEqual(expeditionPreset.heroIds, heroes.slice(0, 3).map((hero) => hero.id));
+});
+
+test("analise de equipamento separa compatibilidade flexivel de bloqueio real", () => {
+  const warrior = createFixedHero("warrior_target", "warrior", 3);
+  const currentWeapon: EquipmentItem = {
+    id: "weapon_atk",
+    name: "Lamina de Teste",
+    type: "weapon",
+    rarity: 1,
+    bonusStat: "atk",
+    bonusValue: 4,
+  };
+  const oddWeapon: EquipmentItem = {
+    id: "weapon_luck",
+    name: "Punhal de Sorte",
+    type: "weapon",
+    rarity: 1,
+    bonusStat: "luck",
+    bonusValue: 7,
+  };
+  const wrongSlot: EquipmentItem = {
+    id: "armor_def",
+    name: "Couraca de Teste",
+    type: "armor",
+    rarity: 1,
+    bonusStat: "def",
+    bonusValue: 5,
+  };
+
+  warrior.equipment.weapon = currentWeapon.id;
+
+  const lowCompatibility = analyzeEquipmentForHero({ currentItem: currentWeapon, hero: warrior, item: oddWeapon, slot: "weapon" });
+  assert.equal(lowCompatibility.canEquip, true);
+  assert.equal(lowCompatibility.compatibility.level, "low");
+  assert.equal(lowCompatibility.actionLabel, "Equipar mesmo assim");
+  assert.equal(lowCompatibility.powerDelta, -9);
+
+  const blocked = analyzeEquipmentForHero({ currentItem: currentWeapon, hero: warrior, item: wrongSlot, slot: "weapon" });
+  assert.equal(blocked.canEquip, false);
+  assert.match(blocked.blockedReason || "", /Slot diferente/);
 });
 
 test("expedicao usa timestamp salvo e concede recompensa ao coletar", () => {

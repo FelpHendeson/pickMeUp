@@ -296,9 +296,14 @@ Manter o resultado de combate claro e acionavel. Com tantos modificadores, o jog
 - SPD.
 - LUCK.
 
+### Arsenal da Guilda
+
+O painel do heroi nao deve equipar itens por dropdown tecnico. Cada slot mostra item atual ou vazio e abre o modal Arsenal da Guilda, com cards por item, raridade, bonus, comparacao com o item atual, impacto estimado de poder e compatibilidade flexivel por classe/atributo.
+
+Compatibilidade de classe nao bloqueia equipamento. Um item pouco afinado deve exibir aviso e permitir "Equipar mesmo assim"; bloqueio real fica reservado para regra tecnica, como slot diferente ou item ja equipado no mesmo slot do heroi alvo.
+
 ### Lacunas futuras
 
-- Comparar item equipado vs item selecionado.
 - Favoritar/travar equipamento.
 - Desmontar equipamento.
 - Melhorar equipamento.
