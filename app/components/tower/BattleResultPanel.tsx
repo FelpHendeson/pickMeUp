@@ -82,6 +82,40 @@ function getResourceRewards(battle: BattleResult) {
   ];
 }
 
+function isRareReward(label: string): boolean {
+  return ["Cristais", "Essência", "Frag. eco", "Contratos"].includes(label);
+}
+
+export function getBattleRewardHighlights(battle: BattleResult, limit = 4): Array<{ label: string; detail?: string; rare?: boolean }> {
+  const resourceRewards = getResourceRewards(battle)
+    .filter((reward) => reward.value > 0)
+    .map((reward) => ({
+      label: `${reward.label}: ${formatNumber(reward.value)}`,
+      detail: reward.description,
+      rare: isRareReward(reward.label),
+    }));
+  const equipmentRewards = (battle.rewards?.equipment || []).map((item) => ({
+    label: item.name,
+    detail: `Equipamento raridade ${item.rarity}`,
+    rare: item.rarity >= 4,
+  }));
+  const consumableRewards = (battle.rewards?.consumables || []).map((item) => ({
+    label: `${item.name} x${item.amount}`,
+    detail: "Consumível",
+    rare: false,
+  }));
+  const highlights = [...resourceRewards, ...equipmentRewards, ...consumableRewards].slice(0, limit);
+
+  if (highlights.length > 0) return highlights;
+
+  return [
+    {
+      label: battle.result === "victory" ? "Sem recompensa registrada" : "Derrota sem recompensa registrada",
+      detail: battle.result === "victory" ? "O combate nao gerou loot destacado." : "Nenhum saque foi aplicado nesta derrota.",
+    },
+  ];
+}
+
 function getConsequenceEvents(events: BattleEvent[], type: string): BattleEvent[] {
   return events.filter((event) => event.type === type);
 }
@@ -96,6 +130,29 @@ function getTopPerformer(performance: Record<string, BattlePerformanceEntry>): B
 
 function getHeroXpGain(battle: BattleResult, entry: BattlePerformanceEntry): number {
   return battle.progression?.heroXp.find((xp) => xp.heroId === entry.id || xp.heroName === entry.name)?.xp || 0;
+}
+
+function getHeroLevel(state: GameState, entry: BattlePerformanceEntry): number | null {
+  const hero = state.heroes.find((candidate) => candidate.id === entry.id || candidate.name === entry.name);
+  return hero?.level ?? null;
+}
+
+function getHeroFinalState(
+  state: GameState,
+  battle: BattleResult,
+  entry: BattlePerformanceEntry,
+  injuries: BattleEvent[],
+  deaths: BattleEvent[],
+): string {
+  const unit = battle.playerTeam.find((candidate) => candidate.id === entry.id || candidate.name === entry.name);
+  const hero = state.heroes.find((candidate) => candidate.id === entry.id || candidate.name === entry.name);
+  const hasHardcoreDeathEvent = deaths.some((event) => event.message.includes(entry.name) && /definitivamente|Hardcore|memorial/i.test(event.message));
+  const hasInjuryEvent = injuries.some((event) => event.message.includes(entry.name));
+
+  if (hasHardcoreDeathEvent) return "Morto no Hardcore";
+  if (unit && !unit.alive) return "Caiu";
+  if (hasInjuryEvent || hero?.injuries.some((injury) => injury.remainingBattles > 0)) return "Ferido";
+  return "Vivo";
 }
 
 function getBattleKind(battle: BattleResult): string {
@@ -180,6 +237,110 @@ function getNextStep(
   return "Reforce a formação e tente novamente quando estiver pronto.";
 }
 
+function getBattleConsequenceHighlights(
+  state: GameState,
+  battle: BattleResult,
+  events: BattleEvent[],
+  limit = 3,
+): Array<{ label: string; tone?: ResultTone }> {
+  const injuries = getConsequenceEvents(events, "injury");
+  const morale = getConsequenceEvents(events, "morale");
+  const deaths = getConsequenceEvents(events, "death");
+  const completedMissions = ((battle.progression?.missionUpdates || []) as ProgressEntry[]).filter((mission) => Boolean(mission.complete));
+  const achievementsAvailable = ((battle.progression?.achievementsAvailable || []) as ProgressEntry[]).filter(
+    (achievement) => Boolean(achievement.complete) && !achievement.claimed,
+  );
+  const libraryUpdates = (battle.progression?.libraryUpdates || []) as LibraryUpdate[];
+  const highlights: Array<{ label: string; tone?: ResultTone }> = [];
+
+  if (deaths.length > 0) highlights.push({ label: `${deaths.length} morte(s) permanente(s)`, tone: "danger" });
+  if (injuries.length > 0) highlights.push({ label: `${injuries.length} ferimento(s) registrado(s)`, tone: "warning" });
+  if (morale.length > 0) highlights.push({ label: `${morale.length} alteração(ões) de moral`, tone: "warning" });
+  if (battle.result === "victory" && state.towerFloor > battle.floor) highlights.push({ label: `Campanha avançou para o andar ${state.towerFloor}`, tone: "success" });
+  if (completedMissions.length > 0) highlights.push({ label: `${completedMissions.length} missão(ões) concluída(s)`, tone: "success" });
+  if (achievementsAvailable.length > 0) highlights.push({ label: `${achievementsAvailable.length} conquista(s) pronta(s)`, tone: "success" });
+  if (libraryUpdates.length > 0) highlights.push({ label: `${libraryUpdates.length} descoberta(s) na Biblioteca`, tone: "neutral" });
+
+  if (highlights.length > 0) return highlights.slice(0, limit);
+
+  return [{ label: "Sem consequência crítica registrada", tone: "neutral" }];
+}
+
+export function BattleResultSummaryCard({
+  battle,
+  state,
+  onContinue,
+  onOpen,
+}: {
+  battle: BattleResult;
+  state: GameState;
+  onContinue?: () => void;
+  onOpen: () => void;
+}) {
+  const events = getBattleEvents(battle);
+  const fallbackChapter = getTowerChapterByFloor(battle.floor);
+  const chapterName = battle.summary?.chapterName ?? fallbackChapter.name;
+  const chapterNumber = battle.summary?.chapterNumber ?? fallbackChapter.number;
+  const rewardHighlights = getBattleRewardHighlights(battle, 4);
+  const consequenceHighlights = getBattleConsequenceHighlights(state, battle, events, 4);
+  const riskReadout = getRiskReadout(battle);
+  const outcome = battle.result === "victory" ? "Vitória" : "Derrota";
+
+  return (
+    <article className={`last-battle-card result-${battle.result}`}>
+      <div className="last-battle-card-head">
+        <div>
+          <span>Último resultado</span>
+          <h3>{outcome}</h3>
+          <p>
+            Andar {battle.floor} | Capítulo {chapterNumber}: {chapterName} | {battle.summary?.difficultyName || "Normal"}
+          </p>
+        </div>
+        <strong>{battle.rounds} turno(s)</strong>
+      </div>
+
+      <div className="last-battle-card-grid">
+        <div>
+          <span>Risco</span>
+          <strong>{riskReadout.label}</strong>
+          <small>{riskReadout.description}</small>
+        </div>
+        <div>
+          <span>Principais recompensas</span>
+          <div className="last-battle-list">
+            {rewardHighlights.map((reward) => (
+              <small className={reward.rare ? "rare" : ""} key={`${reward.label}_${reward.detail || ""}`}>
+                {reward.label}
+              </small>
+            ))}
+          </div>
+        </div>
+        <div>
+          <span>Consequências</span>
+          <div className="last-battle-list">
+            {consequenceHighlights.map((consequence) => (
+              <small className={consequence.tone ? `tone-${consequence.tone}` : ""} key={consequence.label}>
+                {consequence.label}
+              </small>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="last-battle-actions">
+        <button className="hero-inline-action primary" onClick={onOpen} type="button">
+          Ver resultado completo
+        </button>
+        {onContinue ? (
+          <button className="hero-inline-action" onClick={onContinue} type="button">
+            Continuar subida
+          </button>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
 function ProgressList({ entries, empty }: { entries: ProgressEntry[]; empty: string }) {
   if (entries.length === 0) return <span>{empty}</span>;
 
@@ -259,6 +420,7 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
     .sort((a, b) => b.damageDealt - a.damageDealt || b.kills - a.kills)
     .slice(0, compact ? 3 : 6);
   const rewardRows = getResourceRewards(battle);
+  const visibleRewardRows = rewardRows.filter((reward) => reward.value > 0);
   const equipmentRewards = battle.rewards?.equipment || [];
   const consumableRewards = battle.rewards?.consumables || [];
   const levelUps = battle.progression?.levelUps || [];
@@ -279,6 +441,7 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
   const weeklyEvent = battle.summary?.weeklyEvent || "Sem impacto registrado";
   const rewardTabCount =
     rewardRows.filter((reward) => reward.value > 0).length + equipmentRewards.length + consumableRewards.reduce((sum, item) => sum + item.amount, 0);
+  const hasAnyReward = visibleRewardRows.length > 0 || equipmentRewards.length > 0 || consumableRewards.length > 0;
   const heroTabCount = topPerformers.length + levelUps.length;
   const consequenceTabCount = injuries.length + morale.length + deaths.length + completedMissions.length + achievementsAvailable.length + libraryUpdates.length;
   const tabCounts: Partial<Record<BattleResultTab, number>> = {
@@ -357,25 +520,33 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
           <span>Loot conquistado</span>
           <h3>Recompensas</h3>
         </div>
-        <div className="battle-reward-grid">
-          {rewardRows.map((reward) => (
-            <div className={reward.value > 0 ? "has-value" : ""} key={reward.label}>
-              <strong>{formatNumber(reward.value)}</strong>
-              <span>{reward.label}</span>
-              <small>{reward.description}</small>
-            </div>
-          ))}
-          <div className={equipmentRewards.length > 0 ? "has-value" : ""}>
-            <strong>{equipmentRewards.length}</strong>
-            <span>Equipamentos</span>
-            <small>{equipmentRewards.length > 0 ? equipmentRewards.map((item) => item.name).join(", ") : "Nenhum equipamento novo."}</small>
+        {hasAnyReward ? (
+          <div className="battle-reward-grid">
+            {visibleRewardRows.map((reward) => (
+              <div className={`has-value${isRareReward(reward.label) ? " rare-reward" : ""}`} key={reward.label}>
+                <strong>{formatNumber(reward.value)}</strong>
+                <span>{reward.label}</span>
+                <small>{reward.description}</small>
+              </div>
+            ))}
+            {equipmentRewards.length > 0 ? (
+              <div className={`has-value${equipmentRewards.some((item) => item.rarity >= 4) ? " rare-reward" : ""}`}>
+                <strong>{equipmentRewards.length}</strong>
+                <span>Equipamentos</span>
+                <small>{equipmentRewards.map((item) => `${item.name} (R${item.rarity})`).join(", ")}</small>
+              </div>
+            ) : null}
+            {consumableRewards.length > 0 ? (
+              <div className="has-value">
+                <strong>{consumableRewards.reduce((sum, item) => sum + item.amount, 0)}</strong>
+                <span>Consumíveis</span>
+                <small>{consumableRewards.map((item) => `${item.name} x${item.amount}`).join(", ")}</small>
+              </div>
+            ) : null}
           </div>
-          <div className={consumableRewards.length > 0 ? "has-value" : ""}>
-            <strong>{consumableRewards.reduce((sum, item) => sum + item.amount, 0)}</strong>
-            <span>Consumíveis</span>
-            <small>{consumableRewards.length > 0 ? consumableRewards.map((item) => `${item.name} x${item.amount}`).join(", ") : "Nenhum item consumível novo."}</small>
-          </div>
-        </div>
+        ) : (
+          <p className="battle-empty-note">{battle.result === "victory" ? "Nenhuma recompensa foi registrada para esta vitória." : "A derrota nao concedeu recompensas."}</p>
+        )}
         </section>
       ) : null}
 
@@ -399,18 +570,27 @@ export function BattleResultPanel({ compact = false, onContinue }: BattleResultP
         </div>
         {topPerformers.length > 0 ? (
           <div className="battle-performance-grid">
-            {topPerformers.map((entry) => (
-              <article className="battle-performance-card" key={entry.id}>
-                <strong>{entry.name}</strong>
-                <span>{entry.className}</span>
-                <small>
-                  XP {getHeroXpGain(battle, entry)} · Dano {entry.damageDealt} · Cura {entry.healingDone}
-                </small>
-                <small>
-                  Recebido {entry.damageTaken} · Abates {entry.kills} · Habilidades {entry.skillUses}
-                </small>
-              </article>
-            ))}
+            {topPerformers.map((entry) => {
+              const heroLevel = getHeroLevel(state, entry);
+              const finalState = getHeroFinalState(state, battle, entry, injuries, deaths);
+
+              return (
+                <article className="battle-performance-card" key={entry.id}>
+                  <strong>{entry.name}</strong>
+                  <span>
+                    {entry.className}
+                    {heroLevel ? ` | nível ${heroLevel}` : ""}
+                  </span>
+                  <small className="hero-final-state">Estado final: {finalState}</small>
+                  <small>
+                    XP {getHeroXpGain(battle, entry)} | Dano {entry.damageDealt} | Cura {entry.healingDone}
+                  </small>
+                  <small>
+                    Recebido {entry.damageTaken} | Abates {entry.kills} | Habilidades {entry.skillUses}
+                  </small>
+                </article>
+              );
+            })}
           </div>
         ) : (
           <p>Nenhuma estatística de herói registrada.</p>

@@ -77,9 +77,9 @@ Moral, ferimentos, especializacoes e equipamentos ja criam apego. O proximo salt
 ### 4.3 Torre como campanha viva
 A torre ja possui capitulos, chefes, eventos e narrativa. Ela deve evoluir como campanha, nao como lista infinita de numeros.
 
-Na UI atual, a Torre deve priorizar uma leitura mestre-detalhe: o jogador escolhe o andar liberado no mapa, vê inimigos/recompensas/risco no painel de desafio e abre combate, resultado ou histórico em modal para evitar excesso de informação persistente na tela.
+Na UI atual, a Torre deve priorizar uma leitura mestre-detalhe com um estado dominante por vez: evento pendente, resultado recente, bloqueio de combate ou preparacao. O jogador escolhe o andar liberado no mapa, mas o painel de desafio deve destacar apenas a decisao principal daquele momento para evitar excesso de informacao persistente na tela.
 
-A infraestrutura de feedback visual usa toast in-app global, modal reutilizavel de UI, eventos pendentes da Torre resolvidos em modal e resultado de combate em modal grande com abas. Acoes rapidas devem comunicar sucesso/bloqueio sem notificacao real do navegador, eventos importantes nao devem ficar escondidos como texto solto na tela e resultados de ciclo devem separar resumo, recompensas, herois, consequencias e log.
+A infraestrutura de feedback visual usa toast in-app global, modal reutilizavel de UI, eventos pendentes da Torre resolvidos em modal e resultado de combate em modal grande com abas. Ao finalizar combate, o resultado deve abrir automaticamente; ao fechar, a Torre mantém um card compacto de ultimo resultado com CTA para rever o modal ou continuar a subida. Acoes rapidas devem comunicar sucesso/bloqueio sem notificacao real do navegador, eventos importantes nao devem ficar escondidos como texto solto na tela e resultados de ciclo devem separar resumo, recompensas, herois, consequencias e log.
 
 ### 4.4 Progressao horizontal e vertical
 O jogo ja possui progressao vertical: nivel, andar, poder, equipamentos. Agora precisa fortalecer progressao horizontal: biblioteca, bestiario, relíquias, afinidades e escolhas permanentes.
@@ -275,8 +275,8 @@ O combate e automatico por turnos. Unidades vivas agem por SPD, escolhem alvos, 
 - Ladino: Ataque Sombrio.
 - Guardiao: provocacao/defesa.
 
-### Proxima necessidade critica
-Criar uma tela de resultado de combate. Com tantos modificadores, o jogador precisa entender rapidamente o que aconteceu.
+### Necessidade critica atual
+Manter o resultado de combate claro e acionavel. Com tantos modificadores, o jogador precisa entender rapidamente o que aconteceu, o que recebeu e o que mudou antes de continuar a subida.
 
 ---
 
@@ -541,11 +541,11 @@ A camada visual global deve manter a identidade coesa de RPG Dark Fantasy: fundo
 
 ### Proximas melhorias de UX
 
-- Tela de resultado de combate.
+- Painel de modificadores ativos.
+- Historico de resultados de combate.
 - Comparador de equipamentos.
 - Filtros de herois.
 - Tooltips de atributos.
-- Painel de modificadores ativos.
 - Guia Como Jogar.
 - Melhor responsividade mobile.
 
@@ -607,7 +607,7 @@ Criar migracoes formais de save por versao. O projeto vai crescer; sem migracao,
 
 ### Alpha 0.5 - Clareza e consolidacao
 
-1. Tela de resultado de combate.
+1. Resultado de combate em modal com card compacto de ultimo resultado.
 2. Painel de modificadores ativos.
 3. Comparador de equipamentos.
 4. Filtros/ordenacao de herois.
@@ -656,24 +656,19 @@ Criar migracoes formais de save por versao. O projeto vai crescer; sem migracao,
 
 ## 26. Proxima prioridade recomendada
 
-A proxima feature deve ser **Tela de Resultado de Combate**.
+A proxima feature deve ser **Painel de Modificadores Ativos e Historico de Resultados**.
 
-Motivo: o jogo ja possui muitos sistemas que afetam batalha. O jogador precisa ver, apos cada combate:
+Motivo: o resultado de combate agora comunica o ciclo imediato, mas o jogador ainda precisa consultar com facilidade quais modificadores estao moldando a Torre e comparar resultados recentes sem depender apenas do ultimo combate.
 
-- vitoria ou derrota;
-- andar e capítulo;
-- inimigos enfrentados;
-- recompensas;
-- XP ganho;
-- level ups;
-- equipamentos dropados;
-- mudancas de moral;
-- ferimentos;
-- missoes/conquistas atualizadas;
-- modificadores ativos;
-- desempenho por heroi, se possivel.
+O painel deve mostrar:
 
-Sem isso, a complexidade do jogo vira magia negra de planilha. Funciona, mas ninguem sabe se foi buff, azar ou a torre cobrando aluguel.
+- modificadores do capitulo atual;
+- modificadores do andar selecionado;
+- efeitos temporarios de eventos da Torre;
+- impacto do modo de dificuldade;
+- evento semanal ativo;
+- historico compacto de resultados recentes;
+- atalho para abrir o resultado completo quando houver registro salvo.
 
 ---
 
@@ -684,36 +679,26 @@ O projeto atual deixou de ser MVP e agora deve ser tratado como Alpha jogavel.
 
 Leia o GDD atualizado e o codigo atual antes de alterar arquivos.
 
-Proxima prioridade: implementar uma Tela de Resultado de Combate.
+Proxima prioridade: implementar um Painel de Modificadores Ativos e Historico de Resultados na Torre.
 
 Objetivo:
-Dar clareza ao jogador sobre o que aconteceu na batalha, quais recompensas recebeu, quais herois se destacaram, quais modificadores estavam ativos e quais consequencias ocorreram.
+Dar clareza ao jogador sobre quais regras temporarias, regionais e de dificuldade estao afetando a proxima tentativa, alem de permitir revisar resultados recentes sem ocupar a tela principal.
 
 Requisitos:
-1. Criar tela/modal/painel de resultado apos cada combate da torre.
-2. Mostrar resultado: vitoria ou derrota.
-3. Mostrar andar e capítulo.
-4. Mostrar inimigos enfrentados.
-5. Mostrar recompensas recebidas.
-6. Mostrar XP ganho e level ups.
-7. Mostrar equipamentos dropados.
-8. Mostrar ferimentos aplicados.
-9. Mostrar mudancas de moral.
-10. Mostrar missoes/conquistas atualizadas.
-11. Mostrar modificadores ativos da batalha.
-12. Se possivel, mostrar desempenho por heroi:
-    - dano causado;
-    - cura realizada;
-    - dano recebido;
-    - inimigos abatidos.
-13. Se esses dados ainda nao existirem agregados, adapte o core de batalha em `src/game/battle/` para retornar estatisticas resumidas sem quebrar o replay atual.
-14. Nao remover o log de combate existente.
-15. Nao quebrar saves atuais.
-16. Manter compatibilidade com Next.js e o deploy planejado na Vercel.
-17. Usar React e TypeScript, com regras em `src/game/` e mutacoes via `src/store/gameStore.ts`.
+1. Manter o resultado de combate atual em modal grande e card compacto de ultimo resultado.
+2. Criar uma secao recolhivel ou modal para modificadores ativos da Torre.
+3. Mostrar modificador regional do capitulo.
+4. Mostrar modificadores do andar selecionado.
+5. Mostrar efeitos temporarios de eventos da Torre.
+6. Mostrar evento semanal ativo e seus efeitos.
+7. Mostrar impacto do modo de dificuldade escolhido.
+8. Criar historico compacto de resultados recentes usando dados reais ja salvos ou registrar historico pequeno sem quebrar saves antigos.
+9. Nao alterar balanceamento, recompensas ou regras de combate.
+10. Manter localStorage como fluxo principal.
+11. Manter compatibilidade com Next.js e o deploy planejado na Vercel.
 
 Criterio de aceitacao:
-Apos vencer ou perder uma batalha, eu preciso entender rapidamente por que o resultado aconteceu e o que mudou no meu progresso.
+Antes de lutar, eu preciso entender quais modificadores estao ativos; depois de lutar, eu preciso conseguir comparar rapidamente os resultados recentes.
 ```
 
 ---

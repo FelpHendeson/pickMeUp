@@ -57,8 +57,9 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 - A interface deve destacar poder do time, risco do andar, ferimentos, moral e modificadores ativos.
 - Configuracoes deve separar preferencias, save local, importacao/exportacao, cloud save experimental, reset e informacoes do jogo; acoes destrutivas ou de sobrescrita exigem confirmacao clara.
 - A versão atual deve ter identidade Dark Fantasy consistente, design system interno e responsividade real em mobile.
-- A tela da Torre usa layout mestre-detalhe: mapa de andares selecionável à esquerda, dados do desafio à direita e resultado/histórico em modal.
-- A infraestrutura de feedback visual usa toast in-app global para acoes rapidas e modal reutilizavel para confirmacoes, eventos importantes e resultados de ciclo; eventos pendentes da Torre aparecem como CTA claro e sao resolvidos em modal, enquanto resultado de combate abre em modal grande com abas de resumo, recompensas, herois, consequencias e log.
+- A tela da Torre usa layout mestre-detalhe: mapa de andares selecionável à esquerda e um painel à direita que escolhe um estado dominante entre evento pendente, resultado recente, bloqueio de combate e preparação.
+- A infraestrutura de feedback visual usa toast in-app global para acoes rapidas e modal reutilizavel para confirmacoes, eventos importantes e resultados de ciclo; eventos pendentes da Torre aparecem como CTA claro e sao resolvidos em modal, enquanto resultado de combate abre automaticamente em modal grande com abas de resumo, recompensas, herois, consequencias e log.
+- Depois de fechar o modal de combate, a Torre exibe um card compacto de ultimo resultado com outcome, andar, dificuldade, principais recompensas, principais consequencias e CTA para rever o resultado completo ou continuar a subida.
 
 ## Fluxo principal do jogador
 1. O jogador abre a home e entra no jogo, carregando o save local.

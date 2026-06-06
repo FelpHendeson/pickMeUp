@@ -808,6 +808,10 @@ article,
   margin-top: 0.35rem;
 }
 
+.battle-performance-card .hero-final-state {
+  color: var(--gold);
+}
+
 .battle-event-log {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   margin-top: 1rem;
@@ -6150,6 +6154,146 @@ body::before {
   width: 100%;
 }
 
+.last-battle-card,
+.tower-blocker-card {
+  border: 1px solid rgba(232, 188, 88, 0.24);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(232, 188, 88, 0.1), transparent 18rem),
+    rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-lg);
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 0.9rem;
+  padding: 0.9rem;
+}
+
+.last-battle-card.result-defeat,
+.tower-blocker-card.tone-danger {
+  border-color: rgba(214, 90, 90, 0.48);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(214, 90, 90, 0.14), transparent 18rem),
+    rgba(0, 0, 0, 0.2);
+}
+
+.tower-blocker-card.tone-warning {
+  border-color: rgba(232, 188, 88, 0.46);
+}
+
+.last-battle-card-head {
+  align-items: start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.last-battle-card-head span,
+.tower-blocker-card > span {
+  color: var(--teal);
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.last-battle-card-head h3,
+.tower-blocker-card h3,
+.tower-blocker-card p {
+  margin: 0.25rem 0 0;
+}
+
+.last-battle-card-head h3 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  line-height: 1;
+}
+
+.last-battle-card-head p,
+.tower-blocker-card p {
+  color: var(--muted-strong);
+}
+
+.last-battle-card-head > strong {
+  border: 1px solid rgba(232, 188, 88, 0.24);
+  border-radius: 999px;
+  color: var(--gold);
+  flex: 0 0 auto;
+  padding: 0.34rem 0.56rem;
+}
+
+.last-battle-card-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.last-battle-card-grid > div {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius-md);
+  padding: 0.72rem;
+}
+
+.last-battle-card-grid span,
+.last-battle-card-grid strong,
+.last-battle-card-grid small {
+  display: block;
+}
+
+.last-battle-card-grid span {
+  color: var(--gold);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.last-battle-card-grid strong {
+  color: var(--text);
+  font-size: 1.35rem;
+  margin-top: 0.28rem;
+}
+
+.last-battle-list {
+  display: grid;
+  gap: 0.32rem;
+  margin-top: 0.4rem;
+}
+
+.last-battle-list small {
+  color: var(--muted-strong);
+  line-height: 1.35;
+}
+
+.last-battle-list small.rare,
+.last-battle-list small.tone-success {
+  color: var(--gold);
+}
+
+.last-battle-list small.tone-danger {
+  color: #ffd0ca;
+}
+
+.last-battle-list small.tone-warning {
+  color: #f1c77a;
+}
+
+.last-battle-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+@media (max-width: 760px) {
+  .last-battle-card-head,
+  .last-battle-actions {
+    display: grid;
+  }
+
+  .last-battle-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .tower-event-modal-card {
   width: min(760px, calc(100vw - 2rem));
 }
@@ -6876,8 +7020,24 @@ body::before {
   box-shadow: inset 0 0 0 1px rgba(232, 188, 88, 0.045);
 }
 
+.battle-reward-grid div.rare-reward {
+  border-color: rgba(232, 188, 88, 0.68);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(232, 188, 88, 0.13), transparent 12rem),
+    rgba(0, 0, 0, 0.18);
+}
+
 .battle-reward-grid div.has-value strong {
   text-shadow: 0 0 18px rgba(232, 188, 88, 0.22);
+}
+
+.battle-empty-note {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius-md);
+  color: var(--muted-strong);
+  margin: 0;
+  padding: 0.85rem;
 }
 
 .battle-reward-grid small {

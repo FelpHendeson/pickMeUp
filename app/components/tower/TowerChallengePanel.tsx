@@ -13,6 +13,7 @@ import {
   getFormationHeroCount,
   getFormationHeroes,
   getFormationPower,
+  getHeroExpedition,
   getTowerChapterByFloor,
   getTowerDifficultySummary,
   getTowerEventDefinition,
@@ -20,6 +21,7 @@ import {
   getTowerEventResourceName,
   getWeeklyTowerRewardOptions,
   isBossFloor,
+  isHeroOnExpedition,
   normalizeTowerDifficultyMode,
   TOWER_FLOORS,
   type BattleResult,
@@ -31,7 +33,7 @@ import {
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
 import { useConfirmDialog, useToast, UiAlertBox, UiModal, UiProgressBar } from "../ui";
-import { BattleResultPanel } from "./BattleResultPanel";
+import { BattleResultPanel, BattleResultSummaryCard, getBattleRewardHighlights } from "./BattleResultPanel";
 
 const difficultyModes = ["normal", "challenge", "hardcore"] as const;
 const maxTowerFloor = TOWER_FLOORS.at(-1)?.floor ?? GAME_CONFIG.towerMaxFloor;
@@ -95,16 +97,18 @@ function isHeroWounded(hero: Hero): boolean {
   return currentHp / maxHp <= 0.45;
 }
 
-function getFormationReadiness(state: Pick<GameState, "formation" | "heroes">) {
+function getFormationReadiness(state: GameState) {
   const heroes = getFormationHeroes(state).filter((hero): hero is Hero => Boolean(hero));
   const averageLevel = heroes.length > 0 ? heroes.reduce((total, hero) => total + hero.level, 0) / heroes.length : 0;
   const injuredHeroes = heroes.filter((hero) => hero.injuries.some((injury) => injury.remainingBattles > 0));
+  const busyHeroes = heroes.filter((hero) => isHeroOnExpedition(state, hero.id));
   const woundedHeroes = heroes.filter((hero) => isHeroWounded(hero));
   const lowMoraleHeroes = heroes.filter((hero) => hero.morale < 40);
 
   return {
     heroes,
     averageLevel,
+    busyHeroes,
     injuredHeroes,
     woundedHeroes,
     lowMoraleHeroes,
@@ -124,9 +128,18 @@ function formatHeroNames(heroes: Hero[]): string {
   return heroes.length > 3 ? `${names} e mais ${heroes.length - 3}` : names;
 }
 
+function getBattleProgressLabels(entries: unknown[] | undefined, includeClaimed = false): string[] {
+  return (entries || [])
+    .map((entry) => entry as { title?: unknown; name?: unknown; complete?: unknown; claimed?: unknown })
+    .filter((entry) => Boolean(entry.complete) && (includeClaimed || !entry.claimed))
+    .map((entry) => String(entry.title || entry.name || "Progresso concluído"))
+    .slice(0, 3);
+}
+
 function getRiskProfile(options: {
   averageLevel: number;
   bossFloor: boolean;
+  busyCount: number;
   difficultyMode: TowerDifficultyModeId;
   energy: number;
   heroCount: number;
@@ -147,6 +160,10 @@ function getRiskProfile(options: {
 
   if (options.heroCount === 0) {
     return { label: "Sem equipe", tone: "danger", description: "Nenhum herói está escalado para sustentar o avanço." };
+  }
+
+  if (options.busyCount > 0) {
+    return { label: "Indisponível", tone: "danger", description: "Há herói escalado que está em expedição." };
   }
 
   if (options.energy < GAME_CONFIG.towerEnergyCost) {
@@ -195,6 +212,7 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
   const [showTowerEventModal, setShowTowerEventModal] = useState(false);
   const [showBattleModal, setShowBattleModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [dismissedBattleId, setDismissedBattleId] = useState<string | null>(null);
   const normalizedDifficulty = normalizeTowerDifficultyMode(difficultyMode);
   const difficultySummary = getTowerDifficultySummary(normalizedDifficulty);
   const selectedFloorData = getFloorData(selectedFloor);
@@ -226,6 +244,7 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
   const riskProfile = getRiskProfile({
     averageLevel: formationReadiness.averageLevel,
     bossFloor,
+    busyCount: formationReadiness.busyHeroes.length,
     difficultyMode: normalizedDifficulty,
     energy,
     heroCount,
@@ -244,6 +263,15 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
       tone: "danger",
       title: "Evento pendente",
       description: `Resolva o evento do andar ${pendingEvent.floor} antes de iniciar outro combate.`,
+    });
+  }
+
+  if (formationReadiness.busyHeroes.length > 0) {
+    towerWarnings.push({
+      key: "busy-hero",
+      tone: "danger",
+      title: "Herói indisponível",
+      description: `${formatHeroNames(formationReadiness.busyHeroes)} está em expedição e precisa ser trocado antes da luta.`,
     });
   }
 
@@ -292,6 +320,7 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
     !selectedIsLocked &&
     (selectedIsCurrent || selectedIsRepeatable) &&
     heroCount > 0 &&
+    formationReadiness.busyHeroes.length === 0 &&
     !pendingEvent &&
     canSpendResource(state, "energy", GAME_CONFIG.towerEnergyCost);
   const actionLabel = selectedIsCurrent ? "Desafiar andar" : selectedIsRepeatable ? "Repetir andar" : "Andar bloqueado";
@@ -300,6 +329,7 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
     if (selectedIsLocked) return "Este andar ainda não foi liberado pela campanha.";
     if (!selectedIsCurrent && !selectedIsRepeatable) return "Este andar não pode ser repetido agora.";
     if (heroCount === 0) return "Monte uma formação antes de desafiar a torre.";
+    if (formationReadiness.busyHeroes.length > 0) return `${formatHeroNames(formationReadiness.busyHeroes)} está em expedição. Troque a formação antes de lutar.`;
     if (energy < GAME_CONFIG.towerEnergyCost) return `Energia insuficiente (${energy}/${GAME_CONFIG.towerEnergyCost}).`;
     if (weakTeam) return "A equipe pode lutar, mas está abaixo do nível recomendado.";
     if (formationReadiness.injuredHeroes.length > 0 || formationReadiness.lowMoraleHeroes.length > 0) return "A equipe pode lutar, mas há desgaste relevante na formação.";
@@ -307,6 +337,7 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
   }, [
     energy,
     formationReadiness.injuredHeroes.length,
+    formationReadiness.busyHeroes.length,
     formationReadiness.lowMoraleHeroes.length,
     heroCount,
     pendingEvent,
@@ -321,11 +352,11 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
   }, [highestAvailableFloor]);
 
   useEffect(() => {
-    if (!pendingEvent || lastOpenedEventId === pendingEvent.id) return;
+    if (!pendingEvent || lastOpenedEventId === pendingEvent.id || showBattleModal) return;
     setTowerEventOutcome(null);
     setLastOpenedEventId(pendingEvent.id);
     setShowTowerEventModal(true);
-  }, [lastOpenedEventId, pendingEvent]);
+  }, [lastOpenedEventId, pendingEvent, showBattleModal]);
 
   async function confirmHardcore(): Promise<boolean> {
     if (normalizedDifficulty !== "hardcore") return true;
@@ -348,16 +379,58 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
     setShowBattleModal(false);
   }
 
+  function continueFromLastBattle() {
+    if (lastBattle) setDismissedBattleId(lastBattle.id);
+    setHasUnseenBattleResult(false);
+    setShowBattleModal(false);
+  }
+
   function openPendingEvent() {
     setTowerEventOutcome(null);
     setShowTowerEventModal(true);
+  }
+
+  function showBattleToasts(battle: BattleResult) {
+    const rewardHighlights = getBattleRewardHighlights(battle, 3).filter((reward) => !reward.label.startsWith("Sem") && !reward.label.startsWith("Derrota"));
+    const completedMissions = getBattleProgressLabels(battle.progression?.missionUpdates);
+    const completedAchievements = getBattleProgressLabels(battle.progression?.achievementsAvailable);
+
+    showToast({
+      title: battle.result === "victory" ? "Resultado registrado" : "Derrota registrada",
+      message: `${battle.result === "victory" ? "Vitória" : "Derrota"} no andar ${battle.floor} em ${battle.rounds} turno(s).`,
+      tone: battle.result === "victory" ? "success" : "danger",
+    });
+
+    if (rewardHighlights.length > 0) {
+      showToast({
+        title: "Recompensa recebida",
+        message: rewardHighlights.map((reward) => reward.label).join(" | "),
+        tone: "reward",
+      });
+    }
+
+    if (completedMissions.length > 0) {
+      showToast({
+        title: "Missão concluída",
+        message: completedMissions.join(" | "),
+        tone: "success",
+      });
+    }
+
+    if (completedAchievements.length > 0) {
+      showToast({
+        title: "Conquista concluída",
+        message: completedAchievements.join(" | "),
+        tone: "arcane",
+      });
+    }
   }
 
   async function handleChallenge() {
     if (!canChallenge) {
       setFeedback(statusMessage);
       showToast({
-        title: "Ação indisponível",
+        title: energy < GAME_CONFIG.towerEnergyCost ? "Energia insuficiente" : formationReadiness.busyHeroes.length > 0 ? "Herói em expedição" : "Ação indisponível",
         message: statusMessage,
         tone: "warning",
       });
@@ -372,18 +445,60 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
       : startRepeatTowerBattle(selectedFloor, { difficultyMode: normalizedDifficulty });
 
     setFeedback(formatBattleMessage(result));
-    showToast({
-      title: result.ok && "event" in result && result.event ? "Evento revelado" : result.ok ? "Ação concluída" : "Ação indisponível",
-      message: formatBattleMessage(result),
-      tone: result.ok && "event" in result && result.event ? "arcane" : result.ok ? "success" : "warning",
-    });
+
+    if (formationReadiness.injuredHeroes.length > 0 || formationReadiness.woundedHeroes.length > 0) {
+      showToast({
+        title: "Herói ferido",
+        message: "A formação entrou na Torre com ferimentos ou HP crítico.",
+        tone: "warning",
+      });
+    }
+
     if (result.ok && "event" in result && result.event) {
+      if (result.phase === "post") {
+        const completedBattle = useGameStore.getState().state.lastBattle;
+        if (completedBattle) {
+          setDismissedBattleId(null);
+          setHasUnseenBattleResult(true);
+          setShowBattleModal(true);
+          showBattleToasts(completedBattle);
+        }
+        setTowerEventOutcome(null);
+        setShowTowerEventModal(false);
+        return;
+      }
+
+      showToast({
+        title: "Evento revelado",
+        message: formatBattleMessage(result),
+        tone: "arcane",
+      });
       setTowerEventOutcome(null);
       setShowTowerEventModal(true);
     }
     if (result.ok && "battle" in result) {
+      setDismissedBattleId(null);
       setHasUnseenBattleResult(true);
       setShowBattleModal(true);
+      showBattleToasts(result.battle);
+      return;
+    }
+
+    if (result.ok) {
+      showToast({
+        title: "Ação concluída",
+        message: formatBattleMessage(result),
+        tone: "success",
+      });
+      return;
+    }
+
+    if (!result.ok) {
+      showToast({
+        title: "Erro de ação",
+        message: result.message,
+        tone: "warning",
+      });
     }
   }
 
@@ -393,10 +508,13 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
     if (!result.ok) return;
 
     if (result.battleStarted) {
+      const completedBattle = useGameStore.getState().state.lastBattle;
       setTowerEventOutcome(null);
       setShowTowerEventModal(false);
+      setDismissedBattleId(null);
       setHasUnseenBattleResult(true);
       setShowBattleModal(true);
+      if (completedBattle) showBattleToasts(completedBattle);
       return;
     }
 
@@ -408,6 +526,87 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
     setShowTowerEventModal(true);
   }
 
+  const resultIsDominant = Boolean(lastBattle && dismissedBattleId !== lastBattle.id && !pendingEvent);
+  const blockingState = (() => {
+    if (pendingEvent || resultIsDominant) return null;
+
+    if (heroCount === 0) {
+      return {
+        title: "Formação incompleta",
+        description: "A Torre exige pelo menos um herói escalado antes de abrir o combate.",
+        cta: "Montar formação",
+        tone: "warning" as const,
+        onClick: () => {
+          if (onNavigate) onNavigate("formation");
+          else
+            showToast({
+              title: "Formação incompleta",
+              message: "Abra a aba Formação e escale heróis antes de desafiar a Torre.",
+              tone: "warning",
+            });
+        },
+      };
+    }
+
+    if (formationReadiness.busyHeroes.length > 0) {
+      const busyHero = formationReadiness.busyHeroes[0];
+      const expedition = busyHero ? getHeroExpedition(state, busyHero.id) : null;
+      return {
+        title: "Herói indisponível",
+        description: `${formatHeroNames(formationReadiness.busyHeroes)} está em expedição${expedition ? `: ${expedition.name}` : ""}. Troque a formação para lutar.`,
+        cta: "Trocar herói indisponível",
+        tone: "danger" as const,
+        onClick: () => {
+          if (onNavigate) onNavigate("formation");
+          else
+            showToast({
+              title: "Herói em expedição",
+              message: "Troque o herói indisponível antes de desafiar a Torre.",
+              tone: "warning",
+            });
+        },
+      };
+    }
+
+    if (energy < GAME_CONFIG.towerEnergyCost) {
+      return {
+        title: "Energia insuficiente",
+        description: `A Torre exige ${GAME_CONFIG.towerEnergyCost} energia; você tem ${energy}.`,
+        cta: "Recuperar energia",
+        tone: "danger" as const,
+        onClick: () =>
+          showToast({
+            title: "Energia insuficiente",
+            message: `A Torre exige ${GAME_CONFIG.towerEnergyCost} energia. Aguarde regenerar antes de desafiar.`,
+            tone: "warning",
+          }),
+      };
+    }
+
+    if (selectedIsLocked) {
+      return {
+        title: "Andar bloqueado",
+        description: "Este andar ainda não foi liberado pela campanha.",
+        cta: "Voltar ao andar atual",
+        tone: "warning" as const,
+        onClick: () => setSelectedFloor(highestAvailableFloor),
+      };
+    }
+
+    if (!selectedIsCurrent && !selectedIsRepeatable) {
+      return {
+        title: "Repetição indisponível",
+        description: "Este andar ainda não pode ser repetido para recompensas.",
+        cta: "Selecionar andar atual",
+        tone: "warning" as const,
+        onClick: () => setSelectedFloor(highestAvailableFloor),
+      };
+    }
+
+    return null;
+  })();
+  const shouldShowPreparation = !pendingEvent && !resultIsDominant && !blockingState;
+
   const primaryAction = (() => {
     if (pendingEvent) {
       return {
@@ -418,45 +617,21 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
       };
     }
 
-    if (hasUnseenBattleResult && lastBattle) {
+    if (resultIsDominant && lastBattle) {
       return {
-        label: "Ver resultado",
-        detail: "Combate recente ainda precisa ser revisado",
+        label: hasUnseenBattleResult ? "Ver resultado" : "Continuar subida",
+        detail: hasUnseenBattleResult ? "Combate recente ainda precisa ser revisado" : "Resumo recente em destaque",
         disabled: false,
-        onClick: openBattleResult,
+        onClick: hasUnseenBattleResult ? openBattleResult : continueFromLastBattle,
       };
     }
 
-    if (heroCount === 0) {
+    if (blockingState) {
       return {
-        label: "Ajustar formação",
-        detail: "Nenhum herói escalado para a Torre",
+        label: blockingState.cta,
+        detail: blockingState.description,
         disabled: false,
-        onClick: () => {
-          if (onNavigate) {
-            onNavigate("formation");
-            return;
-          }
-          showToast({
-            title: "Formação incompleta",
-            message: "Abra a aba Formação e escale heróis antes de desafiar a Torre.",
-            tone: "warning",
-          });
-        },
-      };
-    }
-
-    if (energy < GAME_CONFIG.towerEnergyCost) {
-      return {
-        label: "Recuperar energia",
-        detail: `Energia atual ${energy}/${GAME_CONFIG.towerEnergyCost}`,
-        disabled: false,
-        onClick: () =>
-          showToast({
-            title: "Energia insuficiente",
-            message: `A Torre exige ${GAME_CONFIG.towerEnergyCost} energia. Aguarde regenerar antes de desafiar.`,
-            tone: "warning",
-          }),
+        onClick: blockingState.onClick,
       };
     }
 
@@ -579,7 +754,7 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
             <span>{difficultySummary.name}</span>
           </div>
 
-          {towerWarnings.length > 0 ? (
+          {shouldShowPreparation && towerWarnings.length > 0 ? (
             <div className="tower-state-alerts">
               {towerWarnings.map((warning) => (
                 <UiAlertBox key={warning.key} tone={warning.tone}>
@@ -609,88 +784,108 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
             </section>
           ) : null}
 
-          <div className="tower-challenge-grid">
-            <section className="tower-threat-card">
-              <h4>Inimigos previstos</h4>
-              <div className="tower-enemy-list">
-                {enemyPreview.map((enemy) => (
-                  <span key={enemy.key}>
-                    {enemy.label}
-                    {enemy.count > 1 ? ` x${enemy.count}` : ""} | {enemy.role}
-                  </span>
-                ))}
-              </div>
-              <small>{bossFloor ? `Chefe detectado: ${selectedChapter.finalBoss}.` : "Composição estimada pela patrulha da guilda."}</small>
-            </section>
-            <section className={`tower-risk-card tone-${riskProfile.tone}`}>
-              <h4>Risco estimado</h4>
-              <strong>{riskProfile.label}</strong>
-              <p>{riskProfile.description}</p>
-              <small>
-                Equipe nível médio {averageFormationLevel || 0} contra recomendado {recommendedLevel}.
-              </small>
-            </section>
-            <section>
-              <h4>Modificadores ativos</h4>
-              <p>{selectedFloorData?.mechanic ?? "Sem mecânica registrada."}</p>
-              <small>{modifierSummary || "Sem modificador adicional além da região."}</small>
-            </section>
-            <section className="tower-reward-card">
-              <h4>Recompensas possíveis</h4>
-              <p>{rewardPreview}</p>
-              <small>{selectedFloorData?.rewardHint ?? "Recompensas variam conforme dificuldade e eventos."}</small>
-            </section>
-            <section className="tower-cost-card">
-              <h4>Custo e equipe</h4>
-              <div className="tower-cost-grid">
-                <span>
-                  <strong>{GAME_CONFIG.towerEnergyCost}</strong>
-                  Energia
-                </span>
-                <span>
-                  <strong>{heroCount}</strong>
-                  Heróis
-                </span>
-                <span>
-                  <strong>{formationPower}</strong>
-                  Poder
-                </span>
-              </div>
-              <small>
-                Energia atual {energy}/{state.resources.maxEnergy}.
-              </small>
-            </section>
-          </div>
-
-          {activeEffects.length > 0 ? (
-            <div className="tower-effect-inline">
-              {activeEffects.map((effect) => (
-                <span key={effect.id}>{effect.label}</span>
-              ))}
-            </div>
+          {resultIsDominant && lastBattle ? (
+            <BattleResultSummaryCard battle={lastBattle} onContinue={continueFromLastBattle} onOpen={openBattleResult} state={state} />
           ) : null}
 
-          <div className="tower-difficulty-picker compact">
-            {difficultyModes.map((mode) => (
-              <button
-                className={normalizedDifficulty === mode ? "tower-event-choice active" : "tower-event-choice"}
-                key={mode}
-                onClick={() => setDifficultyMode(mode)}
-                type="button"
-              >
-                <strong>{getTowerDifficultySummary(mode).name}</strong>
-                <span>{getTowerDifficultySummary(mode).description}</span>
+          {blockingState ? (
+            <section className={`tower-blocker-card tone-${blockingState.tone}`}>
+              <span>Combate bloqueado</span>
+              <h3>{blockingState.title}</h3>
+              <p>{blockingState.description}</p>
+              <button className="tower-start-battle-button" onClick={() => void blockingState.onClick()} type="button">
+                <strong>{blockingState.cta}</strong>
+                <span>{primaryAction.detail}</span>
               </button>
-            ))}
-          </div>
+            </section>
+          ) : null}
 
-          <div className="tower-challenge-footer">
-            <p className="tower-event-next-step">{statusMessage}</p>
-            <button className="tower-start-battle-button" disabled={primaryAction.disabled} onClick={() => void primaryAction.onClick()} type="button">
-              <strong>{primaryAction.label}</strong>
-              <span>{primaryAction.detail}</span>
-            </button>
-          </div>
+          {shouldShowPreparation ? (
+            <>
+              <div className="tower-challenge-grid">
+                <section className="tower-threat-card">
+                  <h4>Inimigos previstos</h4>
+                  <div className="tower-enemy-list">
+                    {enemyPreview.map((enemy) => (
+                      <span key={enemy.key}>
+                        {enemy.label}
+                        {enemy.count > 1 ? ` x${enemy.count}` : ""} | {enemy.role}
+                      </span>
+                    ))}
+                  </div>
+                  <small>{bossFloor ? `Chefe detectado: ${selectedChapter.finalBoss}.` : "Composição estimada pela patrulha da guilda."}</small>
+                </section>
+                <section className={`tower-risk-card tone-${riskProfile.tone}`}>
+                  <h4>Risco estimado</h4>
+                  <strong>{riskProfile.label}</strong>
+                  <p>{riskProfile.description}</p>
+                  <small>
+                    Equipe nível médio {averageFormationLevel || 0} contra recomendado {recommendedLevel}.
+                  </small>
+                </section>
+                <section>
+                  <h4>Modificadores ativos</h4>
+                  <p>{selectedFloorData?.mechanic ?? "Sem mecânica registrada."}</p>
+                  <small>{modifierSummary || "Sem modificador adicional além da região."}</small>
+                </section>
+                <section className="tower-reward-card">
+                  <h4>Recompensas possíveis</h4>
+                  <p>{rewardPreview}</p>
+                  <small>{selectedFloorData?.rewardHint ?? "Recompensas variam conforme dificuldade e eventos."}</small>
+                </section>
+                <section className="tower-cost-card">
+                  <h4>Custo e equipe</h4>
+                  <div className="tower-cost-grid">
+                    <span>
+                      <strong>{GAME_CONFIG.towerEnergyCost}</strong>
+                      Energia
+                    </span>
+                    <span>
+                      <strong>{heroCount}</strong>
+                      Heróis
+                    </span>
+                    <span>
+                      <strong>{formationPower}</strong>
+                      Poder
+                    </span>
+                  </div>
+                  <small>
+                    Energia atual {energy}/{state.resources.maxEnergy}.
+                  </small>
+                </section>
+              </div>
+
+              {activeEffects.length > 0 ? (
+                <div className="tower-effect-inline">
+                  {activeEffects.map((effect) => (
+                    <span key={effect.id}>{effect.label}</span>
+                  ))}
+                </div>
+              ) : null}
+
+              <div className="tower-difficulty-picker compact">
+                {difficultyModes.map((mode) => (
+                  <button
+                    className={normalizedDifficulty === mode ? "tower-event-choice active" : "tower-event-choice"}
+                    key={mode}
+                    onClick={() => setDifficultyMode(mode)}
+                    type="button"
+                  >
+                    <strong>{getTowerDifficultySummary(mode).name}</strong>
+                    <span>{getTowerDifficultySummary(mode).description}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="tower-challenge-footer">
+                <p className="tower-event-next-step">{statusMessage}</p>
+                <button className="tower-start-battle-button" disabled={primaryAction.disabled} onClick={() => void primaryAction.onClick()} type="button">
+                  <strong>{primaryAction.label}</strong>
+                  <span>{primaryAction.detail}</span>
+                </button>
+              </div>
+            </>
+          ) : null}
 
           {feedback ? <p className="tower-battle-feedback">{feedback}</p> : null}
         </article>
