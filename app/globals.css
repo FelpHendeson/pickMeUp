@@ -10191,6 +10191,25 @@ textarea,
   border-radius: var(--radius-md);
 }
 
+select {
+  color-scheme: dark;
+}
+
+select option,
+select optgroup {
+  background: #171016;
+  color: var(--text);
+}
+
+select option:checked {
+  background: var(--gold);
+  color: var(--bg);
+}
+
+select option:disabled {
+  color: rgba(216, 204, 189, 0.58);
+}
+
 input:disabled,
 select:disabled,
 textarea:disabled {
