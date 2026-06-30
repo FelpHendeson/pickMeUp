@@ -43,13 +43,13 @@ npm run dev
 Abra o endereco informado pelo Next, normalmente:
 
 ```text
-http://localhost:3000
+http://localhost:3333
 ```
 
-Se a porta 3000 estiver ocupada, rode em outra porta:
+Se a porta 3333 estiver ocupada, rode em outra porta:
 
 ```bash
-npm run dev -- -p 3002
+npm run dev -- -p 3334
 ```
 
 Sem `DATABASE_URL`, a tela principal continua funcionando. Apenas as acoes de cloud save pela API devem retornar erro de banco indisponivel.
@@ -91,10 +91,10 @@ npm run dev
 DSN local padrao:
 
 ```text
-postgresql://postgres:postgres@localhost:5433/ascensao_dos_ecos?schema=public
+postgresql://postgres:postgres@localhost:55432/ascensao_dos_ecos?schema=public
 ```
 
-O Docker Compose usa a porta local `5433` para evitar conflito com PostgreSQL ja instalado na maquina. O volume `ecos_postgres_data` preserva os dados locais.
+O Docker Compose usa a porta local `55432` para evitar conflito com PostgreSQL ja instalado na maquina. O volume `ecos_postgres_data` preserva os dados locais.
 
 ## Variaveis de Ambiente
 
@@ -115,7 +115,7 @@ Copy-Item .env.example .env
 Valores de exemplo:
 
 ```bash
-DATABASE_URL="postgresql://postgres:postgres@localhost:5433/ascensao_dos_ecos?schema=public"
+DATABASE_URL="postgresql://postgres:postgres@localhost:55432/ascensao_dos_ecos?schema=public"
 NEXT_PUBLIC_APP_ENV="local"
 NEXT_PUBLIC_ENABLE_CLOUD_SAVE="false"
 ```

@@ -50,8 +50,8 @@ O projeto usa `docker-compose.yml` para subir um PostgreSQL local persistente em
 - imagem: `postgres:16`;
 - volume: `ecos_postgres_data`;
 - banco: `ascensao_dos_ecos`;
-- porta no host: `5433`;
-- DSN: `postgresql://postgres:postgres@localhost:5433/ascensao_dos_ecos?schema=public`.
+- porta no host: `55432`;
+- DSN: `postgresql://postgres:postgres@localhost:55432/ascensao_dos_ecos?schema=public`.
 
 Fluxo recomendado:
 
@@ -67,7 +67,7 @@ rode enquanto o container ainda esta inicializando.
 Use `npm run validate:db` para subir o banco, aplicar migrations e rodar o smoke test de persistencia na nuvem.
 O arquivo `.env` deve ficar local e seguir `.env.example`.
 
-Se voce ja tiver outro PostgreSQL local na porta 5432, nao ha conflito: este Compose publica o banco na porta 5433.
+Se voce ja tiver outro PostgreSQL local na porta 5432, nao ha conflito: este Compose publica o banco na porta 55432.
 
 Se existir um container manual antigo do proprio projeto prendendo a configuracao anterior, pare-o antes do Compose:
 
