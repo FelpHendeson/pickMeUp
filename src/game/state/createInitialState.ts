@@ -5,10 +5,11 @@ import { createDailyMissionState, normalizeAchievements } from "../missions";
 import { RELIC_DEFINITIONS } from "../relics";
 import type { GameState } from "../types";
 import { createTeamPresets } from "./teamPresets";
+import { CURRENT_SAVE_SCHEMA_VERSION } from "../save/migrations";
 
 export function createInitialState(now = Date.now()): GameState {
   return {
-    schemaVersion: 1,
+    schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
     saveVersion: GAME_CONFIG.saveVersion,
     accountLevel: 1,
     accountXp: 0,

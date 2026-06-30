@@ -3,11 +3,12 @@ import { regenerateEnergy } from "../state/energy";
 import { ensureStateShape } from "../state/normalizeState";
 import type { GameState, PartialGameState } from "../types";
 import { parseImportedSaveText, validateImportedSaveData } from "./saveSchema";
+import { migrateSaveData } from "./migrations";
 
 export const EXPORT_FILE_NAME = "ascensao-dos-ecos-save.json";
 
 export function normalizeGameState(state: PartialGameState, now = Date.now()): GameState {
-  return ensureStateShape(state, now);
+  return ensureStateShape(migrateSaveData(state), now);
 }
 
 export function prepareLoadedGameState(state: PartialGameState, now = Date.now()): GameState {

@@ -1,5 +1,6 @@
 import type { GameState, PartialGameState } from "../types";
 import { ensureStateShape } from "../state/normalizeState";
+import { migrateSaveData, SaveMigrationError } from "./migrations";
 
 export type ImportedSaveResult =
   | { ok: true; state: GameState }
@@ -11,24 +12,18 @@ export function validateImportedSaveData(data: unknown): ImportedSaveResult {
   }
 
   const candidate = data as PartialGameState;
-  const version = candidate.saveVersion === undefined ? 1 : Number(candidate.saveVersion);
-  if (!Number.isInteger(version) || version <= 0) {
-    return { ok: false, message: "Arquivo invalido: versao do save ausente ou corrompida." };
+  const knownFields = ["schemaVersion", "saveVersion", "resources", "heroes", "formation", "towerFloor"];
+  if (!knownFields.some((field) => field in candidate)) {
+    return { ok: false, message: "Arquivo invalido: nenhum dado reconhecido de save foi encontrado." };
   }
 
-  if (!candidate.resources || typeof candidate.resources !== "object") {
-    return { ok: false, message: "Arquivo invalido: recursos do save ausentes." };
+  try {
+    const migrated = migrateSaveData(candidate);
+    return { ok: true, state: ensureStateShape(migrated) };
+  } catch (error) {
+    const detail = error instanceof SaveMigrationError ? error.message : "falha ao migrar o save.";
+    return { ok: false, message: `Arquivo invalido: ${detail}` };
   }
-
-  if (!Array.isArray(candidate.heroes) || !Array.isArray(candidate.formation)) {
-    return { ok: false, message: "Arquivo invalido: herois ou formacao ausentes." };
-  }
-
-  if (!Number.isFinite(Number(candidate.towerFloor))) {
-    return { ok: false, message: "Arquivo invalido: progresso da torre ausente." };
-  }
-
-  return { ok: true, state: ensureStateShape(candidate) };
 }
 
 export function parseImportedSaveText(text: string): ImportedSaveResult {

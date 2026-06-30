@@ -18,6 +18,7 @@ import {
   getExpeditionDefinition,
   importGameStateFromText,
   initializeNarrativeForSession,
+  migrateSaveData,
   markNarrativeSceneSeen,
   queueNarrativeScene,
   runTowerBattle,
@@ -27,6 +28,7 @@ import {
   startExpedition,
   summonHero,
   useConsumable,
+  validateImportedSaveData,
 } from "../src/game/index.ts";
 import type { EquipmentItem, GameState, Hero } from "../src/game/index.ts";
 
@@ -102,6 +104,93 @@ test("ensureStateShape normaliza save parcial e remove referencias invalidas", (
   assert.deepEqual(state.teamPresets.expedition[0].heroIds, ["hero_valid", null, null]);
   assert.deepEqual(state.narrative.seenSceneIds, ["intro"]);
   assert.deepEqual(state.narrative.pendingScenes, ["firstSevereInjury"]);
+});
+
+test("migration v0 normaliza save legado parcial e adiciona defaults atuais", () => {
+  const hero = createFixedHero("hero_legacy", "mage", 3);
+  const migrated = migrateSaveData({
+    saveVersion: 1,
+    resources: { gold: -50, crystals: 77, energy: 999 },
+    heroes: [hero],
+    formation: [hero.id, "hero_inexistente"],
+    towerFloor: 8,
+  });
+
+  assert.equal(migrated.schemaVersion, 1);
+  assert.equal(migrated.saveVersion, 1);
+
+  const imported = validateImportedSaveData(migrated);
+  assert.equal(imported.ok, true);
+  if (!imported.ok) return;
+
+  assert.equal(imported.state.resources.gold, 0);
+  assert.equal(imported.state.resources.crystals, 77);
+  assert.equal(imported.state.resources.energy, imported.state.resources.maxEnergy);
+  assert.deepEqual(imported.state.formation, [hero.id, null, null, null, null]);
+  assert.deepEqual(imported.state.inventory, []);
+  assert.deepEqual(imported.state.activeExpeditions, []);
+  assert.ok(imported.state.dailyMissions);
+  assert.ok(imported.state.achievements);
+  assert.ok(imported.state.teamPresets);
+});
+
+test("migration preserva sistemas existentes e permite round-trip de importacao", () => {
+  const heroA = createFixedHero("legacya", "warrior", 4);
+  const heroB = createFixedHero("legacyb", "priest", 4);
+  const legacySave = {
+    saveVersion: 1,
+    resources: { gold: 321, crystals: 45, essence: 6, fragments: 7, energy: 12, maxEnergy: 30 },
+    heroes: [heroA, heroB],
+    formation: [heroA.id, heroB.id],
+    towerFloor: 12,
+    relics: { tower_core: { level: 2, unlockedAt: "2026-01-01T00:00:00.000Z" } },
+    affinities: { legacya_legacyb: { heroAId: heroA.id, heroBId: heroB.id, xp: 9 } },
+    library: {
+      enemies: { stoneSlime: { key: "stoneSlime", encountered: 4, defeated: 3, firstFloor: 1, lastFloor: 4, region: "Ecos" } },
+      bosses: {},
+      events: {},
+      heroes: { classes: {}, rarities: {}, traits: {} },
+    },
+    towerDifficultyStats: { victories: { normal: 3, challenge: 2, hardcore: 1 }, hardcoreDeaths: 1 },
+    pendingTowerDifficultyMode: "challenge",
+    lastBattle: {
+      id: "legacy_battle",
+      result: "victory",
+      floor: 11,
+      rounds: 4,
+      playerTeam: [],
+      enemyTeam: [],
+      log: ["Vitoria preservada"],
+      events: [],
+      performance: {},
+      rewards: { gold: 90 },
+    },
+  };
+
+  const imported = importGameStateFromText(JSON.stringify(legacySave), 1_000);
+  assert.equal(imported.ok, true);
+  if (!imported.ok) return;
+
+  assert.equal(imported.state.lastBattle?.id, "legacy_battle");
+  assert.equal(imported.state.lastBattle?.rewards?.gold, 90);
+  assert.equal(imported.state.relics.tower_core.level, 2);
+  assert.equal(imported.state.library.enemies.stoneSlime.defeated, 3);
+  assert.equal(imported.state.affinities.legacya_legacyb.xp, 9);
+  assert.equal(imported.state.towerDifficultyStats?.victories.challenge, 2);
+  assert.equal(imported.state.pendingTowerDifficultyMode, "challenge");
+
+  const roundTrip = importGameStateFromText(serializeGameStateForExport(imported.state), 2_000);
+  assert.equal(roundTrip.ok, true);
+  if (!roundTrip.ok) return;
+  assert.equal(roundTrip.state.schemaVersion, 1);
+  assert.equal(roundTrip.state.saveVersion, 1);
+  assert.equal(roundTrip.state.lastBattle?.id, "legacy_battle");
+  assert.equal(roundTrip.state.affinities.legacya_legacyb.xp, 9);
+});
+
+test("migration rejeita schemas e versoes futuras", () => {
+  assert.equal(validateImportedSaveData({ schemaVersion: 2, saveVersion: 1 }).ok, false);
+  assert.equal(validateImportedSaveData({ schemaVersion: 1, saveVersion: 2 }).ok, false);
 });
 
 test("summonHero consome recurso, adiciona heroi e registra historico", () => {

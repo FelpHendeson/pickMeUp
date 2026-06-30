@@ -17,6 +17,7 @@ import { normalizeNarrativeState } from "../narrative";
 import { normalizeBattleResult } from "../battle";
 import { createInitialState } from "./createInitialState";
 import { normalizeTeamPresets } from "./teamPresets";
+import { CURRENT_SAVE_SCHEMA_VERSION } from "../save/migrations";
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
@@ -38,7 +39,8 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   const baseRooms = asRecord(source.baseRooms);
   const narrative = asRecord(source.narrative);
 
-  merged.saveVersion = Number.isInteger(source.saveVersion) ? Number(source.saveVersion) : GAME_CONFIG.saveVersion;
+  merged.schemaVersion = CURRENT_SAVE_SCHEMA_VERSION;
+  merged.saveVersion = GAME_CONFIG.saveVersion;
   merged.resources = {
     ...fresh.resources,
     gold: nonNegativeInteger(resources.gold ?? fresh.resources.gold),

@@ -6,6 +6,7 @@ export { addResource, canSpendResource, getResourceAmount, spendResource } from 
 export { regenerateEnergy, getEnergyRegenProgress } from "./state/energy";
 export { addAccountXp, getAccountXpForNextLevel } from "./state/account";
 export { parseImportedSaveText, validateImportedSaveData } from "./save/saveSchema";
+export { CURRENT_SAVE_SCHEMA_VERSION, SaveMigrationError, migrateSaveData } from "./save/migrations";
 export {
   EXPORT_FILE_NAME,
   createExportBlob,
