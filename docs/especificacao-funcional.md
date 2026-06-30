@@ -7,7 +7,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 
 ### Estado, persistência e preferências
 - `src/game/state/` define o estado inicial, recursos, energia, presets, `saveVersion` e a normalizacao do save.
-- `src/game/save/` carrega, valida, exporta, importa e normaliza progresso local.
+- `src/game/save/` carrega, migra por `schemaVersion`, valida, exporta, importa e normaliza progresso local.
 - `src/game/preferences/` guarda preferências visuais, de combate e de interface.
 - `src/store/gameStore.ts` expõe ações persistentes para a UI React.
 
@@ -72,7 +72,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 6. Avanca pelos capitulos, desbloqueia relíquias, progressao permanente e melhorias de conta.
 
 ## Regras de alto nível
-- O progresso e salvo localmente no navegador com `localStorage`, `saveVersion` e normalizacao ao carregar.
+- O progresso e salvo localmente no navegador com `localStorage`, `saveVersion: 1` e `schemaVersion: 1`. Saves legados passam por migrations sequenciais antes da normalizacao final; campos ausentes recebem defaults e referencias invalidas sao removidas.
 - A torre e o eixo principal do jogo, com capitulos marcados, chefes, modificadores por regiao e modos de dificuldade por tentativa.
 - Descobertas do jogador devem ser persistidas na Biblioteca e evoluir conforme uso real dos sistemas.
 - A Biblioteca deve apresentar essas descobertas como grimorio/arquivo arcano, separando inimigos, chefes, capitulos, eventos, reliquias e memoria da guilda sem alterar os dados salvos.

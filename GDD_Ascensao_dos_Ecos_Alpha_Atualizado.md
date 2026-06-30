@@ -563,6 +563,7 @@ A camada visual global deve manter a identidade coesa de RPG Dark Fantasy: fundo
 - `localStorage`.
 - Chave: `ascensao-dos-ecos-save-v1`.
 - `saveVersion: 1`.
+- `schemaVersion: 1` com migrations sequenciais antes da normalizacao final.
 - Normalizacao ao carregar.
 - Exportar save JSON.
 - Importar save com validacao.
@@ -590,8 +591,8 @@ Acoes destrutivas ou de sobrescrita precisam usar modal de confirmacao e explica
 - Mostrar numeros detalhados.
 - Volumes de audio preparados.
 
-### Necessidade futura
-Criar migracoes formais de save por versao. O projeto vai crescer; sem migracao, qualquer mudanca pode quebrar progresso antigo.
+### Compatibilidade de save
+O pipeline em `src/game/save/migrations.ts` trata saves sem `schemaVersion` como formato legado, aplica migrations em ordem e preserva `saveVersion: 1`. Depois da migration, a normalizacao completa campos ausentes, remove referencias invalidas e mantem o save exportavel. Schemas ou versoes futuras sao rejeitados para evitar perda silenciosa de progresso.
 
 ---
 
