@@ -2,6 +2,14 @@ export { FLOOR_MODIFIERS, TOWER_CHAPTERS } from "./chapters";
 export { ENEMY_ARCHETYPES } from "./enemies";
 export { TOWER_FLOORS } from "./floors";
 export {
+  getTowerBlockIndex,
+  getTowerDifficultyJumpLabel,
+  getTowerMilestoneInfo,
+  isTowerBlockTestFloor,
+  isTowerChapterBossFloor,
+  isTowerMilestoneFloor,
+} from "./milestones";
+export {
   getChapterEventKeys,
   getCompletedTowerChapterIds,
   getFloorModifierSummary,
@@ -25,3 +33,4 @@ export type {
 } from "./chapters";
 export type { CreateEnemyUnitOptions, EnemyArchetype, EnemyRole, EnemyUnit } from "./enemies";
 export type { TowerFloor, TowerReward, TowerRewardOptions } from "./floors";
+export type { TowerMilestoneInfo, TowerMilestoneType } from "./milestones";

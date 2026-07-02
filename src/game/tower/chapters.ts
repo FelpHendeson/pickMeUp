@@ -1,5 +1,6 @@
 import { GAME_CONFIG } from "../config";
 import type { GameState, TowerEventPhase } from "../types";
+import { getTowerMilestoneInfo } from "./milestones";
 
 export type TowerModifierValues = {
   keys: string[];
@@ -243,6 +244,17 @@ export function getFloorModifierValues(floorData: TowerFloorLike | null): TowerM
   if (floorData) {
     const chapter = getTowerChapterByFloor(floorData.floor);
     applyModifierValues(modifiers, `chapter_${chapter.id}`, chapter.regionalModifier);
+    const milestone = getTowerMilestoneInfo(floorData.floor);
+    if (milestone.type !== "normal") {
+      const bonusPercent = Math.round((milestone.enemyPowerMultiplier - 1) * 100);
+      applyModifierValues(modifiers, `milestone_${milestone.type}`, {
+        label: milestone.type === "chapter-boss" ? "Chefe de capitulo" : "Teste de bloco",
+        description: `marco: HP, ATK e DEF inimigos +${bonusPercent}%`,
+        enemyHpMultiplier: milestone.enemyPowerMultiplier,
+        enemyAtkMultiplier: milestone.enemyPowerMultiplier,
+        enemyDefMultiplier: milestone.enemyPowerMultiplier,
+      });
+    }
   }
 
   return modifiers;

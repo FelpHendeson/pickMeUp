@@ -1,6 +1,7 @@
 import { applyDifficultyToFloorReward } from "../difficulty";
 import { createEnemyUnit, type CreateEnemyUnitOptions, type EnemyUnit } from "./enemies";
 import { getTowerChapterByFloor } from "./chapters";
+import { getTowerMilestoneInfo, isTowerMilestoneFloor } from "./milestones";
 
 export type TowerFloor = {
   floor: number;
@@ -44,7 +45,7 @@ export const TOWER_FLOORS: TowerFloor[] = [
   { floor: 2, title: "Asas na Penumbra", recommendedLevel: 1, mechanic: "Velocidade", enemyKeys: ["stoneSlime", "duskBat", "duskBat"], rewardHint: "Ouro + XP" },
   { floor: 3, title: "Ponte dos Saqueadores", recommendedLevel: 2, mechanic: "Dano fisico", enemyKeys: ["ridgeRaider", "ridgeRaider"], rewardHint: "Cristais" },
   { floor: 4, title: "Ninho Escuro", recommendedLevel: 2, mechanic: "Alvos frageis", enemyKeys: ["duskBat", "duskBat", "duskBat", "duskBat"], rewardHint: "XP" },
-  { floor: 5, title: "Capitao da Serra", recommendedLevel: 3, mechanic: "Mini-chefe", enemyKeys: ["ridgeRaider", "ridgeRaider", "stoneSlime"], rewardHint: "Chance de equipamento" },
+  { floor: 5, title: "Prova do Primeiro Eco", recommendedLevel: 3, mechanic: "Teste de bloco", enemyKeys: ["ridgeRaider", "ridgeRaider", "stoneSlime"], rewardHint: "Equipamento garantido e bonus de marco" },
   { floor: 6, title: "Circulo da Marca", recommendedLevel: 3, mechanic: "Marca", enemyKeys: ["markedAcolyte", "markedAcolyte", "stoneSlime"], modifier: "Maldicao leve: inimigos focam alvos feridos.", rewardHint: "Essencia" },
   { floor: 7, title: "Muralha Viva", recommendedLevel: 4, mechanic: "Defesa alta", enemyKeys: ["stoneSlime", "stoneSlime", "stoneSlime"], modifier: "Terreno estreito: frente recebe mais ataques.", rewardHint: "Fragmentos" },
   { floor: 8, title: "Camara Mista", recommendedLevel: 4, mechanic: "Formacao", enemyKeys: ["stoneSlime", "duskBat", "ridgeRaider", "markedAcolyte"], modifier: "Nevoa: turnos mais imprevisiveis.", rewardHint: "Cristais" },
@@ -54,7 +55,7 @@ export const TOWER_FLOORS: TowerFloor[] = [
   { floor: 12, title: "Galeria dos Uivos", recommendedLevel: 6, mechanic: "Velocidade inimiga", enemyKeys: ["emberHound", "emberHound", "duskBat"], modifierKeys: ["fastEnemies"], rewardHint: "Cristais" },
   { floor: 13, title: "Passagem Tumular", recommendedLevel: 7, mechanic: "Defesa inimiga", enemyKeys: ["graveWarden", "ridgeRaider", "markedAcolyte"], modifierKeys: ["exposedTeam"], rewardHint: "Essencia" },
   { floor: 14, title: "Escadaria Sem Folego", recommendedLevel: 7, mechanic: "Energia inicial baixa", enemyKeys: ["graveWarden", "duskBat", "emberHound"], modifierKeys: ["drainedStart"], rewardHint: "Fragmentos" },
-  { floor: 15, title: "Forja Fraturada", recommendedLevel: 8, mechanic: "Dano constante", enemyKeys: ["emberHound", "graveWarden", "ridgeRaider"], modifierKeys: ["exposedTeam"], rewardHint: "Equipamento garantido" },
+  { floor: 15, title: "Ruptura do Segundo Ciclo", recommendedLevel: 8, mechanic: "Teste de bloco", enemyKeys: ["emberHound", "graveWarden", "ridgeRaider"], modifierKeys: ["exposedTeam"], rewardHint: "Equipamento garantido e bonus de marco" },
   { floor: 16, title: "Sala dos Prismas", recommendedLevel: 8, mechanic: "Suporte inimigo", enemyKeys: ["crystalSeer", "stoneSlime", "emberHound"], modifierKeys: ["reducedHealing"], rewardHint: "Cristais" },
   { floor: 17, title: "Corrente de Vidro", recommendedLevel: 9, mechanic: "Rapidez e foco", enemyKeys: ["crystalSeer", "duskBat", "stormHarpy"], modifierKeys: ["fastEnemies"], rewardHint: "XP alto" },
   { floor: 18, title: "Patio dos Vigias", recommendedLevel: 9, mechanic: "Tanques", enemyKeys: ["graveWarden", "graveWarden", "crystalSeer"], modifierKeys: ["drainedStart"], rewardHint: "Ouro alto" },
@@ -64,7 +65,7 @@ export const TOWER_FLOORS: TowerFloor[] = [
   { floor: 22, title: "Cripta Veloz", recommendedLevel: 11, mechanic: "Pressao na retaguarda", enemyKeys: ["stormHarpy", "voidReaver", "duskBat"], modifierKeys: ["fastEnemies"], rewardHint: "Cristais" },
   { floor: 23, title: "Camara Sem Pulso", recommendedLevel: 12, mechanic: "Cura limitada", enemyKeys: ["voidReaver", "graveWarden", "markedAcolyte"], modifierKeys: ["reducedHealing", "drainedStart"], rewardHint: "Essencia" },
   { floor: 24, title: "Muralha dos Ceifadores", recommendedLevel: 12, mechanic: "Dano pesado", enemyKeys: ["voidReaver", "voidReaver", "graveWarden"], modifierKeys: ["exposedTeam"], rewardHint: "Fragmentos" },
-  { floor: 25, title: "Forja do Eclipse", recommendedLevel: 13, mechanic: "Elite", enemyKeys: ["voidReaver", "crystalSeer", "graveWarden", "emberHound"], modifierKeys: ["exposedTeam", "drainedStart"], rewardHint: "Equipamento garantido" },
+  { floor: 25, title: "Julgamento das Sombras", recommendedLevel: 13, mechanic: "Teste de bloco", enemyKeys: ["voidReaver", "crystalSeer", "graveWarden", "emberHound"], modifierKeys: ["exposedTeam", "drainedStart"], rewardHint: "Equipamento garantido e bonus de marco" },
   { floor: 26, title: "Galeria Invertida", recommendedLevel: 13, mechanic: "Turnos rapidos", enemyKeys: ["stormHarpy", "stormHarpy", "crystalSeer", "duskBat"], modifierKeys: ["fastEnemies", "reducedHealing"], rewardHint: "Cristais" },
   { floor: 27, title: "Fenda Abissal", recommendedLevel: 14, mechanic: "Dano e marca", enemyKeys: ["voidReaver", "markedAcolyte", "voidReaver"], modifierKeys: ["exposedTeam", "reducedHealing"], rewardHint: "XP alto" },
   { floor: 28, title: "Guarda do Eclipse", recommendedLevel: 14, mechanic: "Tanque e suporte", enemyKeys: ["graveWarden", "graveWarden", "crystalSeer", "voidReaver"], modifierKeys: ["drainedStart", "fastEnemies"], rewardHint: "Ouro alto" },
@@ -74,17 +75,13 @@ export const TOWER_FLOORS: TowerFloor[] = [
   { floor: 32, title: "Pontes de Correntes", recommendedLevel: 16, mechanic: "Dano focado", enemyKeys: ["hellboundKnight", "ashImp", "ashImp"], modifierKeys: ["exposedTeam"], rewardHint: "Cristais" },
   { floor: 33, title: "Caldeirao das Cinzas", recommendedLevel: 17, mechanic: "Suporte infernal", enemyKeys: ["cinderWitch", "brimstoneBrute", "ashImp"], modifierKeys: ["reducedHealing"], rewardHint: "Essencia" },
   { floor: 34, title: "Muralha de Ossos Quentes", recommendedLevel: 17, mechanic: "Defesa alta", enemyKeys: ["brimstoneBrute", "brimstoneBrute", "cinderWitch"], modifierKeys: ["drainedStart"], rewardHint: "Fragmentos" },
-  { floor: 35, title: "Arena dos Acorrentados", recommendedLevel: 18, mechanic: "Elite", enemyKeys: ["hellboundKnight", "hellboundKnight", "brimstoneBrute"], modifierKeys: ["exposedTeam", "fastEnemies"], rewardHint: "Equipamento garantido" },
+  { floor: 35, title: "Portao do Abismo", recommendedLevel: 18, mechanic: "Teste de bloco", enemyKeys: ["hellboundKnight", "hellboundKnight", "brimstoneBrute"], modifierKeys: ["exposedTeam", "fastEnemies"], rewardHint: "Equipamento garantido e bonus de marco" },
   { floor: 36, title: "Forno Sem Ceu", recommendedLevel: 18, mechanic: "Cura pressionada", enemyKeys: ["cinderWitch", "ashImp", "hellboundKnight", "ashImp"], modifierKeys: ["reducedHealing", "fastEnemies"], rewardHint: "Cristais" },
   { floor: 37, title: "Desfiladeiro Rubro", recommendedLevel: 19, mechanic: "Ataques pesados", enemyKeys: ["hellboundKnight", "brimstoneBrute", "hellboundKnight"], modifierKeys: ["exposedTeam"], rewardHint: "XP alto" },
   { floor: 38, title: "Capela da Brasa Negra", recommendedLevel: 19, mechanic: "Marca e suporte", enemyKeys: ["cinderWitch", "markedAcolyte", "brimstoneBrute", "ashImp"], modifierKeys: ["reducedHealing", "drainedStart"], rewardHint: "Ouro alto" },
   { floor: 39, title: "Limiar do Abismo", recommendedLevel: 20, mechanic: "Teste final", enemyKeys: ["ashImp", "hellboundKnight", "cinderWitch", "brimstoneBrute"], modifierKeys: ["fastEnemies", "exposedTeam", "reducedHealing"], rewardHint: "Chance muito alta de equipamento" },
   { floor: 40, title: "Garganta da Serpente", recommendedLevel: 20, mechanic: "Chefe: veneno abissal", enemyKeys: ["abyssalSerpent", "cinderWitch", "hellboundKnight"], modifierKeys: ["drainedStart", "exposedTeam", "reducedHealing"], modifier: "Chefe final do Abismo: a Serpente pressiona toda a equipe com ataques brutais.", rewardHint: "Grande recompensa final do capitulo" },
 ];
-
-function isMilestoneFloor(floorNumber: number): boolean {
-  return [5, 9, 15, 19, 25, 29, 35, 39].includes(floorNumber);
-}
 
 export function getFloorData(floorNumber: number): TowerFloor | null {
   return TOWER_FLOORS.find((floor) => floor.floor === floorNumber) ?? null;
@@ -103,6 +100,7 @@ export function createEnemiesForFloor(floorNumber: number, options: CreateEnemyU
 
 export function getFloorReward(floorNumber: number, options: TowerRewardOptions = {}): TowerReward {
   const bossFloor = isBossFloor(floorNumber);
+  const milestone = getTowerMilestoneInfo(floorNumber);
   const reward: TowerReward = {
     gold: 45 + floorNumber * 18 + Math.floor(Math.max(0, floorNumber - 10) * 9),
     xp: 28 + floorNumber * 11 + Math.floor(Math.max(0, floorNumber - 10) * 5),
@@ -115,9 +113,11 @@ export function getFloorReward(floorNumber: number, options: TowerRewardOptions 
     echoFragmentAmount: bossFloor ? 2 + Math.floor(floorNumber / 10) * 2 : 1,
     consumableChance: bossFloor ? 0.38 : Math.min(0.08 + floorNumber * 0.004, 0.24),
     equipmentChance: Math.min(8 + floorNumber * 0.9, 48) / 100,
-    guaranteedEquipment: bossFloor || isMilestoneFloor(floorNumber),
+    guaranteedEquipment: isTowerMilestoneFloor(floorNumber),
   };
 
+  reward.gold = Math.max(1, Math.round(reward.gold * milestone.rewardMultiplier));
+  reward.xp = Math.max(1, Math.round(reward.xp * milestone.rewardMultiplier));
   reward.gold = Math.max(1, Math.round(reward.gold * (options.towerGoldMultiplier || 1)));
   reward.equipmentChance = Math.min(0.9, reward.equipmentChance * (options.equipmentDropMultiplier || 1));
   reward.consumableChance = Math.min(0.9, reward.consumableChance * (options.consumableDropMultiplier || 1));

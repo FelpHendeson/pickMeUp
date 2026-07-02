@@ -14,6 +14,12 @@ import {
   getFloorModifierValues,
   getFloorReward,
   getSummonCost,
+  getTowerBlockIndex,
+  getTowerDifficultyJumpLabel,
+  getTowerMilestoneInfo,
+  isTowerBlockTestFloor,
+  isTowerChapterBossFloor,
+  isTowerMilestoneFloor,
   SUMMON_RARITY_TABLES,
   TOWER_CHAPTERS,
   TOWER_DIFFICULTY_MODES,
@@ -69,6 +75,70 @@ test("configuracao base e estrutura da torre permanecem estaveis", () => {
   );
 });
 
+test("marcos da torre classificam cada salto e expoem orientacao de preparo", () => {
+  const floors = Array.from({ length: GAME_CONFIG.towerMaxFloor }, (_, index) => index + 1);
+
+  assert.deepEqual(floors.filter(isTowerMilestoneFloor), [5, 10, 15, 20, 25, 30, 35, 40]);
+  assert.deepEqual(floors.filter(isTowerBlockTestFloor), [5, 15, 25, 35]);
+  assert.deepEqual(floors.filter(isTowerChapterBossFloor), [10, 20, 30, 40]);
+  assert.deepEqual([1, 4, 6, 9, 11, 39].map(isTowerMilestoneFloor), [false, false, false, false, false, false]);
+  assert.equal(getTowerBlockIndex(1), 1);
+  assert.equal(getTowerBlockIndex(5), 1);
+  assert.equal(getTowerBlockIndex(40), 8);
+  assert.equal(getTowerBlockIndex(0), null);
+
+  const blockTest = getTowerMilestoneInfo(5);
+  assert.equal(blockTest.type, "block-test");
+  assert.equal(blockTest.title, "Prova do Primeiro Eco");
+  assert.equal(blockTest.enemyPowerMultiplier, 1.1);
+  assert.equal(blockTest.rewardMultiplier, 1.08);
+  assert.match(blockTest.warning, /Salto de dificuldade/);
+  assert.ok(blockTest.preparationHint.length > 0);
+  assert.equal(getTowerDifficultyJumpLabel(5), "Teste de bloco: ameaca +10%");
+
+  const chapterBoss = getTowerMilestoneInfo(10);
+  assert.equal(chapterBoss.type, "chapter-boss");
+  assert.equal(chapterBoss.enemyPowerMultiplier, 1.18);
+  assert.equal(chapterBoss.rewardMultiplier, 1.15);
+  assert.match(chapterBoss.warning, /Chefe de capitulo/);
+  assert.ok(chapterBoss.preparationHint.length > 0);
+  assert.equal(getTowerDifficultyJumpLabel(10), "Chefe de capitulo: ameaca +18%");
+
+  const regularFloor = getTowerMilestoneInfo(6);
+  assert.equal(regularFloor.type, "normal");
+  assert.equal(regularFloor.enemyPowerMultiplier, 1);
+  assert.equal(regularFloor.rewardMultiplier, 1);
+  assert.equal(getTowerDifficultyJumpLabel(6), "Progressao regular");
+});
+
+test("bonus de ameaca e recompensa e aplicado somente nos marcos da torre", () => {
+  for (let floorNumber = 1; floorNumber <= GAME_CONFIG.towerMaxFloor; floorNumber += 1) {
+    const modifiers = getFloorModifierValues(getFloorData(floorNumber));
+    const milestoneModifierKeys = modifiers.keys.filter((key) => key.startsWith("milestone_"));
+    assert.equal(milestoneModifierKeys.length, isTowerMilestoneFloor(floorNumber) ? 1 : 0);
+  }
+
+  assert.deepEqual(
+    getFloorModifierValues(getFloorData(5)).keys,
+    ["chapter_awakening_ruins", "milestone_block-test"],
+  );
+  assert.equal(getFloorModifierValues(getFloorData(5)).enemyHpMultiplier, 1.1);
+  assert.equal(getFloorModifierValues(getFloorData(10)).enemyHpMultiplier, 1.18);
+  assert.deepEqual(
+    { gold: getFloorReward(5).gold, xp: getFloorReward(5).xp, guaranteedEquipment: getFloorReward(5).guaranteedEquipment },
+    { gold: 146, xp: 90, guaranteedEquipment: true },
+  );
+  assert.deepEqual(
+    { gold: getFloorReward(10).gold, xp: getFloorReward(10).xp, guaranteedEquipment: getFloorReward(10).guaranteedEquipment },
+    { gold: 259, xp: 159, guaranteedEquipment: true },
+  );
+  assert.equal(getFloorReward(9).guaranteedEquipment, false);
+  assert.equal(getFloorReward(19).guaranteedEquipment, false);
+  assert.equal(getFloorData(15).title, "Ruptura do Segundo Ciclo");
+  assert.equal(getFloorData(25).title, "Julgamento das Sombras");
+  assert.equal(getFloorData(35).title, "Portao do Abismo");
+});
+
 test("andares, modificadores e descricoes de recompensa seguem os contratos atuais", () => {
   const floorFixtures = [
     {
@@ -84,8 +154,8 @@ test("andares, modificadores e descricoes de recompensa seguem os contratos atua
       title: "Trono do Oraculo",
       recommendedLevel: 10,
       mechanic: "Chefe: marcas multiplas",
-      modifierSummary: "curas da equipe -25% | SPD inimiga +6%",
-      rewardDescription: "495 ouro | 298 XP por heroi | 5 energia recuperada | 65% de fragmentos de eco | 38% de consumivel | 34% de cristais | equipamento garantido",
+      modifierSummary: "curas da equipe -25% | SPD inimiga +6% | marco: HP, ATK e DEF inimigos +18%",
+      rewardDescription: "569 ouro | 343 XP por heroi | 5 energia recuperada | 65% de fragmentos de eco | 38% de consumivel | 34% de cristais | equipamento garantido",
     },
     {
       floor: 40,
@@ -93,8 +163,8 @@ test("andares, modificadores e descricoes de recompensa seguem os contratos atua
       recommendedLevel: 20,
       mechanic: "Chefe: veneno abissal",
       modifierSummary:
-        "herois com -15 energia inicial | equipe recebe +12% dano | curas da equipe -25% | ATK inimigo +8% e curas da equipe -8%",
-      rewardDescription: "1035 ouro | 618 XP por heroi | 5 energia recuperada | 65% de fragmentos de eco | 38% de consumivel | 42% de cristais | equipamento garantido",
+        "herois com -15 energia inicial | equipe recebe +12% dano | curas da equipe -25% | ATK inimigo +8% e curas da equipe -8% | marco: HP, ATK e DEF inimigos +18%",
+      rewardDescription: "1190 ouro | 711 XP por heroi | 5 energia recuperada | 65% de fragmentos de eco | 38% de consumivel | 42% de cristais | equipamento garantido",
     },
   ];
 
@@ -108,21 +178,22 @@ test("andares, modificadores e descricoes de recompensa seguem os contratos atua
   });
 
   assert.deepEqual(getFloorModifierValues(getFloorData(40)), {
-    keys: ["drainedStart", "exposedTeam", "reducedHealing", "chapter_infernal_abyss"],
-    labels: ["Energia inicial reduzida", "Dano recebido aumentado", "Cura reduzida", "Calor infernal"],
+    keys: ["drainedStart", "exposedTeam", "reducedHealing", "chapter_infernal_abyss", "milestone_chapter-boss"],
+    labels: ["Energia inicial reduzida", "Dano recebido aumentado", "Cura reduzida", "Calor infernal", "Chefe de capitulo"],
     descriptions: [
       "herois com -15 energia inicial",
       "equipe recebe +12% dano",
       "curas da equipe -25%",
       "ATK inimigo +8% e curas da equipe -8%",
+      "marco: HP, ATK e DEF inimigos +18%",
     ],
     healingDoneMultiplier: 0.6900000000000001,
     enemySpeedMultiplier: 1,
     playerDamageTakenMultiplier: 1.12,
     playerInitialEnergyPenalty: 15,
-    enemyAtkMultiplier: 1.08,
-    enemyDefMultiplier: 1,
-    enemyHpMultiplier: 1,
+    enemyAtkMultiplier: 1.2744,
+    enemyDefMultiplier: 1.18,
+    enemyHpMultiplier: 1.18,
     enemyFocusMultiplier: 1,
   });
 });
@@ -143,8 +214,8 @@ test("modos de dificuldade e recompensas principais permanecem congelados", () =
   );
 
   assert.deepEqual(pickReward(10, "normal"), {
-    gold: 225,
-    xp: 138,
+    gold: 259,
+    xp: 159,
     crystalChance: 0.22,
     crystalAmount: 36,
     equipmentChance: 0.17,
@@ -153,8 +224,8 @@ test("modos de dificuldade e recompensas principais permanecem congelados", () =
     difficultyRewardMultiplier: 1,
   });
   assert.deepEqual(pickReward(20, "challenge"), {
-    gold: 743,
-    xp: 447,
+    gold: 854,
+    xp: 515,
     crystalChance: 0.4164132562731402,
     crystalAmount: 96,
     equipmentChance: 0.377,
@@ -163,8 +234,8 @@ test("modos de dificuldade e recompensas principais permanecem congelados", () =
     difficultyRewardMultiplier: 1.5,
   });
   assert.deepEqual(pickReward(40, "hardcore"), {
-    gold: 2277,
-    xp: 1360,
+    gold: 2618,
+    xp: 1564,
     crystalChance: 0.6229606729160357,
     crystalAmount: 264,
     equipmentChance: 0.836,
@@ -214,21 +285,21 @@ test("inimigos de andares-chave preservam nomes, energia e atributos", () => {
       name: "Avatar do Eclipse",
       enemyKey: "eclipseAvatar",
       level: 15,
-      stats: { hp: 2888, atk: 242, def: 135, spd: 68, focus: 135, luck: 45 },
+      stats: { hp: 3408, atk: 285, def: 159, spd: 68, focus: 135, luck: 45 },
       energy: 45,
     },
     {
       name: "Ceifador do Vazio 2",
       enemyKey: "voidReaver",
       level: 15,
-      stats: { hp: 492, atk: 140, def: 45, spd: 56, focus: 51, luck: 34 },
+      stats: { hp: 581, atk: 165, def: 53, spd: 56, focus: 51, luck: 34 },
       energy: 30,
     },
     {
       name: "Vidente Cristalino 3",
       enemyKey: "crystalSeer",
       level: 15,
-      stats: { hp: 381, atk: 95, def: 39, spd: 51, focus: 84, luck: 30 },
+      stats: { hp: 450, atk: 111, def: 47, spd: 51, focus: 84, luck: 30 },
       energy: 30,
     },
   ]);
