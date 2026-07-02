@@ -549,6 +549,10 @@ A Base deve responder rapidamente "o que eu faco agora?". Ela resume o estado da
 - invocar/recrutar quando houver recursos ou contratos;
 - voltar para a Torre quando a equipe estiver pronta.
 
+O primeiro passo do Lobby Vivo adiciona rotinas idle apenas visuais e derivadas. Cada heroi recebe uma localizacao e atividade coerentes com expedicao, ferimentos, HP, moral, formacao, equipamentos e classe. As descricoes variam deterministicamente em blocos de dez minutos, sem salvar rotina e sem conceder XP, recursos, cura, moral ou qualquer outro progresso automatico.
+
+A Base exibe o resumo do Lobby, ocupacao das areas e a atividade atual dos herois. Esta camada representa vida cotidiana e contexto narrativo; treino real, trabalhos, recompensas e simulacao espacial continuam fora do escopo atual.
+
 ### Recrutamento / contratos de guilda
 
 Recrutamento deve se diferenciar da invocacao. A tela representa um quadro de contratos da guilda: o jogador usa contrato para revelar candidatos, compara classe, raridade, poder, atributos principais, custo ja pago e traco/passiva, escolhe apenas um aventureiro e recebe confirmacao com atalhos para Heróis ou Formacao. Sem contrato, o estado deve comunicar custo insuficiente sem parecer erro.

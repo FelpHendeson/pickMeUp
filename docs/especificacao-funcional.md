@@ -45,6 +45,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 ### Sistemas auxiliares
 - `src/game/summon/` gerencia invocacao comum e superior, historico, custos e probabilidades. A raridade rolada prioriza definicoes disponiveis da mesma raridade ou da raridade mais proxima; nenhuma definicao ja obtida pode repetir e pool esgotado nao consome recursos. Nova jornada recebe cinco tickets comuns e uma especial com ate tres opcoes persistidas, priorizando raridade inicial 3 ou superior. Rituais pagos permanecem bloqueados ate os cinco tickets acabarem e a especial ser escolhida.
 - `src/game/expeditions/` administra expedicoes temporizadas, ate 3 herois por expedicao e recompensas escaladas pelo poder enviado.
+- `src/game/lobby/` deriva rotinas idle visuais por heroi em blocos deterministas de dez minutos. O relatorio agrupa ocupacao por area sem persistir rotina, alterar recursos ou conceder progresso automatico.
 - `src/game/missions/` valida missoes diarias, conquistas permanentes e recompensas.
 - `src/game/narrative/` gerencia cenas curtas por gatilho e marca narrativas ja vistas.
 - `app/components/` concentra os paineis React por domínio.
@@ -53,6 +54,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 ### Interface
 - `app/components/` renderiza as abas da base, herois, formacao, inventario, expedicoes, missoes, invocacao, torre, combate e configuracoes.
 - A Base funciona como hub de comando: recomenda proxima acao, resume conta/campanha/equipe/recursos e oferece atalhos para Torre, Formacao, Herois, Expedicoes, Missoes e Inventario.
+- A Base mostra a primeira representacao do Lobby Vivo com resumo, areas ocupadas e atividades atuais dos herois; a UI apenas consome o relatorio derivado do dominio.
 - O HUD de recursos exibe ouro, cristais, essencia, fragmentos e energia em barra compacta, mantendo recursos secundarios recolhidos e responsivos para nao disputar espaco com navegacao ou acoes.
 - O GameShell agrupa a navegacao principal por areas, exibe contexto da aba ativa e usa tabs com estado ativo evidente e scroll horizontal no mobile.
 - Sobre apresenta nome, versao, objetivo, stack, creditos/notas de alpha e status de save/cloud save em blocos curtos integrados ao tema dark fantasy.
