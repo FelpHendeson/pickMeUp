@@ -239,6 +239,8 @@ Uma nova jornada recebe cinco tickets de invocacao comum e um direito de invocac
 
 A especial oferece ate tres herois ainda nao obtidos, priorizando definicoes de raridade inicial 3 ou superior. As opcoes ficam persistidas ate a escolha. Se uma opcao deixar de estar disponivel, o conjunto e regenerado antes da confirmacao. Escolher um heroi encerra definitivamente a especial e registra historico, biblioteca e progresso de missao como qualquer invocacao.
 
+Rituais pagos ficam bloqueados durante esse onboarding. Eles sao liberados somente quando os cinco tickets terminarem e a escolha especial estiver concluida. Ouro e cristais iniciais permanecem preservados ate a formacao do nucleo inicial do Lobby.
+
 ### Taxas atuais
 
 | Invocacao | 1 estrela | 2 estrelas | 3 estrelas | 4 estrelas | 5 estrelas |

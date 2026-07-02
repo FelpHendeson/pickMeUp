@@ -41,7 +41,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 - `app/components/tower/BattleResultPanel.tsx` renderiza replay, log de combate, barra de energia e painel de resultado para explicar o desenrolar da batalha.
 
 ### Sistemas auxiliares
-- `src/game/summon/` gerencia invocacao comum e superior, historico, custos e probabilidades. A raridade rolada prioriza definicoes disponiveis da mesma raridade ou da raridade mais proxima; nenhuma definicao ja obtida pode repetir e pool esgotado nao consome recursos. Nova jornada recebe cinco tickets comuns e uma especial com ate tres opcoes persistidas, priorizando raridade inicial 3 ou superior.
+- `src/game/summon/` gerencia invocacao comum e superior, historico, custos e probabilidades. A raridade rolada prioriza definicoes disponiveis da mesma raridade ou da raridade mais proxima; nenhuma definicao ja obtida pode repetir e pool esgotado nao consome recursos. Nova jornada recebe cinco tickets comuns e uma especial com ate tres opcoes persistidas, priorizando raridade inicial 3 ou superior. Rituais pagos permanecem bloqueados ate os cinco tickets acabarem e a especial ser escolhida.
 - `src/game/expeditions/` administra expedicoes temporizadas, ate 3 herois por expedicao e recompensas escaladas pelo poder enviado.
 - `src/game/missions/` valida missoes diarias, conquistas permanentes e recompensas.
 - `src/game/narrative/` gerencia cenas curtas por gatilho e marca narrativas ja vistas.
