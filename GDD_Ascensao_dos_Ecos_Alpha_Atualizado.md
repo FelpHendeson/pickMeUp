@@ -352,6 +352,12 @@ A Torre funciona como prova de preparo do Lobby. Os andares 5, 15, 25 e 35 sao t
 
 Esses oito marcos garantem equipamento e exibem aviso e dica de preparacao antes da tentativa. O jogador continua livre para lutar sem hard gate. Andares 9, 19, 29 e 39 deixam de receber equipamento garantido apenas por serem pre-chefes.
 
+### Preparo da equipe
+
+Antes de cada tentativa, a Torre deriva um relatorio de preparo com score de 0 a 100 e classificacao controlada, atencao, perigosa ou critica. A analise considera tamanho e poder da formacao, nivel medio contra o recomendado, HP atual, ferimentos, moral, herois em expedicao, energia e a exigencia adicional de testes de bloco e chefes de capitulo.
+
+O relatorio apresenta problemas e recomendacoes praticas, mas nao cria um novo bloqueio de combate. Permanecem apenas as validacoes operacionais ja existentes, como ter ao menos um heroi disponivel e energia suficiente.
+
 ### Diretriz futura
 Expandir para 60 andares apenas depois de consolidar resultado de combate, balanceamento e progressao permanente.
 
