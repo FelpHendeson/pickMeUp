@@ -8,6 +8,7 @@ import {
   analyzeEquipmentForHero,
   applyExpeditionPresetToExpeditionSelection,
   applyTowerPresetToFormation,
+  canUsePaidSummon,
   claimDailyMissionReward,
   claimInitialSpecialSummonOption,
   collectExpedition,
@@ -25,6 +26,7 @@ import {
   HERO_ROSTER,
   importGameStateFromText,
   initializeNarrativeForSession,
+  isInitialSummonComplete,
   isHeroFromRoster,
   isLegacyHero,
   migrateSaveData,
@@ -74,6 +76,13 @@ function empowerHero(hero: Hero): void {
     luck: 25,
   };
   hero.currentHp = hero.stats.hp;
+}
+
+function completeInitialSummonForTest(state: GameState): void {
+  state.initialSummon.commonRemaining = 0;
+  state.initialSummon.specialAvailable = false;
+  state.initialSummon.specialClaimed = true;
+  state.initialSummon.specialOptions = [];
 }
 
 test("ensureStateShape normaliza save parcial e remove referencias invalidas", () => {
@@ -189,10 +198,11 @@ test("save antigo sem definitionId preserva heroi procedural como legacy", () =>
     specialOptions: [],
   });
 
+  const startingGold = imported.state.resources.gold;
   const summoned = summonHero(imported.state, "common", { random: () => 0 });
-  assert.equal(summoned.ok, true);
-  if (!summoned.ok) return;
-  assert.ok(summoned.hero.definitionId);
+  assert.equal(summoned.ok, false);
+  assert.equal(imported.state.resources.gold, startingGold);
+  assert.equal(canUsePaidSummon(imported.state), false);
   assert.equal(imported.state.heroes.some((hero) => hero.id === "old_hero"), true);
 });
 
@@ -293,6 +303,26 @@ test("nova jornada recebe cinco tickets comuns e uma especial", () => {
     specialClaimed: false,
     specialOptions: [],
   });
+  assert.equal(isInitialSummonComplete(state), false);
+  assert.equal(canUsePaidSummon(state), false);
+});
+
+test("rituais pagos ficam bloqueados sem consumir recursos durante onboarding", () => {
+  const state = createInitialState();
+  const startingGold = state.resources.gold;
+  const startingCrystals = state.resources.crystals;
+  const startingHeroes = state.heroes.length;
+
+  const common = summonHero(state, "common", { random: () => 0 });
+  const superior = summonHero(state, "superior", { random: () => 0 });
+
+  assert.equal(common.ok, false);
+  assert.equal(superior.ok, false);
+  assert.match(common.message, /Conclua os cinco tickets iniciais/);
+  assert.match(superior.message, /Conclua os cinco tickets iniciais/);
+  assert.equal(state.resources.gold, startingGold);
+  assert.equal(state.resources.crystals, startingCrystals);
+  assert.equal(state.heroes.length, startingHeroes);
 });
 
 test("cinco tickets iniciais invocam sem duplicatas e registram sistemas", () => {
@@ -370,6 +400,28 @@ test("escolha especial adiciona heroi correto uma unica vez", () => {
   assert.equal(state.heroes.filter((hero) => hero.definitionId === selected.definitionId).length, 1);
 });
 
+test("rituais pagos sao liberados depois dos cinco tickets e da escolha especial", () => {
+  const state = createInitialState();
+  const generated = generateInitialSpecialSummonOptions(state, { random: () => 0 });
+  assert.equal(generated.ok, true);
+  if (!generated.ok) return;
+
+  for (let index = 0; index < 5; index += 1) {
+    assert.equal(useStarterCommonSummon(state, { random: () => 0 }).ok, true);
+  }
+  assert.equal(canUsePaidSummon(state), false);
+
+  const claimed = claimInitialSpecialSummonOption(state, generated.options[0].definitionId, { random: () => 0.5 });
+  assert.equal(claimed.ok, true);
+  assert.equal(isInitialSummonComplete(state), true);
+  assert.equal(canUsePaidSummon(state), true);
+
+  const common = summonHero(state, "common", { random: () => 0 });
+  const superior = summonHero(state, "superior", { random: () => 0 });
+  assert.equal(common.ok, true);
+  assert.equal(superior.ok, true);
+});
+
 test("estado inicial de summon sobrevive a exportacao e importacao", () => {
   const state = createInitialState();
   assert.equal(useStarterCommonSummon(state, { random: () => 0 }).ok, true);
@@ -380,6 +432,7 @@ test("estado inicial de summon sobrevive a exportacao e importacao", () => {
   assert.equal(imported.ok, true);
   if (!imported.ok) return;
   assert.deepEqual(imported.state.initialSummon, expected);
+  assert.equal(canUsePaidSummon(imported.state), false);
 });
 
 test("pool limitado adapta especial e falhas nao consomem direitos ou recursos", () => {
@@ -414,6 +467,7 @@ test("pool limitado adapta especial e falhas nao consomem direitos ou recursos",
 
 test("summonHero consome recurso, adiciona heroi e registra historico", () => {
   const state = createInitialState();
+  completeInitialSummonForTest(state);
   const startingGold = state.resources.gold;
 
   const result = summonHero(state, "common", {
@@ -437,6 +491,7 @@ test("summonHero consome recurso, adiciona heroi e registra historico", () => {
 
 test("invocacao superior usa raridade disponivel mais proxima e preserva definicao", () => {
   const state = createInitialState();
+  completeInitialSummonForTest(state);
   const startingCrystals = state.resources.crystals;
   const result = summonHero(state, "superior", { random: () => 0.999 });
 
@@ -452,6 +507,7 @@ test("invocacao superior usa raridade disponivel mais proxima e preserva definic
 
 test("invocacoes repetidas nao duplicam definitionId", () => {
   const state = createInitialState();
+  completeInitialSummonForTest(state);
   const first = summonHero(state, "common", { random: () => 0 });
   const second = summonHero(state, "common", { random: () => 0 });
 
@@ -464,6 +520,7 @@ test("invocacoes repetidas nao duplicam definitionId", () => {
 
 test("heroi legacy nao bloqueia roster e definicao obtida nao pode repetir", () => {
   const state = createInitialState();
+  completeInitialSummonForTest(state);
   const legacyHero = createFixedHero("legacy_before_roster");
   const ownedDefinition = HERO_ROSTER.find((definition) => definition.initialRarity === 1)!;
   const ownedRosterHero = createHeroFromDefinition(ownedDefinition, { id: "owned_before_summon", random: () => 0.5 });
@@ -481,6 +538,7 @@ test("heroi legacy nao bloqueia roster e definicao obtida nao pode repetir", () 
 
 test("pool esgotado falha sem consumir recursos ou registrar progresso", () => {
   const state = createInitialState();
+  completeInitialSummonForTest(state);
   state.heroes.push(
     ...HERO_ROSTER.map((definition, index) =>
       createHeroFromDefinition(definition, { id: `owned_${index}`, random: () => 0.5 }),
@@ -628,6 +686,7 @@ test("narrativa inicial entra na fila uma unica vez e cenas vistas nao retornam"
 test("fluxo alpha registra missoes, aplica acoes principais e preserva export/import", () => {
   const now = 1_780_000_000_000;
   const state = createInitialState(now);
+  completeInitialSummonForTest(state);
   const heroes = addHeroes(state, 5);
   heroes.forEach(empowerHero);
   heroes.forEach((hero) => {

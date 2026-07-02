@@ -159,6 +159,15 @@ export function getInitialSummonState(state: GameState) {
   return ensureInitialSummonState(state);
 }
 
+export function isInitialSummonComplete(state: GameState): boolean {
+  const initialSummon = ensureInitialSummonState(state);
+  return initialSummon.commonRemaining <= 0 && initialSummon.specialClaimed;
+}
+
+export function canUsePaidSummon(state: GameState): boolean {
+  return isInitialSummonComplete(state);
+}
+
 function getReservedInitialSpecialDefinitionIds(state: GameState): Set<string> {
   const initialSummon = ensureInitialSummonState(state);
   return initialSummon.specialAvailable && !initialSummon.specialClaimed
@@ -338,6 +347,15 @@ export function summonHero(
 ): SummonHeroResult {
   const summonType = normalizeSummonType(type);
   const cost = getSummonCost(state, summonType, options.dateInput);
+
+  if (!canUsePaidSummon(state)) {
+    return {
+      ok: false,
+      cost,
+      message: "Conclua os cinco tickets iniciais e a escolha especial antes de abrir rituais pagos.",
+    };
+  }
+
   const definition = selectAvailableHeroDefinitionForSummon(state, summonType, options);
 
   if (!definition) {
