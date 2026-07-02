@@ -10949,3 +10949,34 @@ body.pref-reduce-motion *::before,
 body.pref-reduce-motion *::after {
   transition-duration: 0.01ms !important;
 }
+
+.hero-training-block {
+  gap: 0.35rem;
+}
+
+.hero-training-bar {
+  display: block;
+  height: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.32);
+  border-radius: 999px;
+}
+
+.hero-training-bar b {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+}
+
+.hero-training-select {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.hero-training-select select {
+  width: 100%;
+}

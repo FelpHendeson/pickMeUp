@@ -17,9 +17,11 @@ import {
   getHeroMoraleState,
   getHeroPowerWithEquipment,
   getHeroSpecialization,
+  getHeroTrainingSummary,
   getHeroXpForNextLevel,
   getInjuryDefinition,
   getStatLabel,
+  getTrainingFocusDefinitions,
   hasHeroInjuries,
   INJURY_CONFIG,
   isHeroInFormation,
@@ -29,6 +31,7 @@ import {
   type EquipmentSlot,
   type GameState,
   type Hero,
+  type TrainingFocus,
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
 import { useMemo, useState } from "react";
@@ -372,6 +375,7 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
   const unequipItemFromHero = useGameStore((store) => store.unequipItem);
   const chooseHeroSpecializationAction = useGameStore((store) => store.chooseHeroSpecialization);
   const treatHeroInjuriesAction = useGameStore((store) => store.treatHeroInjuries);
+  const assignTrainingFocusAction = useGameStore((store) => store.assignTrainingFocus);
   const useConsumableAction = useGameStore((store) => store.useConsumable);
   const [arsenalSlot, setArsenalSlot] = useState<EquipmentSlot | null>(null);
   const [selectedConsumableId, setSelectedConsumableId] = useState("");
@@ -389,6 +393,8 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
   const goldTreatmentCost = getHeroInjuryTreatmentCost(hero, "gold");
   const essenceTreatmentCost = getHeroInjuryTreatmentCost(hero, "essence");
   const affinities = getHeroAffinitySummaries(state, hero.id).slice(0, 4);
+  const trainingSummary = getHeroTrainingSummary(state, hero.id);
+  const trainingFocusOptions = getTrainingFocusDefinitions();
   const inFormation = isHeroInFormation(state, hero.id);
   const expedition = getHeroExpedition(state, hero.id);
   const onExpedition = Boolean(expedition);
@@ -476,6 +482,40 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
         <span>{injurySummary || "Sem ferimentos ativos."}</span>
         {onExpedition ? <span>Em expedição: {expedition?.name}</span> : null}
       </div>
+
+      {trainingSummary ? (
+        <div className="hero-detail-section hero-detail-block hero-training-block">
+          <strong>Campo de Treino</strong>
+          <span>
+            Treino atual: {trainingSummary.focusDefinition.label}
+            {trainingSummary.isRecommendedFocus ? " (recomendado)" : ""}
+          </span>
+          <span>Progresso: {trainingSummary.progressLabel}</span>
+          {trainingSummary.xpForNextLevel !== null ? (
+            <i className="hero-training-bar" aria-label={`Progresso de treino ${trainingSummary.xpIntoLevel}/${trainingSummary.xpForNextLevel}`}>
+              <b style={{ width: `${Math.round((trainingSummary.xpIntoLevel / trainingSummary.xpForNextLevel) * 100)}%` }} />
+            </i>
+          ) : null}
+          <span className={trainingSummary.eligibility.canTrain ? "tone-good" : "tone-warning"}>
+            Status: {trainingSummary.statusLabel}
+          </span>
+          <small>{trainingSummary.focusDefinition.description}</small>
+          <label className="hero-training-select">
+            <span>Alterar foco</span>
+            <select
+              onChange={(event) => setFeedback(assignTrainingFocusAction(hero.id, event.target.value as TrainingFocus).message)}
+              value={trainingSummary.focus}
+            >
+              {trainingFocusOptions.map((option) => (
+                <option key={option.focus} value={option.focus}>
+                  {option.label}
+                  {option.focus === trainingSummary.recommendedFocus ? " (recomendado)" : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      ) : null}
 
       <div className="hero-detail-section hero-detail-block">
         <strong>Equipamentos</strong>

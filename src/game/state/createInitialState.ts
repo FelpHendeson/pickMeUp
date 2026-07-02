@@ -7,6 +7,7 @@ import type { GameState } from "../types";
 import { createTeamPresets } from "./teamPresets";
 import { CURRENT_SAVE_SCHEMA_VERSION } from "../save/migrations";
 import { createInitialSummonState } from "../summon/initialSummonState";
+import { createTrainingState } from "../training";
 
 export function createInitialState(now = Date.now()): GameState {
   return {
@@ -59,6 +60,7 @@ export function createInitialState(now = Date.now()): GameState {
       seenSceneIds: [],
       pendingScenes: [],
     },
+    training: createTrainingState(now),
     missionStats: {},
     dailyMissions: createDailyMissionState(),
     achievements: normalizeAchievements({}),

@@ -1,4 +1,5 @@
 import { getHeroExpedition, isHeroOnExpedition } from "../expeditions";
+import { getHeroTrainingFocus, getTrainingFocusDefinition } from "../training";
 import type { GameState, Hero } from "../types";
 
 export type LobbyRoutineLocation =
@@ -232,14 +233,18 @@ export function getHeroLobbyRoutine(state: GameState, hero: Hero, now = Date.now
   }
 
   if (COMBAT_CLASSES.has(hero.classKey)) {
+    // Herois impedidos ja retornaram em ramos anteriores (expedicao, ferimento,
+    // HP critico, moral baixa), entao aqui o treino reflete um foco tecnico ativo.
+    const focusDefinition = getTrainingFocusDefinition(getHeroTrainingFocus(state, hero.id));
+    const focusLabel = focusDefinition?.label ?? "Treino Técnico";
     return createRoutine(hero, timeBlock, {
       location: "trainingGround",
       activity: "training",
-      label: "Treino livre",
+      label: `Treino: ${focusLabel}`,
       description: selectVariant(hero.id, timeBlock, [
-        `${hero.name} repete golpes e passos no Campo de Treino.`,
-        `${hero.name} testa a própria guarda contra um boneco de palha.`,
-        `${hero.name} mantém o ritmo de combate enquanto aguarda novas ordens.`,
+        `${hero.name} aprofunda o foco de ${focusLabel} no Campo de Treino.`,
+        `${hero.name} repete exercícios de ${focusLabel} contra um boneco de palha.`,
+        `${hero.name} mantém a rotina de ${focusLabel} enquanto aguarda novas ordens.`,
       ]),
       priority: 30,
     });

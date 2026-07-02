@@ -45,7 +45,8 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 ### Sistemas auxiliares
 - `src/game/summon/` gerencia invocacao comum e superior, historico, custos e probabilidades. A raridade rolada prioriza definicoes disponiveis da mesma raridade ou da raridade mais proxima; nenhuma definicao ja obtida pode repetir e pool esgotado nao consome recursos. Nova jornada recebe cinco tickets comuns e uma especial com ate tres opcoes persistidas, priorizando raridade inicial 3 ou superior. Rituais pagos permanecem bloqueados ate os cinco tickets acabarem e a especial ser escolhida.
 - `src/game/expeditions/` administra expedicoes temporizadas, ate 3 herois por expedicao e recompensas escaladas pelo poder enviado.
-- `src/game/lobby/` deriva rotinas idle visuais por heroi em blocos deterministas de dez minutos. O relatorio agrupa ocupacao por area sem persistir rotina, alterar recursos ou conceder progresso automatico.
+- `src/game/lobby/` deriva rotinas idle visuais por heroi em blocos deterministas de dez minutos. O relatorio agrupa ocupacao por area sem persistir rotina, alterar recursos ou conceder progresso automatico. A rotina de treino reflete o foco tecnico ativo de herois aptos.
+- `src/game/training/` administra o treino funcional leve do Campo de Treino. Cada heroi tem um foco tecnico (linha de frente, dano, defesa, suporte, mobilidade, arcano, disciplina ou sobrevivencia) com XP e nivel de treino persistidos, separados dos atributos de combate. O progresso e calculado por tempo decorrido em blocos de dez minutos, com teto por chamada e sem conceder ATK/DEF/HP/SPD, XP ou nivel de combate. Herois em expedicao, feridos, com HP critico ou moral baixa nao treinam. Foco sem escolha usa a recomendacao da classe. `getTrainingReadinessBonus` calcula um indicativo pequeno de preparo, mantido isolado da readiness da Torre nesta etapa.
 - `src/game/missions/` valida missoes diarias, conquistas permanentes e recompensas.
 - `src/game/narrative/` gerencia cenas curtas por gatilho e marca narrativas ja vistas.
 - `app/components/` concentra os paineis React por domínio.
@@ -54,7 +55,8 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 ### Interface
 - `app/components/` renderiza as abas da base, herois, formacao, inventario, expedicoes, missoes, invocacao, torre, combate e configuracoes.
 - A Base funciona como hub de comando: recomenda proxima acao, resume conta/campanha/equipe/recursos e oferece atalhos para Torre, Formacao, Herois, Expedicoes, Missoes e Inventario.
-- A Base mostra a primeira representacao do Lobby Vivo com resumo, areas ocupadas e atividades atuais dos herois; a UI apenas consome o relatorio derivado do dominio.
+- A Base mostra a primeira representacao do Lobby Vivo com resumo, areas ocupadas e atividades atuais dos herois; a UI apenas consome o relatorio derivado do dominio. Um card do Campo de Treino resume foco, progresso e status de treino de cada heroi.
+- O painel de Herois exibe o foco de treino atual, o progresso (nivel e XP), o status de aptidao e permite trocar o foco de cada heroi.
 - O HUD de recursos exibe ouro, cristais, essencia, fragmentos e energia em barra compacta, mantendo recursos secundarios recolhidos e responsivos para nao disputar espaco com navegacao ou acoes.
 - O GameShell agrupa a navegacao principal por areas, exibe contexto da aba ativa e usa tabs com estado ativo evidente e scroll horizontal no mobile.
 - Sobre apresenta nome, versao, objetivo, stack, creditos/notas de alpha e status de save/cloud save em blocos curtos integrados ao tema dark fantasy.
@@ -77,7 +79,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 6. Avanca pelos capitulos, desbloqueia relíquias, progressao permanente e melhorias de conta.
 
 ## Regras de alto nível
-- O progresso e salvo localmente no navegador com `localStorage`, `saveVersion: 1` e `schemaVersion: 2`. Saves legados passam por migrations sequenciais antes da normalizacao final; campos ausentes recebem defaults e referencias invalidas sao removidas.
+- O progresso e salvo localmente no navegador com `localStorage`, `saveVersion: 1` e `schemaVersion: 3`. Saves legados passam por migrations sequenciais antes da normalizacao final; campos ausentes recebem defaults e referencias invalidas sao removidas. A migration para o schema 3 adiciona a estrutura de treino (`training`) com defaults seguros.
 - A torre e o eixo principal do jogo, com capitulos marcados, chefes, modificadores por regiao e modos de dificuldade por tentativa.
 - Descobertas do jogador devem ser persistidas na Biblioteca e evoluir conforme uso real dos sistemas.
 - A Biblioteca deve apresentar essas descobertas como grimorio/arquivo arcano, separando inimigos, chefes, capitulos, eventos, reliquias e memoria da guilda sem alterar os dados salvos.

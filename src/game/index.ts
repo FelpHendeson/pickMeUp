@@ -34,6 +34,7 @@ export * from "./weekly-events";
 export * from "./affinity";
 export * from "./library";
 export * from "./lobby";
+export * from "./training";
 export * from "./summon";
 export * from "./tower-events";
 export * from "./battle";

@@ -28,6 +28,18 @@ import {
   getRecommendedFormationPower,
   getTowerReadinessLevel,
   getTowerReadinessReport,
+  assignHeroTrainingFocus,
+  getHeroTrainingFocus,
+  getHeroTrainingProgress,
+  getHeroTrainingSummary,
+  getLobbyTrainingReport,
+  getRecommendedTrainingFocusForHero,
+  getTrainingEligibility,
+  getTrainingFocusDefinitions,
+  getTrainingReadinessBonus,
+  progressHeroTraining,
+  progressTrainingForElapsedTime,
+  TRAINING_CONFIG,
   LOBBY_ROUTINE_BLOCK_MS,
   generateInitialSpecialSummonOptions,
   HERO_ROSTER,
@@ -260,7 +272,7 @@ test("migration v0 normaliza save legado parcial e adiciona defaults atuais", ()
     towerFloor: 8,
   });
 
-  assert.equal(migrated.schemaVersion, 2);
+  assert.equal(migrated.schemaVersion, 3);
   assert.equal(migrated.saveVersion, 1);
 
   const imported = validateImportedSaveData(migrated);
@@ -326,21 +338,21 @@ test("migration preserva sistemas existentes e permite round-trip de importacao"
   const roundTrip = importGameStateFromText(serializeGameStateForExport(imported.state), 2_000);
   assert.equal(roundTrip.ok, true);
   if (!roundTrip.ok) return;
-  assert.equal(roundTrip.state.schemaVersion, 2);
+  assert.equal(roundTrip.state.schemaVersion, 3);
   assert.equal(roundTrip.state.saveVersion, 1);
   assert.equal(roundTrip.state.lastBattle?.id, "legacy_battle");
   assert.equal(roundTrip.state.affinities.legacya_legacyb.xp, 9);
 });
 
 test("migration rejeita schemas e versoes futuras", () => {
-  assert.equal(validateImportedSaveData({ schemaVersion: 3, saveVersion: 1 }).ok, false);
-  assert.equal(validateImportedSaveData({ schemaVersion: 2, saveVersion: 2 }).ok, false);
+  assert.equal(validateImportedSaveData({ schemaVersion: 4, saveVersion: 1 }).ok, false);
+  assert.equal(validateImportedSaveData({ schemaVersion: 3, saveVersion: 2 }).ok, false);
 });
 
 test("nova jornada recebe cinco tickets comuns e uma especial", () => {
   const state = createInitialState();
 
-  assert.equal(state.schemaVersion, 2);
+  assert.equal(state.schemaVersion, 3);
   assert.deepEqual(state.initialSummon, {
     commonRemaining: 5,
     specialAvailable: true,
@@ -785,7 +797,7 @@ test("rotina idle e deterministica, varia por bloco e nao modifica o save", () =
   assert.equal(hero.equipment, equipmentReference);
   assert.equal(hero.injuries, injuriesReference);
   assert.equal(state.schemaVersion, CURRENT_SAVE_SCHEMA_VERSION);
-  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 2);
+  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 3);
 });
 
 test("relatorio idle agrupa areas e entrega contrato pronto para a UI", () => {
@@ -1041,4 +1053,242 @@ test("fluxo alpha registra missoes, aplica acoes principais e preserva export/im
   assert.equal(imported.state.dailyMissions.claimed.summon_1, true);
   assert.ok((imported.state.lastBattle?.rewards?.gold || 0) > 0);
   assert.ok((imported.state.lastBattle?.progression?.heroXp.length || 0) > 0);
+});
+
+function makeTrainableHero(state: GameState, id: string, classKey: Hero["classKey"] = "warrior"): Hero {
+  const hero = createFixedHero(id, classKey, 4);
+  hero.morale = 80;
+  hero.injuries = [];
+  hero.currentHp = hero.stats.hp;
+  state.heroes.push(hero);
+  return hero;
+}
+
+test("save antigo recebe estrutura de treino com defaults corretos", () => {
+  const imported = importGameStateFromText(JSON.stringify({
+    saveVersion: 1,
+    resources: { gold: 500 },
+    heroes: [{ id: "legacy_train", name: "Veterano", rarity: 2, classKey: "warrior", traitKey: "brave" }],
+    formation: ["legacy_train"],
+    towerFloor: 3,
+  }), 5_000);
+
+  assert.equal(imported.ok, true);
+  if (!imported.ok) return;
+  assert.ok(imported.state.training);
+  assert.deepEqual(imported.state.training.currentFocusByHeroId, {});
+  assert.deepEqual(imported.state.training.heroProgress, {});
+  assert.equal(typeof imported.state.training.lastTrainingAt, "number");
+  assert.ok((imported.state.training.lastTrainingAt ?? 0) > 0);
+});
+
+test("migration v2 adiciona campo de treino persistido e chega ao schema atual", () => {
+  const migrated = migrateSaveData({
+    schemaVersion: 2,
+    saveVersion: 1,
+    resources: { gold: 100 },
+    heroes: [],
+    formation: [],
+    towerFloor: 1,
+  });
+
+  assert.equal(migrated.schemaVersion, CURRENT_SAVE_SCHEMA_VERSION);
+  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 3);
+  assert.ok(migrated.training);
+  assert.deepEqual((migrated.training as { heroProgress: unknown }).heroProgress, {});
+
+  const normalized = ensureStateShape(migrated, 1_000);
+  assert.equal(normalized.training.lastTrainingAt, 1_000);
+});
+
+test("heroi sem foco definido usa o foco recomendado pela classe", () => {
+  const state = createInitialState();
+  const warrior = makeTrainableHero(state, "focus_warrior", "warrior");
+  const mage = makeTrainableHero(state, "focus_mage", "mage");
+  const priest = makeTrainableHero(state, "focus_priest", "priest");
+  const rogue = makeTrainableHero(state, "focus_rogue", "rogue");
+
+  assert.equal(getRecommendedTrainingFocusForHero(warrior), "frontline");
+  assert.equal(getRecommendedTrainingFocusForHero(mage), "arcane");
+  assert.equal(getRecommendedTrainingFocusForHero(priest), "support");
+  assert.equal(getRecommendedTrainingFocusForHero(rogue), "mobility");
+  assert.equal(getHeroTrainingFocus(state, warrior.id), "frontline");
+  assert.equal(getHeroTrainingFocus(state, mage.id), "arcane");
+});
+
+test("jogador pode alterar o foco de treino do heroi", () => {
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "assign_hero", "warrior");
+
+  assert.equal(getHeroTrainingFocus(state, hero.id), "frontline");
+  const assigned = assignHeroTrainingFocus(state, hero.id, "defense", 1_000);
+  assert.equal(assigned.ok, true);
+  assert.equal(getHeroTrainingFocus(state, hero.id), "defense");
+  assert.equal(state.training.currentFocusByHeroId[hero.id], "defense");
+
+  const invalid = assignHeroTrainingFocus(state, hero.id, "invalido" as never);
+  assert.equal(invalid.ok, false);
+  assert.equal(getHeroTrainingFocus(state, hero.id), "defense");
+});
+
+test("progresso de treino aumenta XP sem alterar stats brutos nem nivel de combate", () => {
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "xp_hero", "warrior");
+  const statsBefore = JSON.stringify(hero.stats);
+  const levelBefore = hero.level;
+  const xpBefore = hero.xp;
+  const rarityBefore = hero.rarity;
+
+  const progress = progressHeroTraining(state, hero.id, 14, 2_000);
+  assert.ok(progress);
+  assert.equal(progress?.xp, 14);
+  assert.equal(progress?.focus, "frontline");
+  assert.equal(getHeroTrainingProgress(state, hero.id, "frontline").xp, 14);
+
+  assert.equal(JSON.stringify(hero.stats), statsBefore);
+  assert.equal(hero.level, levelBefore);
+  assert.equal(hero.xp, xpBefore);
+  assert.equal(hero.rarity, rarityBefore);
+});
+
+test("progresso por tempo respeita impedimentos de expedicao, ferimento, HP e moral", () => {
+  const now = 1_780_000_000_000;
+  const state = createInitialState(now);
+  const healthy = makeTrainableHero(state, "apt_hero", "warrior");
+  const expeditionHero = makeTrainableHero(state, "busy_hero", "guardian");
+  const injuredHero = makeTrainableHero(state, "hurt_hero", "archer");
+  const criticalHero = makeTrainableHero(state, "faint_hero", "rogue");
+  const lowMoraleHero = makeTrainableHero(state, "sad_hero", "mage");
+
+  assert.equal(startExpedition(state, "training_field", [expeditionHero.id], now).ok, true);
+  injuredHero.injuries = [{ id: "inj", typeKey: "injuredArm", remainingBattles: 2, createdAt: "2026-01-01T00:00:00.000Z" }];
+  criticalHero.currentHp = Math.floor(criticalHero.stats.hp * 0.3);
+  lowMoraleHero.morale = 15;
+
+  assert.equal(getTrainingEligibility(state, expeditionHero).reasonCode, "expedition");
+  assert.equal(getTrainingEligibility(state, injuredHero).reasonCode, "injury");
+  assert.equal(getTrainingEligibility(state, criticalHero).reasonCode, "criticalHp");
+  assert.equal(getTrainingEligibility(state, lowMoraleHero).reasonCode, "lowMorale");
+  assert.equal(getTrainingEligibility(state, healthy).canTrain, true);
+
+  state.training.lastTrainingAt = now;
+  const result = progressTrainingForElapsedTime(state, now + TRAINING_CONFIG.blockMs * 3);
+  assert.equal(result.appliedBlocks, 3);
+  assert.equal(result.xpPerHero, 3);
+  assert.deepEqual(result.trainedHeroIds, [healthy.id]);
+  assert.equal(result.skippedHeroIds.length, 4);
+  assert.equal(getHeroTrainingProgress(state, healthy.id, getHeroTrainingFocus(state, healthy.id)).xp, 3);
+  assert.equal(getHeroTrainingProgress(state, expeditionHero.id, getHeroTrainingFocus(state, expeditionHero.id)).xp, 0);
+});
+
+test("limite por chamada impede farm e progresso e deterministico para o mesmo elapsed", () => {
+  const now = 1_780_000_000_000;
+  const bigGap = TRAINING_CONFIG.blockMs * 100;
+
+  const stateA = createInitialState(now);
+  const heroA = makeTrainableHero(stateA, "cap_a", "warrior");
+  stateA.training.lastTrainingAt = now;
+  const resultA = progressTrainingForElapsedTime(stateA, now + bigGap);
+
+  const stateB = createInitialState(now);
+  const heroB = makeTrainableHero(stateB, "cap_b", "warrior");
+  stateB.training.lastTrainingAt = now;
+  const resultB = progressTrainingForElapsedTime(stateB, now + bigGap);
+
+  assert.equal(resultA.appliedBlocks, TRAINING_CONFIG.maxBlocksPerCall);
+  assert.equal(resultA.xpPerHero, TRAINING_CONFIG.maxBlocksPerCall * TRAINING_CONFIG.xpPerBlock);
+  assert.equal(resultA.appliedBlocks, resultB.appliedBlocks);
+  assert.equal(resultA.xpPerHero, resultB.xpPerHero);
+  assert.equal(resultA.generatedAt, resultB.generatedAt);
+  assert.equal(
+    getHeroTrainingProgress(stateA, heroA.id, "frontline").xp,
+    getHeroTrainingProgress(stateB, heroB.id, "frontline").xp,
+  );
+
+  // Chamada seguinte sem novo tempo decorrido nao concede XP extra.
+  const repeated = progressTrainingForElapsedTime(stateA, now + bigGap);
+  assert.equal(repeated.appliedBlocks, 0);
+  assert.equal(getHeroTrainingProgress(stateA, heroA.id, "frontline").xp, TRAINING_CONFIG.maxBlocksPerCall);
+});
+
+test("resumo de treino entrega dados consumiveis pela UI e bonus de readiness leve", () => {
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "summary_hero", "guardian");
+  assert.equal(assignHeroTrainingFocus(state, hero.id, "defense", 0).ok, true);
+  progressHeroTraining(state, hero.id, 44, 0);
+
+  const summary = getHeroTrainingSummary(state, hero.id);
+  assert.ok(summary);
+  if (!summary) return;
+  assert.equal(summary.focus, "defense");
+  assert.equal(summary.focusDefinition.label, "Defesa");
+  assert.equal(summary.level, 2);
+  assert.equal(summary.xpIntoLevel, 14);
+  assert.equal(summary.xpForNextLevel, 30);
+  assert.equal(summary.progressLabel, "nível 2, 14/30 XP");
+  assert.equal(summary.eligibility.canTrain, true);
+  assert.ok(summary.statusLabel.length > 0);
+  assert.ok(summary.readinessBonus > 0 && summary.readinessBonus <= TRAINING_CONFIG.readinessBonusCap);
+  assert.ok(getTrainingFocusDefinitions().length === 8);
+
+  const readinessBonus = getTrainingReadinessBonus(state, hero.id);
+  assert.ok(readinessBonus <= TRAINING_CONFIG.readinessBonusCap);
+});
+
+test("import/export preserva progresso de treino e foco escolhido", () => {
+  const now = 1_780_000_000_000;
+  const state = createInitialState(now);
+  const hero = makeTrainableHero(state, "roundtrip_hero", "mage");
+  assert.equal(assignHeroTrainingFocus(state, hero.id, "arcane", now).ok, true);
+  progressHeroTraining(state, hero.id, 35, now);
+
+  const exported = serializeGameStateForExport(state);
+  const imported = importGameStateFromText(exported, now + 1_000);
+  assert.equal(imported.ok, true);
+  if (!imported.ok) return;
+  assert.equal(imported.state.training.currentFocusByHeroId[hero.id], "arcane");
+  const restored = getHeroTrainingProgress(imported.state, hero.id, "arcane");
+  assert.equal(restored.xp, 35);
+  assert.equal(restored.level, 2);
+});
+
+test("rotina idle reflete o foco de treino de herois aptos", () => {
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "routine_focus_hero", "warrior");
+  equipHeroForLobbyRoutine(state, hero);
+  assert.equal(assignHeroTrainingFocus(state, hero.id, "defense", 0).ok, true);
+
+  const routine = getHeroLobbyRoutine(state, hero, 0);
+  assert.equal(routine.activity, "training");
+  assert.equal(routine.location, "trainingGround");
+  assert.match(routine.label, /Defesa/);
+  assert.match(routine.description, /Defesa/);
+
+  const report = getLobbyTrainingReport(state, 0);
+  assert.equal(report.entries.length, 1);
+  assert.equal(report.trainingCount, 1);
+  assert.equal(report.entries[0].focus, "defense");
+});
+
+test("progresso de treino nao altera combate, summon nem expedicao", () => {
+  const now = 1_780_000_000_000;
+  const state = createInitialState(now);
+  completeInitialSummonForTest(state);
+  const hero = makeTrainableHero(state, "isolation_hero", "warrior");
+  const floorBefore = state.towerFloor;
+  const goldBefore = state.resources.gold;
+  const heroesBefore = state.heroes.length;
+  const historyBefore = state.summonHistory.length;
+  const expeditionsBefore = state.activeExpeditions.length;
+  const heroSnapshot = JSON.stringify({ stats: hero.stats, level: hero.level, xp: hero.xp, rarity: hero.rarity });
+
+  state.training.lastTrainingAt = now;
+  progressTrainingForElapsedTime(state, now + TRAINING_CONFIG.blockMs * 6);
+
+  assert.equal(state.towerFloor, floorBefore);
+  assert.equal(state.resources.gold, goldBefore);
+  assert.equal(state.heroes.length, heroesBefore);
+  assert.equal(state.summonHistory.length, historyBefore);
+  assert.equal(state.activeExpeditions.length, expeditionsBefore);
+  assert.equal(JSON.stringify({ stats: hero.stats, level: hero.level, xp: hero.xp, rarity: hero.rarity }), heroSnapshot);
 });

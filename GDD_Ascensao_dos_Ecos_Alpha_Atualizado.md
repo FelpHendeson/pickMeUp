@@ -551,7 +551,17 @@ A Base deve responder rapidamente "o que eu faco agora?". Ela resume o estado da
 
 O primeiro passo do Lobby Vivo adiciona rotinas idle apenas visuais e derivadas. Cada heroi recebe uma localizacao e atividade coerentes com expedicao, ferimentos, HP, moral, formacao, equipamentos e classe. As descricoes variam deterministicamente em blocos de dez minutos, sem salvar rotina e sem conceder XP, recursos, cura, moral ou qualquer outro progresso automatico.
 
-A Base exibe o resumo do Lobby, ocupacao das areas e a atividade atual dos herois. Esta camada representa vida cotidiana e contexto narrativo; treino real, trabalhos, recompensas e simulacao espacial continuam fora do escopo atual.
+A Base exibe o resumo do Lobby, ocupacao das areas e a atividade atual dos herois. Esta camada representa vida cotidiana e contexto narrativo; trabalhos, recompensas materiais e simulacao espacial continuam fora do escopo atual.
+
+### Campo de Treino funcional (progresso tecnico leve)
+
+O Campo de Treino ganha uma primeira versao funcional focada em progresso tecnico, nao em atributos brutos. Cada heroi possui um foco de treino entre linha de frente, dano, defesa, suporte, mobilidade, arcano, disciplina e sobrevivencia. O foco escolhido acumula XP e nivel de treino proprios, persistidos no save, separados de `stats`, `level`, `xp` e raridade do heroi.
+
+- O progresso e calculado por tempo decorrido em blocos de dez minutos, com teto por chamada para impedir farm; o excesso ocioso e descartado.
+- Nao treinam herois em expedicao, feridos, com HP critico ou moral baixa; o motivo do impedimento fica visivel.
+- Sem escolha explicita, o foco recomendado vem da classe (guerreiro/guardiao para linha de frente ou defesa; arqueiro/ladino para dano ou mobilidade; mago para arcano; sacerdote para suporte).
+- O treino nao concede ATK, DEF, HP, SPD, XP ou nivel de combate e nao altera summon, expedicoes, Torre ou readiness. Existe um bonus derivado pequeno de preparo (`getTrainingReadinessBonus`), calculado mas ainda nao integrado a readiness.
+- O painel de Herois mostra e permite trocar o foco; a Base resume foco, progresso e status por heroi. A rotina idle reflete o foco tecnico de herois aptos. Habilidades, perks e desbloqueios complexos ficam fora desta etapa.
 
 ### Recrutamento / contratos de guilda
 
@@ -596,7 +606,7 @@ A camada visual global deve manter a identidade coesa de RPG Dark Fantasy: fundo
 - `localStorage`.
 - Chave: `ascensao-dos-ecos-save-v1`.
 - `saveVersion: 1`.
-- `schemaVersion: 2` com migrations sequenciais antes da normalizacao final.
+- `schemaVersion: 3` com migrations sequenciais antes da normalizacao final. O schema 3 adiciona a estrutura persistida de treino funcional (`training`).
 - Normalizacao ao carregar.
 - Exportar save JSON.
 - Importar save com validacao.

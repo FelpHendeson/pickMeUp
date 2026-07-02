@@ -11,6 +11,7 @@ import {
   getFormationPower,
   getInjuredHeroes,
   getLobbyRoutineReport,
+  getLobbyTrainingReport,
   getSummonCost,
   getRelicState,
   getRelicUpgradeCost,
@@ -358,6 +359,7 @@ function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) 
 
   const weeklyEvent = getActiveWeeklyEvent();
   const lobbyRoutineReport = getLobbyRoutineReport(state, lobbyRoutineNow);
+  const lobbyTrainingReport = getLobbyTrainingReport(state, lobbyRoutineNow);
   const chapter = getTowerChapterByFloor(state.towerFloor);
   const formationCount = getFormationHeroCount(state);
   const formationHeroes = getFormationHeroes(state).filter((hero): hero is Hero => Boolean(hero));
@@ -561,6 +563,34 @@ function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) 
           </div>
 
           <small className="lobby-routine-note">Rotinas visuais derivadas do estado atual. Nenhum recurso ou progresso é concedido automaticamente.</small>
+        </article>
+
+        <article className="command-card base-training-card">
+          <div className="base-card-head">
+            <span>Campo de Treino | Progresso técnico</span>
+            <h3>Desenvolvimento dos heróis</h3>
+          </div>
+          <p>{lobbyTrainingReport.summary}</p>
+
+          <div className="lobby-routine-list">
+            {lobbyTrainingReport.entries.length > 0 ? (
+              lobbyTrainingReport.entries.map((entry) => (
+                <div className={`lobby-routine-entry ${entry.eligibility.canTrain ? "activity-training" : "activity-resting"}`} key={entry.heroId}>
+                  <span>{entry.focusDefinition.label}</span>
+                  <strong>{entry.heroName}</strong>
+                  <em>{entry.progressLabel}</em>
+                  <small>{entry.statusLabel}</small>
+                </div>
+              ))
+            ) : (
+              <div className="lobby-routine-empty">
+                <strong>Campo de Treino vazio</strong>
+                <span>Recrute heróis para iniciar o desenvolvimento técnico.</span>
+              </div>
+            )}
+          </div>
+
+          <small className="lobby-routine-note">Treino técnico lento e limitado. Não concede atributos brutos nem nível de combate.</small>
         </article>
 
         <article className="command-card base-shortcuts-card">

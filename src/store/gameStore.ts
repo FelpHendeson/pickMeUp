@@ -42,6 +42,8 @@ import {
   applyPreferencesToDocument,
   resetPreferences as resetStoredPreferences,
   updatePreference as updateStoredPreference,
+  assignHeroTrainingFocus,
+  progressTrainingForElapsedTime,
   type EquipmentSlot,
   type GameState,
   type PartialGameState,
@@ -49,6 +51,7 @@ import {
   type RunTowerBattleResult,
   type SummonType,
   type TeamPresetType,
+  type TrainingFocus,
 } from "@/src/game";
 
 type InjuryTreatmentResource = keyof typeof import("@/src/game/hero-status/injuries").INJURY_CONFIG.treatmentCosts;
@@ -95,6 +98,8 @@ type GameStore = {
   chooseRecruitmentHero: (heroId: string) => ActionResult;
   chooseHeroSpecialization: (heroId: string, specializationKey: string) => ActionResult;
   treatHeroInjuries: (heroId: string, resourceKey: InjuryTreatmentResource) => ActionResult;
+  assignTrainingFocus: (heroId: string, focus: TrainingFocus) => ActionResult;
+  progressTraining: () => void;
   saveTowerPresetFromFormation: (presetIndex: number) => ActionResult;
   applyTowerPresetToFormation: (presetIndex: number) => ActionResult;
   saveExpeditionPresetFromFormation: (presetIndex: number) => ActionResult;
@@ -204,6 +209,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   refreshSession: () => {
     const current = get().state;
     regenerateEnergy(current);
+    progressTrainingForElapsedTime(current);
     const nextState = commitState(current);
     set({ state: nextState, source: get().source === "initial" ? "initial" : "manual" });
   },
@@ -313,6 +319,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   chooseHeroSpecialization: (heroId, specializationKey) =>
     mutateState(get, set, (state) => chooseHeroSpecialization(state, heroId, specializationKey)),
   treatHeroInjuries: (heroId, resourceKey) => mutateState(get, set, (state) => treatHeroInjuries(state, heroId, resourceKey)),
+  assignTrainingFocus: (heroId, focus) => mutateState(get, set, (state) => assignHeroTrainingFocus(state, heroId, focus)),
+  progressTraining: () => {
+    const current = get().state;
+    const result = progressTrainingForElapsedTime(current);
+    if (result.appliedBlocks <= 0) return;
+    const nextState = commitState(current);
+    set({ state: nextState, source: "manual" });
+  },
   saveTowerPresetFromFormation: (presetIndex) => mutateState(get, set, (state) => saveTowerPresetFromFormation(state, presetIndex)),
   applyTowerPresetToFormation: (presetIndex) => mutateState(get, set, (state) => applyTowerPresetToFormation(state, presetIndex)),
   saveExpeditionPresetFromFormation: (presetIndex) =>

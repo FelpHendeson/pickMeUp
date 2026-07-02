@@ -16,6 +16,7 @@ import { getCompletedTowerChapterIds } from "../tower";
 import { normalizeTowerEventInstance, normalizeTowerEventState } from "../tower-events";
 import { normalizeNarrativeState } from "../narrative";
 import { normalizeBattleResult } from "../battle";
+import { normalizeTrainingState } from "../training";
 import { createInitialState } from "./createInitialState";
 import { normalizeTeamPresets } from "./teamPresets";
 import { CURRENT_SAVE_SCHEMA_VERSION } from "../save/migrations";
@@ -108,6 +109,7 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   normalizeRecruitmentState(merged);
   normalizeTowerEventState(merged);
   normalizeNarrativeState(merged);
+  normalizeTrainingState(merged, now);
 
   return merged;
 }
