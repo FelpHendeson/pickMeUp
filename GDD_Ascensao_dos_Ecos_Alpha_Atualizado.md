@@ -585,6 +585,15 @@ O jogador nao conhece tudo sobre o heroi na invocacao. Especialmente em baixa ra
 - A analise nao altera dano, stats, level, raridade, IA, recompensas, summon nem expedicoes, e nao ha promocao nesta etapa: o sistema apenas prepara o terreno para evolucoes futuras.
 - O painel de Herois mostra nivel/XP de analise, resumo, insights revelados, indicios bloqueados, recomendacoes e o botao de analise manual.
 
+### Fundacao da ascensao por estrelas (preview)
+
+A promocao real ainda nao altera estado. Esta etapa apenas le o progresso atual e projeta a proxima estrela.
+
+- `getHeroPromotionPreview` avalia elegibilidade por faixa (1★→2★, 2★→3★, 3★→4★, 4★→5★) usando nivel, analise de potencial, proficiencias, tecnicas leves, moral, ferimentos e andar da Torre. Herois 5★ nao tem alvo.
+- O preview retorna readiness (`blocked`, `not-ready`, `almost`, `ready`), requisitos com status, beneficios projetados (texto), riscos e recomendacoes. Baixa raridade e tratada como investimento possivel, nao descarte.
+- Material de Eco aparece como requisito futuro na rota 4★→5★, sem consumo. `promoteHero` retorna bloqueado explicitamente.
+- Nao ha campo persistido nem migration: tudo e derivado do estado atual.
+
 ### Recrutamento / contratos de guilda
 
 Recrutamento deve se diferenciar da invocacao. A tela representa um quadro de contratos da guilda: o jogador usa contrato para revelar candidatos, compara classe, raridade, poder, atributos principais, custo ja pago e traco/passiva, escolhe apenas um aventureiro e recebe confirmacao com atalhos para Heróis ou Formacao. Sem contrato, o estado deve comunicar custo insuficiente sem parecer erro.

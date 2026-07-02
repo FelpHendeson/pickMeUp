@@ -16,6 +16,7 @@ import {
   getHeroInjuryTreatmentCost,
   getHeroMoraleState,
   getHeroPotentialReport,
+  getHeroPromotionPreview,
   getHeroPowerWithEquipment,
   getHeroProficiencySummary,
   getHeroSpecialization,
@@ -400,6 +401,7 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
   const trainingFocusOptions = getTrainingFocusDefinitions();
   const proficiencySummary = getHeroProficiencySummary(state, hero.id);
   const potentialReport = getHeroPotentialReport(state, hero.id);
+  const promotionPreview = getHeroPromotionPreview(state, hero.id);
   const analyzeHeroAction = useGameStore((store) => store.analyzeHero);
   const canAffordAnalysis = (state.resources.gold ?? 0) >= POTENTIAL_CONFIG.manualAnalysisGoldCost;
   const analysisComplete = potentialReport
@@ -627,6 +629,85 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
           {!analysisComplete && !canAffordAnalysis ? (
             <small className="tone-warning">Ouro insuficiente para aprofundar a análise agora.</small>
           ) : null}
+        </div>
+      ) : null}
+
+      {promotionPreview ? (
+        <div className="hero-detail-section hero-detail-block hero-promotion-block">
+          <strong>Ascensão por Estrelas</strong>
+          <span>
+            {promotionPreview.currentRarity}★
+            {promotionPreview.targetRarity ? ` → ${promotionPreview.targetRarity}★` : " (máximo)"}
+            {" · "}
+            {promotionPreview.title}
+          </span>
+          <small>{promotionPreview.summary}</small>
+          <small className="hero-promotion-notice">{promotionPreview.systemNotice}</small>
+
+          <div className={`hero-promotion-status status-${promotionPreview.readiness}`}>
+            <strong>Status:</strong>{" "}
+            {promotionPreview.readiness === "ready"
+              ? "Pronto (prévia)"
+              : promotionPreview.readiness === "almost"
+                ? "Quase pronto"
+                : promotionPreview.readiness === "blocked"
+                  ? "Bloqueado"
+                  : "Não pronto"}
+          </div>
+
+          {promotionPreview.requirements.length > 0 ? (
+            <div className="hero-promotion-requirements">
+              <strong>Requisitos</strong>
+              {promotionPreview.requirements.map((requirement) => (
+                <div
+                  className={`hero-promotion-requirement req-${requirement.status}`}
+                  key={`${requirement.key}-${requirement.label}`}
+                >
+                  <span>{requirement.label}</span>
+                  <small>
+                    {requirement.description}
+                    {requirement.currentValue !== undefined && requirement.requiredValue !== undefined
+                      ? ` (${requirement.currentValue} / ${requirement.requiredValue})`
+                      : ""}
+                  </small>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {promotionPreview.projectedBenefits.length > 0 ? (
+            <div className="hero-promotion-benefits">
+              <strong>Benefícios projetados</strong>
+              <ul>
+                {promotionPreview.projectedBenefits.map((benefit, index) => (
+                  <li key={index}>{benefit}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {promotionPreview.risks.length > 0 ? (
+            <div className="hero-promotion-risks">
+              <strong>Riscos</strong>
+              <ul>
+                {promotionPreview.risks.map((risk, index) => (
+                  <li key={index}>{risk}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {promotionPreview.recommendations.length > 0 ? (
+            <ul className="hero-promotion-recommendations">
+              {promotionPreview.recommendations.map((recommendation, index) => (
+                <li key={index}>{recommendation}</li>
+              ))}
+            </ul>
+          ) : null}
+
+          <button type="button" className="hero-promotion-action" disabled title={promotionPreview.systemNotice}>
+            Promover (em breve)
+          </button>
         </div>
       ) : null}
 

@@ -11091,3 +11091,85 @@ body.pref-reduce-motion *::after {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+.hero-promotion-block {
+  gap: 0.4rem;
+}
+
+.hero-promotion-notice {
+  padding: 0.35rem 0.5rem;
+  border-left: 2px solid rgba(232, 188, 88, 0.45);
+  background: rgba(232, 188, 88, 0.08);
+  border-radius: 6px;
+  font-style: italic;
+}
+
+.hero-promotion-status {
+  font-size: 0.82rem;
+}
+
+.hero-promotion-status.status-ready {
+  color: var(--teal);
+}
+
+.hero-promotion-status.status-almost {
+  color: var(--gold);
+}
+
+.hero-promotion-status.status-blocked,
+.hero-promotion-status.status-not-ready {
+  color: var(--muted);
+}
+
+.hero-promotion-requirements {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.hero-promotion-requirement {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.3rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.hero-promotion-requirement.req-met {
+  border-left: 2px solid rgba(96, 205, 196, 0.5);
+  background: rgba(96, 205, 196, 0.06);
+}
+
+.hero-promotion-requirement.req-missing {
+  border-left: 2px solid rgba(232, 120, 120, 0.45);
+  background: rgba(232, 120, 120, 0.06);
+}
+
+.hero-promotion-requirement.req-warning {
+  border-left: 2px solid rgba(232, 188, 88, 0.45);
+  background: rgba(232, 188, 88, 0.06);
+}
+
+.hero-promotion-requirement span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.hero-promotion-benefits ul,
+.hero-promotion-risks ul,
+.hero-promotion-recommendations {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.hero-promotion-action {
+  justify-self: start;
+  margin-top: 0.2rem;
+  opacity: 0.6;
+  cursor: not-allowed;
+}

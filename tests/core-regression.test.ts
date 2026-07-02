@@ -59,6 +59,12 @@ import {
   progressHeroPotentialAnalysis,
   progressPotentialFromProficiencyOutcomes,
   POTENTIAL_CONFIG,
+  getHeroPromotionPreview,
+  getPromotionReadiness,
+  getPromotionRequirementsForHero,
+  getPromotionTargetRarity,
+  promoteHero,
+  PROMOTION_MAX_RARITY,
   LOBBY_ROUTINE_BLOCK_MS,
   generateInitialSpecialSummonOptions,
   HERO_ROSTER,
@@ -1801,4 +1807,235 @@ test("analise de potencial nao altera stats, level, raridade, combate, summon ou
   assert.equal(state.heroes.length, heroesBefore);
   assert.equal(state.summonHistory.length, historyBefore);
   assert.equal(state.activeExpeditions.length, expeditionsBefore);
+});
+
+function preparePromotionCandidate(
+  state: GameState,
+  hero: Hero,
+  options: {
+    level?: number;
+    potentialXp?: number;
+    proficiencyXp?: number;
+    proficiencyKey?: "shieldwork" | "swordplay";
+    towerFloor?: number;
+  } = {},
+): void {
+  if (options.level !== undefined) hero.level = options.level;
+  if (options.potentialXp !== undefined) progressHeroPotentialAnalysis(state, hero.id, options.potentialXp, "manual", 1_000);
+  if (options.proficiencyXp !== undefined) {
+    progressHeroProficiency(state, hero.id, options.proficiencyKey ?? "shieldwork", options.proficiencyXp, 1_000);
+  }
+  if (options.towerFloor !== undefined) state.towerFloor = options.towerFloor;
+}
+
+test("heroi 5 estrelas nao possui alvo de promocao", () => {
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "promo_max", "warrior");
+  hero.rarity = PROMOTION_MAX_RARITY;
+
+  assert.equal(getPromotionTargetRarity(hero), null);
+  const preview = getHeroPromotionPreview(state, hero.id);
+  assert.ok(preview);
+  if (!preview) return;
+  assert.equal(preview.targetRarity, null);
+  assert.equal(preview.readiness, "blocked");
+  assert.equal(preview.eligible, false);
+});
+
+test("heroi 1 estrela tem alvo 2 estrelas e heroi 2 estrelas tem alvo 3", () => {
+  const state = createInitialState();
+  const oneStar = makeRosterHeroForTest(state, "promo_1", "orven_ash_eye");
+  const twoStar = makeRosterHeroForTest(state, "promo_2", "elira_stone_vigil");
+
+  assert.equal(oneStar.rarity, 1);
+  assert.equal(getPromotionTargetRarity(oneStar), 2);
+  assert.equal(twoStar.rarity, 2);
+  assert.equal(getPromotionTargetRarity(twoStar), 3);
+});
+
+test("heroi sem analise de potencial fica nao pronto ou bloqueado", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_no_pot", "orven_ash_eye");
+  progressHeroProficiency(state, hero.id, "archery", 5, 1_000);
+
+  const preview = getHeroPromotionPreview(state, hero.id);
+  assert.ok(preview);
+  if (!preview) return;
+  assert.equal(getHeroPotentialProgress(state, hero.id).level, 0);
+  assert.ok(["not-ready", "blocked"].includes(preview.readiness));
+  const potentialReq = preview.requirements.find((req) => req.key === "potential");
+  assert.ok(potentialReq);
+  assert.equal(potentialReq?.status, "missing");
+});
+
+test("heroi com analise suficiente melhora readiness", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_pot_ok", "orven_ash_eye");
+  preparePromotionCandidate(state, hero, { level: 6, potentialXp: 8, proficiencyXp: 5, towerFloor: 3 });
+
+  const preview = getHeroPromotionPreview(state, hero.id);
+  assert.ok(preview);
+  if (!preview) return;
+  const potentialReq = preview.requirements.find((req) => req.key === "potential");
+  assert.equal(potentialReq?.status, "met");
+  assert.ok(["almost", "ready"].includes(preview.readiness));
+});
+
+test("heroi sem proficiencia descoberta recebe requisito pendente", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_no_prof", "orven_ash_eye");
+  progressHeroPotentialAnalysis(state, hero.id, 5, "manual", 1_000);
+
+  const preview = getHeroPromotionPreview(state, hero.id);
+  assert.ok(preview);
+  if (!preview) return;
+  const profReq = preview.requirements.find((req) => req.key === "proficiency");
+  assert.ok(profReq);
+  assert.equal(profReq?.status, "missing");
+});
+
+test("heroi com proficiencia e tecnica adequadas melhora readiness", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_prof_ok", "elira_stone_vigil");
+  preparePromotionCandidate(state, hero, { level: 12, potentialXp: 16, proficiencyXp: 25, towerFloor: 6 });
+
+  const preview = getHeroPromotionPreview(state, hero.id);
+  assert.ok(preview);
+  if (!preview) return;
+  assert.equal(preview.targetRarity, 3);
+  const profReq = preview.requirements.find((req) => req.key === "proficiency");
+  const techReq = preview.requirements.find((req) => req.key === "technique");
+  assert.equal(profReq?.status, "met");
+  assert.equal(techReq?.status, "met");
+  assert.ok(["almost", "ready", "not-ready"].includes(preview.readiness));
+  assert.notEqual(preview.readiness, "blocked");
+});
+
+test("ferimento ativo bloqueia promocao", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_injury", "orven_ash_eye");
+  preparePromotionCandidate(state, hero, { level: 8, potentialXp: 10, proficiencyXp: 10, towerFloor: 5 });
+  hero.injuries = [{ key: "bruise", remainingBattles: 2, severity: 1 }];
+
+  const preview = getHeroPromotionPreview(state, hero.id);
+  assert.ok(preview);
+  if (!preview) return;
+  assert.equal(preview.readiness, "blocked");
+  const injuryReq = preview.requirements.find((req) => req.key === "injury");
+  assert.equal(injuryReq?.status, "missing");
+});
+
+test("moral colapsada bloqueia promocao", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_morale", "orven_ash_eye");
+  preparePromotionCandidate(state, hero, { level: 8, potentialXp: 10, proficiencyXp: 10, towerFloor: 5 });
+  hero.morale = 15;
+
+  const preview = getHeroPromotionPreview(state, hero.id);
+  assert.ok(preview);
+  if (!preview) return;
+  assert.equal(preview.readiness, "blocked");
+  const moraleReq = preview.requirements.find((req) => req.key === "morale");
+  assert.equal(moraleReq?.status, "missing");
+});
+
+test("progresso da Torre e considerado como requisito", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_tower", "elira_stone_vigil");
+  preparePromotionCandidate(state, hero, { level: 12, potentialXp: 16, proficiencyXp: 25, towerFloor: 2 });
+
+  const previewLow = getHeroPromotionPreview(state, hero.id);
+  assert.ok(previewLow);
+  if (!previewLow) return;
+  const towerReqLow = previewLow.requirements.find((req) => req.key === "tower");
+  assert.equal(towerReqLow?.status, "missing");
+
+  state.towerFloor = 10;
+  const previewHigh = getHeroPromotionPreview(state, hero.id);
+  assert.ok(previewHigh);
+  if (!previewHigh) return;
+  const towerReqHigh = previewHigh.requirements.find((req) => req.key === "tower");
+  assert.equal(towerReqHigh?.status, "met");
+});
+
+test("baixa raridade recebe recomendacao de investimento, nao descarte", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_low_rec", "orven_ash_eye");
+  const preview = getHeroPromotionPreview(state, hero.id);
+
+  assert.ok(preview);
+  if (!preview) return;
+  assert.equal(preview.currentRarity, 1);
+  const joined = [preview.summary, ...preview.recommendations].join(" ").toLowerCase();
+  assert.ok(joined.includes("descarte") || joined.includes("inesperado") || joined.includes("investimento"));
+});
+
+test("preview retorna beneficios projetados sem aplicar nada ao heroi", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_benefits", "orven_ash_eye");
+  const maxLevelBefore = hero.maxLevel;
+  const rarityBefore = hero.rarity;
+  const statsBefore = JSON.stringify(hero.stats);
+
+  const preview = getHeroPromotionPreview(state, hero.id);
+  assert.ok(preview);
+  if (!preview) return;
+  assert.ok(preview.projectedBenefits.length > 0);
+  assert.ok(preview.projectedBenefits.some((benefit) => benefit.includes("futuro") || benefit.includes("futura")));
+
+  assert.equal(hero.rarity, rarityBefore);
+  assert.equal(hero.maxLevel, maxLevelBefore);
+  assert.equal(JSON.stringify(hero.stats), statsBefore);
+});
+
+test("chamar preview nao altera estado do jogo", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_pure", "darian_cinder_oath");
+  const snapshot = JSON.stringify(state);
+
+  getHeroPromotionPreview(state, hero.id);
+  getPromotionRequirementsForHero(state, hero.id);
+
+  assert.equal(JSON.stringify(state), snapshot);
+});
+
+test("placeholder promoteHero nao altera raridade nem estado", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_placeholder", "orven_ash_eye");
+  preparePromotionCandidate(state, hero, { level: 10, potentialXp: 20, proficiencyXp: 30, towerFloor: 10 });
+  const rarityBefore = hero.rarity;
+  const goldBefore = state.resources.gold;
+  const snapshot = JSON.stringify(state);
+
+  const result = promoteHero(state, hero.id);
+  assert.equal(result.ok, false);
+  assert.ok(result.message.includes("não está disponível"));
+  assert.equal(hero.rarity, rarityBefore);
+  assert.equal(state.resources.gold, goldBefore);
+  assert.equal(JSON.stringify(state), snapshot);
+});
+
+test("promocao nao adiciona campo persistido nem altera schemaVersion", () => {
+  const state = createInitialState();
+  assert.equal(state.schemaVersion, CURRENT_SAVE_SCHEMA_VERSION);
+  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 5);
+  assert.equal("promotion" in state, false);
+});
+
+test("preview de promocao entrega contrato consumivel pela UI", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_ui", "elira_stone_vigil");
+  const preview = getHeroPromotionPreview(state, hero.id);
+
+  assert.ok(preview);
+  if (!preview) return;
+  assert.equal(typeof preview.title, "string");
+  assert.equal(typeof preview.summary, "string");
+  assert.ok(preview.systemNotice.includes("preparação") || preview.systemNotice.includes("preparacao"));
+  assert.ok(["blocked", "not-ready", "almost", "ready"].includes(preview.readiness));
+  preview.requirements.forEach((req) => {
+    assert.ok(["met", "missing", "warning"].includes(req.status));
+    assert.ok(typeof req.label === "string" && typeof req.description === "string");
+  });
+  assert.equal(getPromotionReadiness(preview), preview.readiness);
 });
