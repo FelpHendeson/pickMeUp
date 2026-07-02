@@ -22,6 +22,9 @@ import {
   getAvailableHeroDefinitions,
   getHeroDefinitionById,
   getOwnedHeroDefinitionIds,
+  getRecommendedFormationPower,
+  getTowerReadinessLevel,
+  getTowerReadinessReport,
   generateInitialSpecialSummonOptions,
   HERO_ROSTER,
   importGameStateFromText,
@@ -83,6 +86,19 @@ function completeInitialSummonForTest(state: GameState): void {
   state.initialSummon.specialAvailable = false;
   state.initialSummon.specialClaimed = true;
   state.initialSummon.specialOptions = [];
+}
+
+function createPreparedTowerState(): { state: GameState; heroes: Hero[] } {
+  const state = createInitialState();
+  const heroes = addHeroes(state, 5);
+  heroes.forEach((hero, index) => {
+    empowerHero(hero);
+    hero.morale = 80;
+    hero.injuries = [];
+    hero.currentHp = hero.stats.hp;
+    state.formation[index] = hero.id;
+  });
+  return { state, heroes };
 }
 
 test("ensureStateShape normaliza save parcial e remove referencias invalidas", () => {
@@ -643,6 +659,138 @@ test("expedicao usa timestamp salvo e concede recompensa ao coletar", () => {
   assert.equal(collected.ok, true);
   assert.equal(reloadedState.activeExpeditions.length, 0);
   assert.ok(reloadedState.heroes.find((hero) => hero.id === heroA.id)!.xp > startingXp);
+});
+
+test("readiness classifica formacao vazia e falhas operacionais como criticas", () => {
+  const emptyState = createInitialState();
+  const emptyReport = getTowerReadinessReport(emptyState, 1);
+  assert.equal(emptyReport.level, "critical");
+  assert.equal(emptyReport.score, 0);
+  assert.equal(emptyReport.checks.find((check) => check.key === "formation")?.status, "bad");
+
+  const busySetup = createPreparedTowerState();
+  const expedition = startExpedition(busySetup.state, "training_field", [busySetup.heroes[0].id], 1_000);
+  assert.equal(expedition.ok, true);
+  const busyReport = getTowerReadinessReport(busySetup.state, 4);
+  assert.equal(busyReport.level, "critical");
+  assert.equal(busyReport.score, 0);
+  assert.equal(busyReport.checks.find((check) => check.key === "expedition")?.status, "bad");
+
+  const energySetup = createPreparedTowerState();
+  energySetup.state.resources.energy = 0;
+  const energyReport = getTowerReadinessReport(energySetup.state, 4);
+  assert.equal(energyReport.level, "critical");
+  assert.equal(energyReport.score, 0);
+  assert.match(energyReport.recommendations.join(" "), /energia/i);
+});
+
+test("readiness reconhece equipe completa no nivel esperado e aumenta risco por desgaste", () => {
+  const { state, heroes } = createPreparedTowerState();
+  const readyReport = getTowerReadinessReport(state, 20);
+  assert.equal(readyReport.level, "ready");
+  assert.ok(readyReport.score >= 85);
+  assert.equal(readyReport.metrics.formationSize, 5);
+  assert.equal(readyReport.checks.find((check) => check.key === "formation")?.status, "good");
+
+  heroes.forEach((hero) => {
+    hero.level = 1;
+  });
+  const underleveledReport = getTowerReadinessReport(state, 20);
+  assert.ok(underleveledReport.score < readyReport.score);
+  assert.equal(underleveledReport.checks.find((check) => check.key === "level")?.status, "bad");
+
+  const healthySetup = createPreparedTowerState();
+  const healthyReport = getTowerReadinessReport(healthySetup.state, 4);
+  healthySetup.heroes[0].currentHp = Math.floor(healthySetup.heroes[0].stats.hp * 0.3);
+  const lowHpReport = getTowerReadinessReport(healthySetup.state, 4);
+  assert.ok(lowHpReport.score < healthyReport.score);
+  assert.equal(lowHpReport.checks.find((check) => check.key === "health")?.status, "bad");
+
+  const injurySetup = createPreparedTowerState();
+  const injuryBaseline = getTowerReadinessReport(injurySetup.state, 4);
+  injurySetup.heroes[0].injuries = [
+    { id: "injury_test", typeKey: "injuredArm", remainingBattles: 2, createdAt: "2026-01-01T00:00:00.000Z" },
+  ];
+  const injuryReport = getTowerReadinessReport(injurySetup.state, 4);
+  assert.ok(injuryReport.score < injuryBaseline.score);
+  assert.equal(injuryReport.checks.find((check) => check.key === "injuries")?.status, "bad");
+
+  const moraleSetup = createPreparedTowerState();
+  const moraleBaseline = getTowerReadinessReport(moraleSetup.state, 4);
+  moraleSetup.heroes[0].morale = 15;
+  const moraleReport = getTowerReadinessReport(moraleSetup.state, 4);
+  assert.ok(moraleReport.score < moraleBaseline.score);
+  assert.equal(moraleReport.checks.find((check) => check.key === "morale")?.status, "bad");
+});
+
+test("readiness diferencia andares normais, testes de bloco e chefes", () => {
+  const { state } = createPreparedTowerState();
+  const regular = getTowerReadinessReport(state, 4);
+  const blockTest = getTowerReadinessReport(state, 5);
+  const chapterBoss = getTowerReadinessReport(state, 10);
+  const regularMilestone = regular.checks.find((check) => check.key === "milestone");
+  const blockMilestone = blockTest.checks.find((check) => check.key === "milestone");
+  const bossMilestone = chapterBoss.checks.find((check) => check.key === "milestone");
+
+  assert.equal(regular.metrics.milestoneType, "normal");
+  assert.equal(blockTest.metrics.milestoneType, "block-test");
+  assert.equal(chapterBoss.metrics.milestoneType, "chapter-boss");
+  assert.equal(regularMilestone?.impact, 0);
+  assert.equal(blockMilestone?.impact, -6);
+  assert.equal(bossMilestone?.impact, -12);
+  assert.ok(getRecommendedFormationPower(5) > getRecommendedFormationPower(4));
+  assert.ok(getRecommendedFormationPower(10) > getRecommendedFormationPower(5));
+  assert.ok(chapterBoss.score < blockTest.score);
+  assert.equal(getTowerReadinessLevel(100), "ready");
+  assert.equal(getTowerReadinessLevel(70), "caution");
+  assert.equal(getTowerReadinessLevel(50), "danger");
+  assert.equal(getTowerReadinessLevel(20), "critical");
+});
+
+test("relatorio de readiness e puro e entrega contrato consumivel pela UI", () => {
+  const { state, heroes } = createPreparedTowerState();
+  heroes[0].currentHp = Math.floor(heroes[0].stats.hp * 0.4);
+  heroes[1].morale = 30;
+  heroes[2].injuries = [
+    { id: "injury_ui", typeKey: "brokenRib", remainingBattles: 1, createdAt: "2026-01-01T00:00:00.000Z" },
+  ];
+  const stateBefore = JSON.stringify(state);
+  const injuriesReference = heroes[2].injuries;
+  const equipmentReference = heroes[2].equipment;
+
+  const report = getTowerReadinessReport(state, 10);
+
+  assert.equal(JSON.stringify(state), stateBefore);
+  assert.equal(heroes[2].injuries, injuriesReference);
+  assert.equal(heroes[2].equipment, equipmentReference);
+  assert.equal(report.floor, 10);
+  assert.ok(report.label.length > 0);
+  assert.ok(report.summary.length > 0);
+  assert.ok(report.recommendations.length >= 3);
+  assert.match(report.recommendations.join(" "), /HP|ferimento|moral/i);
+  assert.deepEqual(
+    report.checks.map((check) => check.key),
+    ["formation", "power", "level", "health", "injuries", "morale", "expedition", "energy", "milestone"],
+  );
+  assert.equal(report.metrics.recommendedLevel, 5);
+  assert.ok(report.metrics.formationPower > 0);
+  assert.ok(report.metrics.recommendedPower > 0);
+});
+
+test("readiness critico nao adiciona bloqueio ao contrato de combate", () => {
+  const { state, heroes } = createPreparedTowerState();
+  heroes.forEach((hero, index) => {
+    hero.currentHp = Math.floor(hero.stats.hp * 0.4);
+    hero.morale = 30;
+    hero.injuries = [
+      { id: `injury_readiness_${index}`, typeKey: "injuredArm", remainingBattles: 2, createdAt: "2026-01-01T00:00:00.000Z" },
+    ];
+  });
+
+  assert.equal(getTowerReadinessReport(state, 1).level, "critical");
+  const result = runTowerBattle(state, { skipEventRoll: true });
+  assert.equal(result.ok, true);
+  assert.equal("battle" in result, true);
 });
 
 test("runTowerBattle vence andar inicial, aplica recompensa e avanca progresso", () => {
