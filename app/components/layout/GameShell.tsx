@@ -10,6 +10,7 @@ import {
   getFormationHeroCount,
   getFormationPower,
   getInjuredHeroes,
+  getLobbyRoutineReport,
   getSummonCost,
   getRelicState,
   getRelicUpgradeCost,
@@ -346,7 +347,17 @@ function BaseShortcutButton({ description, onNavigate, tab, title }: { descripti
 
 function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) {
   const state = useGameStore((store) => store.state);
+  const [lobbyRoutineNow, setLobbyRoutineNow] = useState(0);
+
+  useEffect(() => {
+    const refreshRoutineClock = () => setLobbyRoutineNow(Date.now());
+    refreshRoutineClock();
+    const intervalId = window.setInterval(refreshRoutineClock, 60_000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   const weeklyEvent = getActiveWeeklyEvent();
+  const lobbyRoutineReport = getLobbyRoutineReport(state, lobbyRoutineNow);
   const chapter = getTowerChapterByFloor(state.towerFloor);
   const formationCount = getFormationHeroCount(state);
   const formationHeroes = getFormationHeroes(state).filter((hero): hero is Hero => Boolean(hero));
@@ -513,6 +524,43 @@ function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) 
             <BaseResourceStat label="Frag. Eco" value={state.echoFragments} tone="arcane" />
             <BaseResourceStat label="Contratos" value={state.heroContracts} tone={state.heroContracts > 0 ? "gold" : undefined} />
           </div>
+        </article>
+
+        <article className="command-card base-lobby-card">
+          <div className="base-card-head">
+            <span>Lobby Vivo | Rotina atual</span>
+            <h3>Movimento entre os Ecos</h3>
+          </div>
+          <p>{lobbyRoutineReport.summary}</p>
+
+          <div className="lobby-location-grid" aria-label="Ocupação das áreas do Lobby">
+            {Object.entries(lobbyRoutineReport.locations).map(([locationKey, location]) => (
+              <span className={location.heroCount > 0 ? "is-occupied" : ""} key={locationKey}>
+                <strong>{location.heroCount}</strong>
+                {location.label}
+              </span>
+            ))}
+          </div>
+
+          <div className="lobby-routine-list">
+            {lobbyRoutineReport.routines.length > 0 ? (
+              lobbyRoutineReport.routines.map((routine) => (
+                <div className={`lobby-routine-entry activity-${routine.activity}`} key={routine.heroId}>
+                  <span>{lobbyRoutineReport.locations[routine.location].label}</span>
+                  <strong>{routine.heroName}</strong>
+                  <em>{routine.label}</em>
+                  <small>{routine.description}</small>
+                </div>
+              ))
+            ) : (
+              <div className="lobby-routine-empty">
+                <strong>Lobby silencioso</strong>
+                <span>Os primeiros heróis darão vida a estas instalações.</span>
+              </div>
+            )}
+          </div>
+
+          <small className="lobby-routine-note">Rotinas visuais derivadas do estado atual. Nenhum recurso ou progresso é concedido automaticamente.</small>
         </article>
 
         <article className="command-card base-shortcuts-card">
