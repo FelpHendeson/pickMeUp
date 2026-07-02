@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   canChooseTowerEventOption,
   canRepeatTowerFloor,
@@ -10,9 +10,6 @@ import {
   getEnemyArchetype,
   getFloorData,
   getFloorModifierSummary,
-  getFormationHeroCount,
-  getFormationHeroes,
-  getFormationPower,
   getHeroExpedition,
   getTowerChapterByFloor,
   getTowerDifficultyJumpLabel,
@@ -21,18 +18,17 @@ import {
   getTowerEventPhaseLabel,
   getTowerEventResourceName,
   getTowerMilestoneInfo,
+  getTowerReadinessReport,
   getWeeklyTowerRewardOptions,
   isBossFloor,
-  isHeroOnExpedition,
   normalizeTowerDifficultyMode,
   TOWER_FLOORS,
   type BattleResult,
-  type GameState,
   type Hero,
   type RunTowerBattleResult,
   type TowerDifficultyModeId,
   type TowerFloor,
-  type TowerMilestoneType,
+  type TowerReadinessReport,
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
 import { useConfirmDialog, useToast, UiAlertBox, UiModal, UiProgressBar } from "../ui";
@@ -94,30 +90,6 @@ function getBattleSummary(battle: BattleResult | null): string {
   return `${outcome} no andar ${battle.floor} em ${battle.rounds} turno(s).`;
 }
 
-function isHeroWounded(hero: Hero): boolean {
-  const maxHp = Math.max(1, Math.round(Number(hero.stats.hp) || 1));
-  const currentHp = Number.isFinite(Number(hero.currentHp)) ? Math.max(0, Math.round(Number(hero.currentHp))) : maxHp;
-  return currentHp / maxHp <= 0.45;
-}
-
-function getFormationReadiness(state: GameState) {
-  const heroes = getFormationHeroes(state).filter((hero): hero is Hero => Boolean(hero));
-  const averageLevel = heroes.length > 0 ? heroes.reduce((total, hero) => total + hero.level, 0) / heroes.length : 0;
-  const injuredHeroes = heroes.filter((hero) => hero.injuries.some((injury) => injury.remainingBattles > 0));
-  const busyHeroes = heroes.filter((hero) => isHeroOnExpedition(state, hero.id));
-  const woundedHeroes = heroes.filter((hero) => isHeroWounded(hero));
-  const lowMoraleHeroes = heroes.filter((hero) => hero.morale < 40);
-
-  return {
-    heroes,
-    averageLevel,
-    busyHeroes,
-    injuredHeroes,
-    woundedHeroes,
-    lowMoraleHeroes,
-  };
-}
-
 function getTowerEventModalTone(tone: string): "default" | "danger" | "ritual" | "arcane" {
   if (tone === "danger") return "danger";
   if (tone === "reward" || tone === "merchant") return "ritual";
@@ -140,19 +112,10 @@ function getBattleProgressLabels(entries: unknown[] | undefined, includeClaimed 
 }
 
 function getRiskProfile(options: {
-  averageLevel: number;
-  bossFloor: boolean;
-  busyCount: number;
   difficultyMode: TowerDifficultyModeId;
-  energy: number;
-  heroCount: number;
-  injuredCount: number;
-  lowMoraleCount: number;
-  milestoneType: TowerMilestoneType;
   pendingEvent: boolean;
-  recommendedLevel: number;
+  readinessReport: TowerReadinessReport;
   selectedIsLocked: boolean;
-  woundedCount: number;
 }) {
   if (options.pendingEvent) {
     return { label: "Bloqueado", tone: "danger", description: "Evento pendente impede a marcha até a Torre." };
@@ -162,38 +125,19 @@ function getRiskProfile(options: {
     return { label: "Selado", tone: "locked", description: "A campanha ainda não liberou este andar." };
   }
 
-  if (options.heroCount === 0) {
-    return { label: "Sem equipe", tone: "danger", description: "Nenhum herói está escalado para sustentar o avanço." };
-  }
+  let riskScore = 100 - options.readinessReport.score;
+  if (options.difficultyMode === "challenge") riskScore += 12;
+  if (options.difficultyMode === "hardcore") riskScore += 25;
 
-  if (options.busyCount > 0) {
-    return { label: "Indisponível", tone: "danger", description: "Há herói escalado que está em expedição." };
-  }
-
-  if (options.energy < GAME_CONFIG.towerEnergyCost) {
-    return { label: "Sem energia", tone: "danger", description: "Falta energia para abrir o portal deste desafio." };
-  }
-
-  const levelGap = options.recommendedLevel - options.averageLevel;
-  let score = Math.max(0, levelGap);
-
-  if (options.bossFloor) score += 1.4;
-  if (options.milestoneType === "block-test") score += 0.8;
-  if (options.difficultyMode === "challenge") score += 1.1;
-  if (options.difficultyMode === "hardcore") score += 2.2;
-  score += Math.min(2, options.injuredCount * 0.7);
-  score += Math.min(1.5, options.lowMoraleCount * 0.55);
-  score += Math.min(1.2, options.woundedCount * 0.45);
-
-  if (score >= 4) {
+  if (options.readinessReport.level === "critical" || riskScore >= 65) {
     return { label: "Crítico", tone: "critical", description: "A formação entra abaixo da ameaça prevista; espere perdas reais." };
   }
 
-  if (score >= 2.2) {
+  if (options.readinessReport.level === "danger" || riskScore >= 40) {
     return { label: "Alto", tone: "danger", description: "O andar favorece desgaste, ferimentos e falhas de moral." };
   }
 
-  if (score >= 1) {
+  if (options.readinessReport.level === "caution" || riskScore >= 20) {
     return { label: "Moderado", tone: "warning", description: "A luta é viável, mas a região ainda pune descuidos." };
   }
 
@@ -228,16 +172,25 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
   const selectedIsLocked = selectedFloor > state.towerFloor;
   const bossFloor = isBossFloor(selectedFloor);
   const milestoneInfo = getTowerMilestoneInfo(selectedFloor);
-  const heroCount = getFormationHeroCount(state);
-  const formationPower = getFormationPower(state);
-  const formationReadiness = getFormationReadiness(state);
-  const energy = state.resources.energy;
+  const readinessReport = getTowerReadinessReport(state, selectedFloor);
+  const heroCount = readinessReport.metrics.formationSize;
+  const formationPower = readinessReport.metrics.formationPower;
+  const energy = readinessReport.metrics.energy;
+  const averageFormationLevel = readinessReport.metrics.averageLevel;
+  const getReadinessCheck = (key: string) => readinessReport.checks.find((check) => check.key === key);
+  const getReadinessHeroes = (key: string) => {
+    const heroIds = new Set(getReadinessCheck(key)?.heroIds ?? []);
+    return state.heroes.filter((hero) => heroIds.has(hero.id));
+  };
+  const busyHeroes = getReadinessHeroes("expedition");
+  const injuredHeroes = getReadinessHeroes("injuries");
+  const woundedHeroes = getReadinessHeroes("health");
+  const readinessProblemChecks = readinessReport.checks.filter((check) => check.status !== "good");
   const weeklyRewardOptions = getWeeklyTowerRewardOptions();
   const rewardPreview = selectedFloorData ? describeReward(selectedFloor, { ...weeklyRewardOptions, difficultyMode: normalizedDifficulty }) : "";
   const modifierSummary = selectedFloorData ? getFloorModifierSummary(selectedFloorData) : "";
   const enemyPreview = selectedFloorData ? getEnemyPreview(selectedFloorData) : [];
   const recommendedLevel = selectedFloorData?.recommendedLevel ?? 1;
-  const averageFormationLevel = Math.round(formationReadiness.averageLevel * 10) / 10;
   const chapterFloorCount = currentChapter.endFloor - currentChapter.startFloor + 1;
   const chapterFloorPosition = Math.max(1, Math.min(highestAvailableFloor - currentChapter.startFloor + 1, chapterFloorCount));
   const chapterProgress = Math.round((chapterFloorPosition / chapterFloorCount) * 100);
@@ -246,21 +199,11 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
   const activeEffects = state.towerBattleEffects.filter((effect) => effect.scope === "nextBattle");
   const recentHistory = state.towerEventHistory.slice(0, 5);
   const lastBattle = state.lastBattle;
-  const weakTeam = heroCount > 0 && formationReadiness.averageLevel + 0.5 < recommendedLevel;
   const riskProfile = getRiskProfile({
-    averageLevel: formationReadiness.averageLevel,
-    bossFloor,
-    busyCount: formationReadiness.busyHeroes.length,
     difficultyMode: normalizedDifficulty,
-    energy,
-    heroCount,
-    injuredCount: formationReadiness.injuredHeroes.length,
-    lowMoraleCount: formationReadiness.lowMoraleHeroes.length,
-    milestoneType: milestoneInfo.type,
     pendingEvent: Boolean(pendingEvent),
-    recommendedLevel,
+    readinessReport,
     selectedIsLocked,
-    woundedCount: formationReadiness.woundedHeroes.length,
   });
   const towerWarnings: Array<{ key: string; tone: "info" | "warning" | "danger" | "success"; title: string; description: string }> = [];
 
@@ -282,78 +225,24 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
     });
   }
 
-  if (formationReadiness.busyHeroes.length > 0) {
-    towerWarnings.push({
-      key: "busy-hero",
-      tone: "danger",
-      title: "Herói indisponível",
-      description: `${formatHeroNames(formationReadiness.busyHeroes)} está em expedição e precisa ser trocado antes da luta.`,
-    });
-  }
-
-  if (energy < GAME_CONFIG.towerEnergyCost) {
-    towerWarnings.push({
-      key: "energy",
-      tone: "danger",
-      title: "Energia insuficiente",
-      description: `A Torre exige ${GAME_CONFIG.towerEnergyCost} energia; você tem ${energy}.`,
-    });
-  }
-
-  if (weakTeam) {
-    towerWarnings.push({
-      key: "weak-team",
-      tone: "warning",
-      title: "Equipe abaixo do recomendado",
-      description: `Nível médio ${averageFormationLevel || 0}; este andar recomenda nível ${recommendedLevel}.`,
-    });
-  }
-
-  if (formationReadiness.injuredHeroes.length > 0 || formationReadiness.woundedHeroes.length > 0 || formationReadiness.lowMoraleHeroes.length > 0) {
-    towerWarnings.push({
-      key: "injured",
-      tone: formationReadiness.injuredHeroes.length > 0 ? "danger" : "warning",
-      title: "Formação desgastada",
-      description: [
-        formationReadiness.injuredHeroes.length > 0 ? `Feridos: ${formatHeroNames(formationReadiness.injuredHeroes)}.` : "",
-        formationReadiness.woundedHeroes.length > 0 ? `HP crítico: ${formatHeroNames(formationReadiness.woundedHeroes)}.` : "",
-        formationReadiness.lowMoraleHeroes.length > 0 ? `Moral baixa: ${formatHeroNames(formationReadiness.lowMoraleHeroes)}.` : "",
-      ]
-        .filter(Boolean)
-        .join(" "),
-    });
-  }
-
   const canChallenge =
     !selectedIsLocked &&
     (selectedIsCurrent || selectedIsRepeatable) &&
     heroCount > 0 &&
-    formationReadiness.busyHeroes.length === 0 &&
+    readinessReport.metrics.busyHeroCount === 0 &&
     !pendingEvent &&
     canSpendResource(state, "energy", GAME_CONFIG.towerEnergyCost);
   const actionLabel = selectedIsCurrent ? "Desafiar andar" : selectedIsRepeatable ? "Repetir andar" : "Andar bloqueado";
-  const statusMessage = useMemo(() => {
+  const statusMessage = (() => {
     if (pendingEvent) return `Resolva o evento pendente no andar ${pendingEvent.floor} antes de lutar.`;
     if (selectedIsLocked) return "Este andar ainda não foi liberado pela campanha.";
     if (!selectedIsCurrent && !selectedIsRepeatable) return "Este andar não pode ser repetido agora.";
     if (heroCount === 0) return "Monte uma formação antes de desafiar a torre.";
-    if (formationReadiness.busyHeroes.length > 0) return `${formatHeroNames(formationReadiness.busyHeroes)} está em expedição. Troque a formação antes de lutar.`;
+    if (busyHeroes.length > 0) return `${formatHeroNames(busyHeroes)} está em expedição. Troque a formação antes de lutar.`;
     if (energy < GAME_CONFIG.towerEnergyCost) return `Energia insuficiente (${energy}/${GAME_CONFIG.towerEnergyCost}).`;
-    if (weakTeam) return "A equipe pode lutar, mas está abaixo do nível recomendado.";
-    if (formationReadiness.injuredHeroes.length > 0 || formationReadiness.lowMoraleHeroes.length > 0) return "A equipe pode lutar, mas há desgaste relevante na formação.";
+    if (readinessReport.level !== "ready") return `${readinessReport.label}: ${readinessReport.summary}`;
     return selectedIsCurrent ? "Pronto para avançar a campanha." : "Pronto para repetir este andar e farmar recompensas.";
-  }, [
-    energy,
-    formationReadiness.injuredHeroes.length,
-    formationReadiness.busyHeroes.length,
-    formationReadiness.lowMoraleHeroes.length,
-    heroCount,
-    pendingEvent,
-    selectedIsCurrent,
-    selectedIsLocked,
-    selectedIsRepeatable,
-    weakTeam,
-  ]);
+  })();
 
   useEffect(() => {
     setSelectedFloor(highestAvailableFloor);
@@ -438,7 +327,7 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
     if (!canChallenge) {
       setFeedback(statusMessage);
       showToast({
-        title: energy < GAME_CONFIG.towerEnergyCost ? "Energia insuficiente" : formationReadiness.busyHeroes.length > 0 ? "Herói em expedição" : "Ação indisponível",
+        title: energy < GAME_CONFIG.towerEnergyCost ? "Energia insuficiente" : busyHeroes.length > 0 ? "Herói em expedição" : "Ação indisponível",
         message: statusMessage,
         tone: "warning",
       });
@@ -454,7 +343,7 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
 
     setFeedback(formatBattleMessage(result));
 
-    if (formationReadiness.injuredHeroes.length > 0 || formationReadiness.woundedHeroes.length > 0) {
+    if (injuredHeroes.length > 0 || woundedHeroes.length > 0) {
       showToast({
         title: "Herói ferido",
         message: "A formação entrou na Torre com ferimentos ou HP crítico.",
@@ -556,12 +445,12 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
       };
     }
 
-    if (formationReadiness.busyHeroes.length > 0) {
-      const busyHero = formationReadiness.busyHeroes[0];
+    if (busyHeroes.length > 0) {
+      const busyHero = busyHeroes[0];
       const expedition = busyHero ? getHeroExpedition(state, busyHero.id) : null;
       return {
         title: "Herói indisponível",
-        description: `${formatHeroNames(formationReadiness.busyHeroes)} está em expedição${expedition ? `: ${expedition.name}` : ""}. Troque a formação para lutar.`,
+        description: `${formatHeroNames(busyHeroes)} está em expedição${expedition ? `: ${expedition.name}` : ""}. Troque a formação para lutar.`,
         cta: "Trocar herói indisponível",
         tone: "danger" as const,
         onClick: () => {
@@ -759,10 +648,65 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
           <div className="tower-selected-tags">
             <span>{selectedIsCurrent ? "Avanço" : selectedIsRepeatable ? "Repetição" : selectedIsLocked ? "Bloqueado" : "Concluído"}</span>
             <span>Risco {riskProfile.label}</span>
+            <span>Preparo {readinessReport.score}/100</span>
             <span>Nível recomendado {recommendedLevel}</span>
             <span>{difficultySummary.name}</span>
             {milestoneInfo.type !== "normal" ? <span>{getTowerDifficultyJumpLabel(selectedFloor)}</span> : null}
           </div>
+
+          <section className={`tower-readiness-card tone-${readinessReport.level}`}>
+            <div className="tower-readiness-head">
+              <div>
+                <span>Diagnóstico do Lobby</span>
+                <h4>{readinessReport.label}</h4>
+                <p>{readinessReport.summary}</p>
+              </div>
+              <strong aria-label={`Score de preparo ${readinessReport.score} de 100`}>{readinessReport.score}</strong>
+            </div>
+
+            <div className="tower-readiness-metrics">
+              <span>
+                Formação <strong>{heroCount}/{readinessReport.metrics.maxFormationSize}</strong>
+              </span>
+              <span>
+                Poder <strong>{formationPower}/{readinessReport.metrics.recommendedPower}</strong>
+              </span>
+              <span>
+                Nível <strong>{averageFormationLevel || 0}/{recommendedLevel}</strong>
+              </span>
+              <span>
+                Energia <strong>{energy}/{readinessReport.metrics.energyCost}</strong>
+              </span>
+            </div>
+
+            <div className="tower-readiness-content">
+              <div>
+                <h5>Pontos de atenção</h5>
+                {readinessProblemChecks.length > 0 ? (
+                  <ul className="tower-readiness-checks">
+                    {readinessProblemChecks.map((check) => (
+                      <li className={`status-${check.status}`} key={check.key}>
+                        <strong>{check.label}</strong>
+                        <span>{check.description}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="tower-readiness-clear">Nenhum problema relevante detectado na formação.</p>
+                )}
+              </div>
+              <div>
+                <h5>Recomendações</h5>
+                <ul className="tower-readiness-recommendations">
+                  {readinessReport.recommendations.map((recommendation) => (
+                    <li key={recommendation}>{recommendation}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <small>Este diagnóstico é informativo e não cria um novo bloqueio para a tentativa.</small>
+          </section>
 
           {shouldShowPreparation && towerWarnings.length > 0 ? (
             <div className="tower-state-alerts">
