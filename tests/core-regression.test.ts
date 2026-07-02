@@ -19,6 +19,7 @@ import {
   equipItem,
   generateHero,
   generateEquipment,
+  getMaxLevelForRarity,
   getExpeditionDefinition,
   getAvailableHeroDefinitions,
   getHeroDefinitionById,
@@ -1816,8 +1817,10 @@ function preparePromotionCandidate(
     level?: number;
     potentialXp?: number;
     proficiencyXp?: number;
-    proficiencyKey?: "shieldwork" | "swordplay";
+    proficiencyKey?: "shieldwork" | "swordplay" | "archery";
     towerFloor?: number;
+    gold?: number;
+    fragments?: number;
   } = {},
 ): void {
   if (options.level !== undefined) hero.level = options.level;
@@ -1826,6 +1829,23 @@ function preparePromotionCandidate(
     progressHeroProficiency(state, hero.id, options.proficiencyKey ?? "shieldwork", options.proficiencyXp, 1_000);
   }
   if (options.towerFloor !== undefined) state.towerFloor = options.towerFloor;
+  if (options.gold !== undefined) state.resources.gold = options.gold;
+  if (options.fragments !== undefined) state.resources.fragments = options.fragments;
+}
+
+// Deixa um heroi 1★ totalmente elegivel para 2★, incluindo recursos do custo.
+function makeEligibleOneStar(state: GameState, id: string): Hero {
+  const hero = makeRosterHeroForTest(state, id, "orven_ash_eye");
+  preparePromotionCandidate(state, hero, {
+    level: 8,
+    potentialXp: 10,
+    proficiencyXp: 10,
+    proficiencyKey: "archery",
+    towerFloor: 3,
+    gold: 500,
+    fragments: 10,
+  });
+  return hero;
 }
 
 test("heroi 5 estrelas nao possui alvo de promocao", () => {
@@ -1999,20 +2019,168 @@ test("chamar preview nao altera estado do jogo", () => {
   assert.equal(JSON.stringify(state), snapshot);
 });
 
-test("placeholder promoteHero nao altera raridade nem estado", () => {
+test("promocao real 1 para 2 estrelas altera raridade e maxLevel preservando o resto", () => {
   const state = createInitialState();
-  const hero = makeRosterHeroForTest(state, "promo_placeholder", "orven_ash_eye");
-  preparePromotionCandidate(state, hero, { level: 10, potentialXp: 20, proficiencyXp: 30, towerFloor: 10 });
-  const rarityBefore = hero.rarity;
+  const hero = makeEligibleOneStar(state, "promo_real");
+  hero.level = 8;
+  hero.xp = 42;
+  const statsBefore = JSON.stringify(hero.stats);
+  const levelBefore = hero.level;
+  const xpBefore = hero.xp;
+  const hpBefore = hero.currentHp;
+  const equipmentBefore = JSON.stringify(hero.equipment);
+  const definitionBefore = hero.definitionId;
+  const classBefore = hero.classKey;
+  const traitBefore = hero.traitKey;
+  const proficiencyBefore = JSON.stringify(state.proficiencies.heroProgress[hero.id]);
+  const potentialBefore = JSON.stringify(state.potential.heroAnalysis[hero.id]);
+  state.formation[0] = hero.id;
   const goldBefore = state.resources.gold;
+  const fragmentsBefore = state.resources.fragments;
+
+  const preview = getHeroPromotionPreview(state, hero.id);
+  assert.equal(preview?.eligible, true);
+  assert.equal(preview?.promotionAvailable, true);
+
+  const result = promoteHero(state, hero.id);
+  assert.equal(result.ok, true);
+  assert.ok(result.message.includes("2★"));
+
+  assert.equal(hero.rarity, 2);
+  assert.equal(hero.maxLevel, getMaxLevelForRarity(2));
+  assert.equal(hero.level, levelBefore);
+  assert.equal(hero.xp, xpBefore);
+  assert.equal(JSON.stringify(hero.stats), statsBefore);
+  assert.equal(hero.currentHp, hpBefore);
+  assert.equal(JSON.stringify(hero.equipment), equipmentBefore);
+  assert.equal(hero.definitionId, definitionBefore);
+  assert.equal(hero.classKey, classBefore);
+  assert.equal(hero.traitKey, traitBefore);
+  assert.equal(JSON.stringify(state.proficiencies.heroProgress[hero.id]), proficiencyBefore);
+  assert.equal(JSON.stringify(state.potential.heroAnalysis[hero.id]), potentialBefore);
+  assert.equal(state.formation[0], hero.id);
+  assert.equal(state.resources.gold, goldBefore - 150);
+  assert.equal(state.resources.fragments, fragmentsBefore - 5);
+});
+
+test("falha de promocao por recurso insuficiente nao consome nada", () => {
+  const state = createInitialState();
+  const hero = makeEligibleOneStar(state, "promo_no_gold");
+  state.resources.fragments = 2;
   const snapshot = JSON.stringify(state);
 
   const result = promoteHero(state, hero.id);
   assert.equal(result.ok, false);
-  assert.ok(result.message.includes("não está disponível"));
-  assert.equal(hero.rarity, rarityBefore);
-  assert.equal(state.resources.gold, goldBefore);
+  assert.ok(result.message.toLowerCase().includes("insuficient") || result.message.includes("requisitos"));
+  assert.equal(hero.rarity, 1);
   assert.equal(JSON.stringify(state), snapshot);
+});
+
+test("falha de promocao por requisito faltante nao consome recursos", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_missing_req", "orven_ash_eye");
+  state.resources.gold = 500;
+  state.resources.fragments = 10;
+  const snapshot = JSON.stringify(state);
+
+  const result = promoteHero(state, hero.id);
+  assert.equal(result.ok, false);
+  assert.equal(hero.rarity, 1);
+  assert.equal(state.resources.gold, 500);
+  assert.equal(state.resources.fragments, 10);
+  assert.equal(JSON.stringify(state), snapshot);
+});
+
+test("heroi ferido nao promove", () => {
+  const state = createInitialState();
+  const hero = makeEligibleOneStar(state, "promo_hurt");
+  hero.injuries = [{ key: "bruise", remainingBattles: 2, severity: 1 }];
+
+  const result = promoteHero(state, hero.id);
+  assert.equal(result.ok, false);
+  assert.equal(hero.rarity, 1);
+});
+
+test("heroi com moral baixa nao promove", () => {
+  const state = createInitialState();
+  const hero = makeEligibleOneStar(state, "promo_sad");
+  hero.morale = 15;
+
+  const result = promoteHero(state, hero.id);
+  assert.equal(result.ok, false);
+  assert.equal(hero.rarity, 1);
+});
+
+test("heroi 2 estrelas nao promove para 3 nesta etapa", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_two_block", "elira_stone_vigil");
+  preparePromotionCandidate(state, hero, {
+    level: 20,
+    potentialXp: 20,
+    proficiencyXp: 30,
+    towerFloor: 10,
+    gold: 999,
+    fragments: 99,
+  });
+  const snapshot = JSON.stringify(state);
+
+  const result = promoteHero(state, hero.id);
+  assert.equal(result.ok, false);
+  assert.ok(result.message.includes("acima de 2★"));
+  assert.equal(hero.rarity, 2);
+  assert.equal(JSON.stringify(state), snapshot);
+});
+
+test("heroi 5 estrelas continua sem promocao", () => {
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "promo_five_block", "warrior");
+  hero.rarity = PROMOTION_MAX_RARITY;
+  const snapshot = JSON.stringify(state);
+
+  const result = promoteHero(state, hero.id);
+  assert.equal(result.ok, false);
+  assert.equal(hero.rarity, PROMOTION_MAX_RARITY);
+  assert.equal(JSON.stringify(state), snapshot);
+});
+
+test("preview reflete custo e disponibilidade da promocao 1 para 2", () => {
+  const state = createInitialState();
+  const hero = makeEligibleOneStar(state, "promo_preview_cost");
+
+  const preview = getHeroPromotionPreview(state, hero.id);
+  assert.ok(preview);
+  if (!preview) return;
+  assert.equal(preview.promotionAvailable, true);
+  assert.equal(preview.eligible, true);
+  assert.equal(preview.readiness, "ready");
+  assert.ok(preview.systemNotice.includes("1★ → 2★ disponível"));
+  const costReq = preview.requirements.find((req) => req.key === "cost");
+  assert.ok(costReq);
+  assert.equal(costReq?.status, "met");
+  assert.equal(preview.cost.length, 2);
+  assert.ok(preview.costLabel.includes("150 ouro"));
+  assert.ok(preview.costLabel.includes("5 fragmentos"));
+});
+
+test("preview marca custo como faltante quando nao ha recursos", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_preview_poor", "orven_ash_eye");
+  preparePromotionCandidate(state, hero, {
+    level: 8,
+    potentialXp: 10,
+    proficiencyXp: 10,
+    proficiencyKey: "archery",
+    towerFloor: 3,
+    gold: 10,
+    fragments: 0,
+  });
+
+  const preview = getHeroPromotionPreview(state, hero.id);
+  assert.ok(preview);
+  if (!preview) return;
+  const costReq = preview.requirements.find((req) => req.key === "cost");
+  assert.equal(costReq?.status, "missing");
+  assert.equal(preview.eligible, false);
 });
 
 test("promocao nao adiciona campo persistido nem altera schemaVersion", () => {

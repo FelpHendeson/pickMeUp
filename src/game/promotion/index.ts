@@ -1,8 +1,10 @@
 export {
   PROMOTION_MAX_RARITY,
   PROMOTION_TIER_REQUIREMENTS,
+  formatPromotionCost,
   getProficiencyRankIndex,
   getProficiencyRankLabel,
+  getPromotionResourceLabel,
   getPromotionTierRequirement,
 } from "./definitions";
 export type {
@@ -10,9 +12,12 @@ export type {
   PromotionRequirement,
   PromotionRequirementKey,
   PromotionRequirementStatus,
+  PromotionResourceCost,
+  PromotionResourceKey,
   PromotionTierRequirement,
 } from "./definitions";
 export {
+  PROMOTION_UNAVAILABLE_ABOVE_TARGET,
   getHeroPromotionPreview,
   getPromotionReadiness,
   getPromotionRecommendations,

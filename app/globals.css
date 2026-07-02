@@ -11167,9 +11167,17 @@ body.pref-reduce-motion *::after {
   color: var(--muted);
 }
 
+.hero-promotion-cost {
+  font-size: 0.82rem;
+  color: var(--gold);
+}
+
 .hero-promotion-action {
   justify-self: start;
   margin-top: 0.2rem;
+}
+
+.hero-promotion-action:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

@@ -403,6 +403,7 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
   const potentialReport = getHeroPotentialReport(state, hero.id);
   const promotionPreview = getHeroPromotionPreview(state, hero.id);
   const analyzeHeroAction = useGameStore((store) => store.analyzeHero);
+  const promoteHeroAction = useGameStore((store) => store.promoteHero);
   const canAffordAnalysis = (state.resources.gold ?? 0) >= POTENTIAL_CONFIG.manualAnalysisGoldCost;
   const analysisComplete = potentialReport
     ? potentialReport.analysisLevel >= 5 && potentialReport.analysisXp >= POTENTIAL_CONFIG.maxXp
@@ -705,9 +706,28 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
             </ul>
           ) : null}
 
-          <button type="button" className="hero-promotion-action" disabled title={promotionPreview.systemNotice}>
-            Promover (em breve)
-          </button>
+          {promotionPreview.promotionAvailable ? (
+            <>
+              <span className="hero-promotion-cost">Custo: {promotionPreview.costLabel}</span>
+              <button
+                type="button"
+                className="hero-promotion-action primary"
+                disabled={!promotionPreview.eligible}
+                onClick={() => setFeedback(promoteHeroAction(hero.id).message)}
+                title={
+                  promotionPreview.eligible
+                    ? `Promover ${hero.name} para ${promotionPreview.targetRarity}★`
+                    : "Cumpra todos os requisitos e o custo para promover."
+                }
+              >
+                {`Promover para ${promotionPreview.targetRarity}★`}
+              </button>
+            </>
+          ) : (
+            <button type="button" className="hero-promotion-action" disabled title={promotionPreview.systemNotice}>
+              Promover (em breve)
+            </button>
+          )}
         </div>
       ) : null}
 

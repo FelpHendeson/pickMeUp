@@ -11,7 +11,15 @@ export type PromotionRequirementKey =
   | "tower"
   | "material"
   | "morale"
-  | "injury";
+  | "injury"
+  | "cost";
+
+export type PromotionResourceKey = "gold" | "crystals" | "essence" | "fragments";
+
+export type PromotionResourceCost = {
+  resourceKey: PromotionResourceKey;
+  amount: number;
+};
 
 export type PromotionReadiness = "blocked" | "not-ready" | "almost" | "ready";
 
@@ -35,9 +43,29 @@ export type PromotionTierRequirement = {
   minMorale: number;
   requireNoInjury: boolean;
   futureMaterialLabel: string | null;
+  // Custo real de recursos. Vazio quando a promocao ainda nao e executavel.
+  cost: PromotionResourceCost[];
+  // Marca a unica faixa com promocao real liberada nesta versao (1★ -> 2★).
+  promotionAvailable: boolean;
 };
 
 export const PROMOTION_MAX_RARITY = 5;
+
+const RESOURCE_LABELS: Record<PromotionResourceKey, string> = {
+  gold: "ouro",
+  crystals: "cristais",
+  essence: "essência",
+  fragments: "fragmentos",
+};
+
+export function getPromotionResourceLabel(resourceKey: PromotionResourceKey): string {
+  return RESOURCE_LABELS[resourceKey] ?? resourceKey;
+}
+
+export function formatPromotionCost(cost: readonly PromotionResourceCost[]): string {
+  if (!cost || cost.length === 0) return "Sem custo de recursos.";
+  return cost.map((entry) => `${entry.amount} ${getPromotionResourceLabel(entry.resourceKey)}`).join(", ");
+}
 
 // Requisitos por estrela-alvo. Ajustaveis sem migration: o preview e derivado do estado.
 export const PROMOTION_TIER_REQUIREMENTS: readonly PromotionTierRequirement[] = [
@@ -52,6 +80,11 @@ export const PROMOTION_TIER_REQUIREMENTS: readonly PromotionTierRequirement[] = 
     minMorale: 40,
     requireNoInjury: true,
     futureMaterialLabel: null,
+    cost: [
+      { resourceKey: "gold", amount: 150 },
+      { resourceKey: "fragments", amount: 5 },
+    ],
+    promotionAvailable: true,
   },
   {
     targetRarity: 3,
@@ -64,6 +97,8 @@ export const PROMOTION_TIER_REQUIREMENTS: readonly PromotionTierRequirement[] = 
     minMorale: 45,
     requireNoInjury: true,
     futureMaterialLabel: null,
+    cost: [],
+    promotionAvailable: false,
   },
   {
     targetRarity: 4,
@@ -76,6 +111,8 @@ export const PROMOTION_TIER_REQUIREMENTS: readonly PromotionTierRequirement[] = 
     minMorale: 50,
     requireNoInjury: true,
     futureMaterialLabel: null,
+    cost: [],
+    promotionAvailable: false,
   },
   {
     targetRarity: 5,
@@ -88,6 +125,8 @@ export const PROMOTION_TIER_REQUIREMENTS: readonly PromotionTierRequirement[] = 
     minMorale: 55,
     requireNoInjury: true,
     futureMaterialLabel: "Material de Eco",
+    cost: [],
+    promotionAvailable: false,
   },
 ];
 

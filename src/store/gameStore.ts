@@ -47,6 +47,7 @@ import {
   progressProficienciesForTrainingResult,
   progressPotentialFromProficiencyOutcomes,
   analyzeHeroPotential,
+  promoteHero,
   type EquipmentSlot,
   type GameState,
   type PartialGameState,
@@ -104,6 +105,7 @@ type GameStore = {
   assignTrainingFocus: (heroId: string, focus: TrainingFocus) => ActionResult;
   progressTraining: () => void;
   analyzeHero: (heroId: string) => ActionResult;
+  promoteHero: (heroId: string) => ActionResult;
   saveTowerPresetFromFormation: (presetIndex: number) => ActionResult;
   applyTowerPresetToFormation: (presetIndex: number) => ActionResult;
   saveExpeditionPresetFromFormation: (presetIndex: number) => ActionResult;
@@ -327,6 +329,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   treatHeroInjuries: (heroId, resourceKey) => mutateState(get, set, (state) => treatHeroInjuries(state, heroId, resourceKey)),
   assignTrainingFocus: (heroId, focus) => mutateState(get, set, (state) => assignHeroTrainingFocus(state, heroId, focus)),
   analyzeHero: (heroId) => mutateState(get, set, (state) => analyzeHeroPotential(state, heroId)),
+  promoteHero: (heroId) => mutateState(get, set, (state) => promoteHero(state, heroId)),
   progressTraining: () => {
     const current = get().state;
     const result = progressTrainingForElapsedTime(current);

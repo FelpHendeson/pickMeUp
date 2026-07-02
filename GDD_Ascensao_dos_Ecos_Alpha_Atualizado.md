@@ -585,14 +585,15 @@ O jogador nao conhece tudo sobre o heroi na invocacao. Especialmente em baixa ra
 - A analise nao altera dano, stats, level, raridade, IA, recompensas, summon nem expedicoes, e nao ha promocao nesta etapa: o sistema apenas prepara o terreno para evolucoes futuras.
 - O painel de Herois mostra nivel/XP de analise, resumo, insights revelados, indicios bloqueados, recomendacoes e o botao de analise manual.
 
-### Fundacao da ascensao por estrelas (preview)
+### Ascensao por estrelas
 
-A promocao real ainda nao altera estado. Esta etapa apenas le o progresso atual e projeta a proxima estrela.
+A promocao real esta liberada apenas para 1★ → 2★ nesta versao, validando a mecanica com baixo risco antes de faixas maiores.
 
-- `getHeroPromotionPreview` avalia elegibilidade por faixa (1★→2★, 2★→3★, 3★→4★, 4★→5★) usando nivel, analise de potencial, proficiencias, tecnicas leves, moral, ferimentos e andar da Torre. Herois 5★ nao tem alvo.
-- O preview retorna readiness (`blocked`, `not-ready`, `almost`, `ready`), requisitos com status, beneficios projetados (texto), riscos e recomendacoes. Baixa raridade e tratada como investimento possivel, nao descarte.
-- Material de Eco aparece como requisito futuro na rota 4★→5★, sem consumo. `promoteHero` retorna bloqueado explicitamente.
-- Nao ha campo persistido nem migration: tudo e derivado do estado atual.
+- `getHeroPromotionPreview` avalia elegibilidade por faixa (1★→2★, 2★→3★, 3★→4★, 4★→5★) usando nivel, analise de potencial, proficiencias, tecnicas leves, moral, ferimentos, andar da Torre e custo de recursos. Herois 5★ nao tem alvo.
+- O preview retorna readiness (`blocked`, `not-ready`, `almost`, `ready`), requisitos com status, custo, beneficios projetados, riscos e recomendacoes. Baixa raridade e tratada como investimento possivel, nao descarte.
+- `promoteHero` executa somente 1★ → 2★: exige requisitos hard cumpridos e custo (150 ouro + 5 fragmentos), consome recursos apenas no sucesso e atualiza `hero.rarity` e `hero.maxLevel`. Level, XP, stats, HP, equipamentos, formacao, treino, proficiencias e potencial sao preservados; classe, trait e `definitionId` nao mudam.
+- Promocoes acima de 2★ continuam bloqueadas (mensagem explicita). Material de Eco aparece como requisito futuro na rota 4★→5★.
+- Nao ha campo persistido novo nem migration: a promocao altera apenas campos ja existentes do heroi e recursos existentes.
 
 ### Recrutamento / contratos de guilda
 
