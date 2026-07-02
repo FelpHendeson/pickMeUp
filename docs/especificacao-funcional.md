@@ -41,7 +41,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 - `app/components/tower/BattleResultPanel.tsx` renderiza replay, log de combate, barra de energia e painel de resultado para explicar o desenrolar da batalha.
 
 ### Sistemas auxiliares
-- `src/game/summon/` gerencia invocacao comum e superior, historico, custos e probabilidades. A raridade rolada prioriza definicoes disponiveis da mesma raridade ou da raridade mais proxima; nenhuma definicao ja obtida pode repetir e pool esgotado nao consome recursos.
+- `src/game/summon/` gerencia invocacao comum e superior, historico, custos e probabilidades. A raridade rolada prioriza definicoes disponiveis da mesma raridade ou da raridade mais proxima; nenhuma definicao ja obtida pode repetir e pool esgotado nao consome recursos. Nova jornada recebe cinco tickets comuns e uma especial com ate tres opcoes persistidas, priorizando raridade inicial 3 ou superior.
 - `src/game/expeditions/` administra expedicoes temporizadas, ate 3 herois por expedicao e recompensas escaladas pelo poder enviado.
 - `src/game/missions/` valida missoes diarias, conquistas permanentes e recompensas.
 - `src/game/narrative/` gerencia cenas curtas por gatilho e marca narrativas ja vistas.
@@ -73,7 +73,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 6. Avanca pelos capitulos, desbloqueia relíquias, progressao permanente e melhorias de conta.
 
 ## Regras de alto nível
-- O progresso e salvo localmente no navegador com `localStorage`, `saveVersion: 1` e `schemaVersion: 1`. Saves legados passam por migrations sequenciais antes da normalizacao final; campos ausentes recebem defaults e referencias invalidas sao removidas.
+- O progresso e salvo localmente no navegador com `localStorage`, `saveVersion: 1` e `schemaVersion: 2`. Saves legados passam por migrations sequenciais antes da normalizacao final; campos ausentes recebem defaults e referencias invalidas sao removidas.
 - A torre e o eixo principal do jogo, com capitulos marcados, chefes, modificadores por regiao e modos de dificuldade por tentativa.
 - Descobertas do jogador devem ser persistidas na Biblioteca e evoluir conforme uso real dos sistemas.
 - A Biblioteca deve apresentar essas descobertas como grimorio/arquivo arcano, separando inimigos, chefes, capitulos, eventos, reliquias e memoria da guilda sem alterar os dados salvos.

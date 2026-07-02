@@ -233,6 +233,12 @@ Criar memoria individual: historico de batalhas, chefes vencidos, titulos, relac
 - Invocacao comum: custa ouro.
 - Invocacao superior: custa cristais.
 
+### Invocacoes iniciais
+
+Uma nova jornada recebe cinco tickets de invocacao comum e um direito de invocacao especial. Tickets iniciais nao consomem ouro e nao alteram os custos do fluxo normal depois que acabam.
+
+A especial oferece ate tres herois ainda nao obtidos, priorizando definicoes de raridade inicial 3 ou superior. As opcoes ficam persistidas ate a escolha. Se uma opcao deixar de estar disponivel, o conjunto e regenerado antes da confirmacao. Escolher um heroi encerra definitivamente a especial e registra historico, biblioteca e progresso de missao como qualquer invocacao.
+
 ### Taxas atuais
 
 | Invocacao | 1 estrela | 2 estrelas | 3 estrelas | 4 estrelas | 5 estrelas |
@@ -572,7 +578,7 @@ A camada visual global deve manter a identidade coesa de RPG Dark Fantasy: fundo
 - `localStorage`.
 - Chave: `ascensao-dos-ecos-save-v1`.
 - `saveVersion: 1`.
-- `schemaVersion: 1` com migrations sequenciais antes da normalizacao final.
+- `schemaVersion: 2` com migrations sequenciais antes da normalizacao final.
 - Normalizacao ao carregar.
 - Exportar save JSON.
 - Importar save com validacao.
