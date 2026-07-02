@@ -12,7 +12,8 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 - `src/store/gameStore.ts` expõe ações persistentes para a UI React.
 
 ### Heróis, recrutamento e progressão
-- `src/game/heroes/` define classes, raridades, atributos, XP, níveis e geracao procedimental de herois.
+- `src/game/heroes/` define classes, raridades, atributos, XP, niveis, geracao procedural legacy e o roster de herois unicos/predefinidos.
+- Herois do roster possuem `definitionId` estavel; herois antigos sem esse campo continuam validos como procedurais/legacy. O roster expoe consultas de posse e disponibilidade sem alterar ainda o sorteio da invocacao atual.
 - `src/game/recruitment/` controla contratos de heroi, selecao entre tres candidatos, veteranos tematicos e recrutamento alternativo.
 - A tela de Recrutamento deve parecer um quadro de contratos da guilda, diferenciando-se da Invocacao por escolha estrategica entre candidatos com classe, raridade, poder, atributos, custo e traco/passiva.
 - `src/game/relics/` gerencia relíquias permanentes da conta, custos em Fragmentos de Eco e bonus globais.

@@ -213,6 +213,14 @@ A economia deve favorecer sessoes curtas e decisoes frequentes. Energia nao deve
 - Posicao na formacao.
 - Expedicao ativa.
 
+### Roster de herois unicos
+
+A direcao do Lobby Vivo introduz um roster inicial de herois originais com identidade estavel. Cada definicao possui `definitionId`, nome, raridade inicial, classe, traco, origem, historia, personalidade e tags de potencial, funcao e aptidao oculta.
+
+Herois criados pelo roster preservam o `definitionId` no save. Herois procedurais de saves anteriores continuam validos sem esse campo e sao tratados como legacy; nenhuma associacao automatica deve substituir ou apagar sua identidade atual.
+
+Nesta etapa, o roster prepara a futura invocacao sem duplicatas, mas a invocacao procedural atual permanece ativa ate que o fluxo de pool, esgotamento e compatibilidade esteja implementado e testado.
+
 ### Diretriz futura
 Criar memoria individual: historico de batalhas, chefes vencidos, titulos, relacoes e afinidade.
 
@@ -235,6 +243,7 @@ Criar memoria individual: historico de batalhas, chefes vencidos, titulos, relac
 ### Lacunas
 
 - Falta sistema de garantia/pity.
+- A invocacao ainda usa geracao procedural; a proxima etapa deve sortear apenas definicoes ainda nao obtidas do roster unico.
 - Recrutamento por contrato ja existe como alternativa controlada a invocacao.
 - Veteranias tematicas por capitulo podem ser expandidas com novos candidatos e origens.
 
