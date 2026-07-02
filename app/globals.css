@@ -6446,6 +6446,23 @@ body::before {
   border-color: rgba(86, 199, 189, 0.28);
 }
 
+.tower-floor-node.milestone-block-test {
+  border-color: rgba(232, 188, 88, 0.42);
+}
+
+.tower-floor-node.milestone-chapter-boss {
+  border-color: rgba(214, 90, 90, 0.58);
+  box-shadow: inset 0 0 0 1px rgba(214, 90, 90, 0.12);
+}
+
+.tower-challenge-detail.milestone-block-test {
+  border-top-color: rgba(232, 188, 88, 0.68);
+}
+
+.tower-challenge-detail.milestone-chapter-boss {
+  border-top-color: rgba(214, 90, 90, 0.74);
+}
+
 .tower-floor-node.current {
   border-color: rgba(232, 188, 88, 0.58);
   box-shadow: inset 0 0 0 1px rgba(232, 188, 88, 0.12);

@@ -15,10 +15,12 @@ import {
   getFormationPower,
   getHeroExpedition,
   getTowerChapterByFloor,
+  getTowerDifficultyJumpLabel,
   getTowerDifficultySummary,
   getTowerEventDefinition,
   getTowerEventPhaseLabel,
   getTowerEventResourceName,
+  getTowerMilestoneInfo,
   getWeeklyTowerRewardOptions,
   isBossFloor,
   isHeroOnExpedition,
@@ -30,6 +32,7 @@ import {
   type RunTowerBattleResult,
   type TowerDifficultyModeId,
   type TowerFloor,
+  type TowerMilestoneType,
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
 import { useConfirmDialog, useToast, UiAlertBox, UiModal, UiProgressBar } from "../ui";
@@ -145,6 +148,7 @@ function getRiskProfile(options: {
   heroCount: number;
   injuredCount: number;
   lowMoraleCount: number;
+  milestoneType: TowerMilestoneType;
   pendingEvent: boolean;
   recommendedLevel: number;
   selectedIsLocked: boolean;
@@ -174,6 +178,7 @@ function getRiskProfile(options: {
   let score = Math.max(0, levelGap);
 
   if (options.bossFloor) score += 1.4;
+  if (options.milestoneType === "block-test") score += 0.8;
   if (options.difficultyMode === "challenge") score += 1.1;
   if (options.difficultyMode === "hardcore") score += 2.2;
   score += Math.min(2, options.injuredCount * 0.7);
@@ -222,6 +227,7 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
   const selectedIsRepeatable = selectedFloor < state.towerFloor && canRepeatTowerFloor(state, selectedFloor);
   const selectedIsLocked = selectedFloor > state.towerFloor;
   const bossFloor = isBossFloor(selectedFloor);
+  const milestoneInfo = getTowerMilestoneInfo(selectedFloor);
   const heroCount = getFormationHeroCount(state);
   const formationPower = getFormationPower(state);
   const formationReadiness = getFormationReadiness(state);
@@ -250,12 +256,22 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
     heroCount,
     injuredCount: formationReadiness.injuredHeroes.length,
     lowMoraleCount: formationReadiness.lowMoraleHeroes.length,
+    milestoneType: milestoneInfo.type,
     pendingEvent: Boolean(pendingEvent),
     recommendedLevel,
     selectedIsLocked,
     woundedCount: formationReadiness.woundedHeroes.length,
   });
   const towerWarnings: Array<{ key: string; tone: "info" | "warning" | "danger" | "success"; title: string; description: string }> = [];
+
+  if (milestoneInfo.type !== "normal") {
+    towerWarnings.push({
+      key: "milestone",
+      tone: milestoneInfo.type === "chapter-boss" ? "danger" : "warning",
+      title: milestoneInfo.title,
+      description: `${milestoneInfo.warning} ${milestoneInfo.preparationHint}`,
+    });
+  }
 
   if (pendingEvent) {
     towerWarnings.push({
@@ -308,14 +324,6 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
     });
   }
 
-  if (bossFloor) {
-    towerWarnings.push({
-      key: "boss",
-      tone: "danger",
-      title: "Andar de chefe",
-      description: `${selectedChapter.finalBoss} guarda o fechamento desta região.`,
-    });
-  }
   const canChallenge =
     !selectedIsLocked &&
     (selectedIsCurrent || selectedIsRepeatable) &&
@@ -701,6 +709,7 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
           </div>
           <div className="tower-floor-grid">
             {TOWER_FLOORS.map((floor) => {
+              const floorMilestone = getTowerMilestoneInfo(floor.floor);
               const locked = floor.floor > state.towerFloor;
               const current = floor.floor === highestAvailableFloor && state.towerFloor <= maxTowerFloor;
               const completed = floor.floor < state.towerFloor;
@@ -711,7 +720,7 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
               return (
                 <button
                   aria-pressed={selected}
-                  className={`tower-floor-node ${status}${selected ? " selected" : ""}`}
+                  className={`tower-floor-node ${status}${selected ? " selected" : ""}${floorMilestone.type !== "normal" ? ` milestone-${floorMilestone.type}` : ""}`}
                   disabled={locked}
                   key={floor.floor}
                   onClick={() => setSelectedFloor(floor.floor)}
@@ -719,14 +728,14 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
                   type="button"
                 >
                   <strong>{floor.floor}</strong>
-                  <span>{isBossFloor(floor.floor) ? "Chefe" : floor.floor < 10 ? `0${floor.floor}` : floor.floor}</span>
+                  <span>{floorMilestone.type === "chapter-boss" ? "Chefe" : floorMilestone.type === "block-test" ? "Prova" : floor.floor < 10 ? `0${floor.floor}` : floor.floor}</span>
                 </button>
               );
             })}
           </div>
         </aside>
 
-        <article className={`tower-challenge-detail risk-${riskProfile.tone}${bossFloor ? " boss-floor" : ""}`}>
+        <article className={`tower-challenge-detail risk-${riskProfile.tone}${bossFloor ? " boss-floor" : ""}${milestoneInfo.type !== "normal" ? ` milestone-${milestoneInfo.type}` : ""}`}>
           <div className="tower-challenge-head">
             <div>
               <span>Dados do Desafio</span>
@@ -752,6 +761,7 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
             <span>Risco {riskProfile.label}</span>
             <span>Nível recomendado {recommendedLevel}</span>
             <span>{difficultySummary.name}</span>
+            {milestoneInfo.type !== "normal" ? <span>{getTowerDifficultyJumpLabel(selectedFloor)}</span> : null}
           </div>
 
           {shouldShowPreparation && towerWarnings.length > 0 ? (
