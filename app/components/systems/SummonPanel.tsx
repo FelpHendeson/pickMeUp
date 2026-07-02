@@ -3,10 +3,12 @@
 import {
   canSpendResource,
   getAdjustedSummonRarityTable,
+  getHeroDefinitionById,
   getHeroPower,
   getRarityStars,
   getSummonCost,
   type Hero,
+  type HeroDefinition,
   type SummonCost,
   type SummonHistoryEntry,
   type SummonType,
@@ -21,7 +23,7 @@ type SummonPanelProps = {
 type SummonResultPreview = {
   hero: Hero;
   type: SummonType;
-  cost: SummonCost;
+  cost?: SummonCost;
   message: string;
 };
 
@@ -217,11 +219,17 @@ function SummonHistoryCard({ entry }: { entry: SummonHistoryEntry }) {
 export function SummonPanel({ onViewHero }: SummonPanelProps) {
   const state = useGameStore((store) => store.state);
   const summonHeroAction = useGameStore((store) => store.summonHero);
+  const useStarterCommonSummonAction = useGameStore((store) => store.useStarterCommonSummon);
+  const prepareInitialSpecialSummon = useGameStore((store) => store.prepareInitialSpecialSummon);
+  const claimInitialSpecialSummon = useGameStore((store) => store.claimInitialSpecialSummon);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<SummonResultPreview | null>(null);
   const commonCost = getSummonCost(state, "common");
   const superiorCost = getSummonCost(state, "superior");
   const lastSummons = state.summonHistory.slice(0, 8);
+  const specialOptions = state.initialSummon.specialOptions
+    .map(getHeroDefinitionById)
+    .filter((definition): definition is HeroDefinition => Boolean(definition));
 
   function getCost(type: SummonType): SummonCost {
     return type === "superior" ? superiorCost : commonCost;
@@ -239,6 +247,27 @@ export function SummonPanel({ onViewHero }: SummonPanelProps) {
         cost,
         message: result.message,
       });
+    }
+  }
+
+  function handleStarterCommonSummon() {
+    const result = useStarterCommonSummonAction() as SummonActionResult;
+    setFeedback(result.message);
+    if (result.ok && result.hero) {
+      setLastResult({ hero: result.hero, type: "common", message: result.message });
+    }
+  }
+
+  function handlePrepareSpecialSummon() {
+    const result = prepareInitialSpecialSummon();
+    setFeedback(result.message);
+  }
+
+  function handleClaimSpecialSummon(definitionId: string) {
+    const result = claimInitialSpecialSummon(definitionId) as SummonActionResult;
+    setFeedback(result.message);
+    if (result.ok && result.hero) {
+      setLastResult({ hero: result.hero, type: "superior", message: result.message });
     }
   }
 
@@ -261,6 +290,58 @@ export function SummonPanel({ onViewHero }: SummonPanelProps) {
           </span>
         </div>
       </div>
+
+      <section className="starter-summon-panel" aria-label="Invocacoes iniciais">
+        <div className="starter-summon-copy">
+          <span>Chamado de fundacao</span>
+          <h3>Nucleo inicial do Lobby</h3>
+          <p>Cinco tickets comuns e uma escolha especial formam a primeira equipe sem consumir ouro ou cristais.</p>
+        </div>
+
+        <article className="starter-common-card">
+          <strong>{state.initialSummon.commonRemaining}</strong>
+          <span>tickets comuns restantes</span>
+          <button
+            className="hero-inline-action primary"
+            disabled={state.initialSummon.commonRemaining <= 0}
+            onClick={handleStarterCommonSummon}
+            type="button"
+          >
+            Usar ticket comum
+          </button>
+        </article>
+
+        <article className="starter-special-card">
+          <div>
+            <span>Escolha especial</span>
+            <strong>{state.initialSummon.specialClaimed ? "Pacto concluido" : "Um direito disponivel"}</strong>
+          </div>
+          {!state.initialSummon.specialClaimed && specialOptions.length === 0 ? (
+            <button className="hero-inline-action" onClick={handlePrepareSpecialSummon} type="button">
+              Revelar opcoes especiais
+            </button>
+          ) : null}
+          {!state.initialSummon.specialClaimed && specialOptions.length > 0 ? (
+            <div className="starter-special-options">
+              {specialOptions.map((definition) => (
+                <article key={definition.definitionId}>
+                  <span>{getRarityStars(definition.initialRarity)}</span>
+                  <strong>{definition.name}</strong>
+                  <small>{definition.origin} · {definition.classKey}</small>
+                  <p>{definition.personality}</p>
+                  <button
+                    className="hero-inline-action primary"
+                    onClick={() => handleClaimSpecialSummon(definition.definitionId)}
+                    type="button"
+                  >
+                    Escolher este heroi
+                  </button>
+                </article>
+              ))}
+            </div>
+          ) : null}
+        </article>
+      </section>
 
       <div className="summon-grid-react">
         {summonTypes.map((type) => {

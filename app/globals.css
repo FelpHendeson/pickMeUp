@@ -4403,6 +4403,99 @@ article,
   font-size: 1.45rem;
 }
 
+.starter-summon-panel {
+  border: 1px solid rgba(86, 199, 189, 0.32);
+  background: linear-gradient(135deg, rgba(86, 199, 189, 0.1), rgba(155, 127, 232, 0.08));
+  border-radius: var(--radius-lg);
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.35fr);
+  margin-top: 1rem;
+  padding: 1rem;
+}
+
+.starter-summon-copy span,
+.starter-special-card > div > span {
+  color: var(--teal);
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.starter-summon-copy h3,
+.starter-summon-copy p,
+.starter-special-options p {
+  margin: 0;
+}
+
+.starter-summon-copy h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  margin-top: 0.25rem;
+}
+
+.starter-summon-copy p,
+.starter-special-options p {
+  color: var(--muted-strong);
+  margin-top: 0.35rem;
+}
+
+.starter-common-card,
+.starter-special-card,
+.starter-special-options > article {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+}
+
+.starter-common-card {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.starter-common-card > strong {
+  color: var(--gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.8rem;
+}
+
+.starter-common-card > span,
+.starter-special-options small {
+  color: var(--muted);
+}
+
+.starter-special-card {
+  display: grid;
+  gap: 0.7rem;
+  grid-column: 1 / -1;
+}
+
+.starter-special-card > div > strong {
+  display: block;
+  margin-top: 0.2rem;
+}
+
+.starter-special-options {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.starter-special-options > article {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.starter-special-options > article > span {
+  color: var(--gold);
+}
+
+.starter-special-options small {
+  display: block;
+}
+
 .summon-grid-react {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5036,7 +5129,9 @@ code {
   .formation-slot-row.back,
   .formation-available-grid,
   .memorial-grid,
-  .summon-grid-react {
+  .summon-grid-react,
+  .starter-summon-panel,
+  .starter-special-options {
     grid-template-columns: 1fr;
   }
 
