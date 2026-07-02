@@ -9,6 +9,7 @@ import { CURRENT_SAVE_SCHEMA_VERSION } from "../save/migrations";
 import { createInitialSummonState } from "../summon/initialSummonState";
 import { createTrainingState } from "../training";
 import { createProficiencyState } from "../proficiencies";
+import { createPotentialState } from "../potential";
 
 export function createInitialState(now = Date.now()): GameState {
   return {
@@ -63,6 +64,7 @@ export function createInitialState(now = Date.now()): GameState {
     },
     training: createTrainingState(now),
     proficiencies: createProficiencyState(),
+    potential: createPotentialState(),
     missionStats: {},
     dailyMissions: createDailyMissionState(),
     achievements: normalizeAchievements({}),

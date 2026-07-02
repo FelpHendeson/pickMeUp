@@ -574,6 +574,17 @@ O treino tecnico passa a revelar e fortalecer proficiencias, dando identidade te
 - Existe `getProficiencyReadinessBonus` como bonus pequeno e limitado por heroi, criado e testado isoladamente, mas ainda nao somado ao readiness da Torre para preservar o balanceamento.
 - O painel de Herois exibe proficiencias descobertas (rank e XP), tecnicas leves desbloqueadas, indicios de proficiencias recomendadas ainda nao praticadas e um sinal de potencial oculto derivado do roster, sem revelar diretamente os `hiddenAptitudeTags`. A rotina idle cita a tecnica ou a proficiencia quando o dado existe.
 
+### Descoberta e analise de potencial
+
+O jogador nao conhece tudo sobre o heroi na invocacao. Especialmente em baixa raridade, ha algo a investigar, treinar e revelar aos poucos.
+
+- Cada heroi acumula XP e nivel de analise (0 a 5): desconhecido, sinais iniciais, leitura de background, padrao de treino, indicios de aptidao oculta e potencial bem mapeado.
+- A analise cresce devagar a partir do treino/proficiencia (+1 XP por progresso de proficiencia, +2 por rank-up ou descoberta) e de uma acao manual leve "Analisar heroi" com custo em ouro. Nao ha tick proprio: a analise acompanha os desdobramentos ja calculados.
+- O relatorio gera insights (background, treino, proficiencia, comportamento, aptidao oculta, risco e recomendacao) revelados gradualmente por nivel, conectando background, classe, raridade, treino, proficiencias, tecnicas, rotina e possiveis aptidoes ocultas.
+- Os `hiddenAptitudeTags` nunca aparecem crus: no maximo geram um sinal de "aptidao ainda nao compreendida". Herois 1-2 estrelas recebem a leitura de "potencial a descobrir, nao descartavel"; herois raros recebem leitura mais confiante, mas ainda com indicios bloqueados.
+- A analise nao altera dano, stats, level, raridade, IA, recompensas, summon nem expedicoes, e nao ha promocao nesta etapa: o sistema apenas prepara o terreno para evolucoes futuras.
+- O painel de Herois mostra nivel/XP de analise, resumo, insights revelados, indicios bloqueados, recomendacoes e o botao de analise manual.
+
 ### Recrutamento / contratos de guilda
 
 Recrutamento deve se diferenciar da invocacao. A tela representa um quadro de contratos da guilda: o jogador usa contrato para revelar candidatos, compara classe, raridade, poder, atributos principais, custo ja pago e traco/passiva, escolhe apenas um aventureiro e recebe confirmacao com atalhos para Heróis ou Formacao. Sem contrato, o estado deve comunicar custo insuficiente sem parecer erro.
@@ -617,7 +628,7 @@ A camada visual global deve manter a identidade coesa de RPG Dark Fantasy: fundo
 - `localStorage`.
 - Chave: `ascensao-dos-ecos-save-v1`.
 - `saveVersion: 1`.
-- `schemaVersion: 4` com migrations sequenciais antes da normalizacao final. O schema 3 adiciona a estrutura persistida de treino funcional (`training`) e o schema 4 adiciona a estrutura persistida de proficiencias (`proficiencies`).
+- `schemaVersion: 5` com migrations sequenciais antes da normalizacao final. O schema 3 adiciona a estrutura persistida de treino funcional (`training`), o schema 4 adiciona proficiencias (`proficiencies`) e o schema 5 adiciona a analise de potencial (`potential`).
 - Normalizacao ao carregar.
 - Exportar save JSON.
 - Importar save com validacao.

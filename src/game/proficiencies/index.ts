@@ -36,6 +36,7 @@ export type {
   HeroLightTechnique,
   HeroProficiencyProgress,
   HeroProficiencySummary,
+  HeroProficiencyTrainingOutcome,
   HeroProficiencyView,
   ProficiencyState,
 } from "./proficiencyRules";

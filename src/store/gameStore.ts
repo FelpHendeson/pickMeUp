@@ -45,6 +45,8 @@ import {
   assignHeroTrainingFocus,
   progressTrainingForElapsedTime,
   progressProficienciesForTrainingResult,
+  progressPotentialFromProficiencyOutcomes,
+  analyzeHeroPotential,
   type EquipmentSlot,
   type GameState,
   type PartialGameState,
@@ -101,6 +103,7 @@ type GameStore = {
   treatHeroInjuries: (heroId: string, resourceKey: InjuryTreatmentResource) => ActionResult;
   assignTrainingFocus: (heroId: string, focus: TrainingFocus) => ActionResult;
   progressTraining: () => void;
+  analyzeHero: (heroId: string) => ActionResult;
   saveTowerPresetFromFormation: (presetIndex: number) => ActionResult;
   applyTowerPresetToFormation: (presetIndex: number) => ActionResult;
   saveExpeditionPresetFromFormation: (presetIndex: number) => ActionResult;
@@ -211,7 +214,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const current = get().state;
     regenerateEnergy(current);
     const trainingResult = progressTrainingForElapsedTime(current);
-    progressProficienciesForTrainingResult(current, trainingResult, trainingResult.generatedAt);
+    const proficiencyOutcomes = progressProficienciesForTrainingResult(current, trainingResult, trainingResult.generatedAt);
+    progressPotentialFromProficiencyOutcomes(current, proficiencyOutcomes, trainingResult.generatedAt);
     const nextState = commitState(current);
     set({ state: nextState, source: get().source === "initial" ? "initial" : "manual" });
   },
@@ -322,11 +326,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     mutateState(get, set, (state) => chooseHeroSpecialization(state, heroId, specializationKey)),
   treatHeroInjuries: (heroId, resourceKey) => mutateState(get, set, (state) => treatHeroInjuries(state, heroId, resourceKey)),
   assignTrainingFocus: (heroId, focus) => mutateState(get, set, (state) => assignHeroTrainingFocus(state, heroId, focus)),
+  analyzeHero: (heroId) => mutateState(get, set, (state) => analyzeHeroPotential(state, heroId)),
   progressTraining: () => {
     const current = get().state;
     const result = progressTrainingForElapsedTime(current);
     if (result.appliedBlocks <= 0) return;
-    progressProficienciesForTrainingResult(current, result, result.generatedAt);
+    const proficiencyOutcomes = progressProficienciesForTrainingResult(current, result, result.generatedAt);
+    progressPotentialFromProficiencyOutcomes(current, proficiencyOutcomes, result.generatedAt);
     const nextState = commitState(current);
     set({ state: nextState, source: "manual" });
   },

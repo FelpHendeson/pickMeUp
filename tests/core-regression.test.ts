@@ -51,6 +51,14 @@ import {
   progressHeroProficiency,
   progressProficienciesForTrainingResult,
   PROFICIENCY_CONFIG,
+  analyzeHeroPotential,
+  getHeroPotentialProgress,
+  getHeroPotentialReport,
+  getPotentialInsightsForHero,
+  getPotentialLevelForXp,
+  progressHeroPotentialAnalysis,
+  progressPotentialFromProficiencyOutcomes,
+  POTENTIAL_CONFIG,
   LOBBY_ROUTINE_BLOCK_MS,
   generateInitialSpecialSummonOptions,
   HERO_ROSTER,
@@ -283,7 +291,7 @@ test("migration v0 normaliza save legado parcial e adiciona defaults atuais", ()
     towerFloor: 8,
   });
 
-  assert.equal(migrated.schemaVersion, 4);
+  assert.equal(migrated.schemaVersion, 5);
   assert.equal(migrated.saveVersion, 1);
 
   const imported = validateImportedSaveData(migrated);
@@ -349,21 +357,21 @@ test("migration preserva sistemas existentes e permite round-trip de importacao"
   const roundTrip = importGameStateFromText(serializeGameStateForExport(imported.state), 2_000);
   assert.equal(roundTrip.ok, true);
   if (!roundTrip.ok) return;
-  assert.equal(roundTrip.state.schemaVersion, 4);
+  assert.equal(roundTrip.state.schemaVersion, 5);
   assert.equal(roundTrip.state.saveVersion, 1);
   assert.equal(roundTrip.state.lastBattle?.id, "legacy_battle");
   assert.equal(roundTrip.state.affinities.legacya_legacyb.xp, 9);
 });
 
 test("migration rejeita schemas e versoes futuras", () => {
-  assert.equal(validateImportedSaveData({ schemaVersion: 5, saveVersion: 1 }).ok, false);
-  assert.equal(validateImportedSaveData({ schemaVersion: 4, saveVersion: 2 }).ok, false);
+  assert.equal(validateImportedSaveData({ schemaVersion: 6, saveVersion: 1 }).ok, false);
+  assert.equal(validateImportedSaveData({ schemaVersion: 5, saveVersion: 2 }).ok, false);
 });
 
 test("nova jornada recebe cinco tickets comuns e uma especial", () => {
   const state = createInitialState();
 
-  assert.equal(state.schemaVersion, 4);
+  assert.equal(state.schemaVersion, 5);
   assert.deepEqual(state.initialSummon, {
     commonRemaining: 5,
     specialAvailable: true,
@@ -808,7 +816,7 @@ test("rotina idle e deterministica, varia por bloco e nao modifica o save", () =
   assert.equal(hero.equipment, equipmentReference);
   assert.equal(hero.injuries, injuriesReference);
   assert.equal(state.schemaVersion, CURRENT_SAVE_SCHEMA_VERSION);
-  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 4);
+  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 5);
 });
 
 test("relatorio idle agrupa areas e entrega contrato pronto para a UI", () => {
@@ -1104,7 +1112,7 @@ test("migration v2 adiciona campo de treino persistido e chega ao schema atual",
   });
 
   assert.equal(migrated.schemaVersion, CURRENT_SAVE_SCHEMA_VERSION);
-  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 4);
+  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 5);
   assert.ok(migrated.training);
   assert.deepEqual((migrated.training as { heroProgress: unknown }).heroProgress, {});
 
@@ -1330,7 +1338,7 @@ test("migration v3 adiciona proficiencias persistidas e chega ao schema atual", 
   });
 
   assert.equal(migrated.schemaVersion, CURRENT_SAVE_SCHEMA_VERSION);
-  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 4);
+  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 5);
   assert.ok(migrated.proficiencies);
   assert.deepEqual((migrated.proficiencies as { heroProgress: unknown }).heroProgress, {});
 });
@@ -1528,4 +1536,269 @@ test("bonus de proficiencia para readiness e pequeno, limitado e isolado", () =>
   progressHeroProficiency(prepared.state, prepared.heroes[0].id, "shieldwork", 120, 1_000);
   const afterProficiency = getTowerReadinessReport(prepared.state, 20);
   assert.equal(afterProficiency.score, baseline.score);
+});
+
+function makeRosterHeroForTest(state: GameState, id: string, definitionId: string): Hero {
+  const definition = HERO_ROSTER.find((entry) => entry.definitionId === definitionId)!;
+  const hero = createHeroFromDefinition(definition, { id, random: () => 0.5 });
+  hero.morale = 80;
+  hero.injuries = [];
+  hero.currentHp = hero.stats.hp;
+  state.heroes.push(hero);
+  return hero;
+}
+
+test("save antigo recebe estrutura de potencial com defaults corretos", () => {
+  const imported = importGameStateFromText(JSON.stringify({
+    saveVersion: 1,
+    resources: { gold: 500 },
+    heroes: [{ id: "legacy_pot", name: "Veterano", rarity: 2, classKey: "warrior", traitKey: "brave" }],
+    formation: ["legacy_pot"],
+    towerFloor: 3,
+  }));
+
+  assert.equal(imported.ok, true);
+  if (!imported.ok) return;
+  assert.ok(imported.state.potential);
+  assert.deepEqual(imported.state.potential.heroAnalysis, {});
+});
+
+test("migration v4 adiciona potencial persistido e chega ao schema atual", () => {
+  const migrated = migrateSaveData({
+    schemaVersion: 4,
+    saveVersion: 1,
+    resources: { gold: 100 },
+    heroes: [],
+    formation: [],
+    towerFloor: 1,
+  });
+
+  assert.equal(migrated.schemaVersion, CURRENT_SAVE_SCHEMA_VERSION);
+  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 5);
+  assert.ok(migrated.potential);
+  assert.deepEqual((migrated.potential as { heroAnalysis: unknown }).heroAnalysis, {});
+});
+
+test("normalizacao remove analise de potencial de herois inexistentes", () => {
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "pot_valid", "warrior");
+  progressHeroPotentialAnalysis(state, hero.id, 10, "manual", 1_000);
+
+  const normalized = ensureStateShape({
+    ...state,
+    potential: {
+      heroAnalysis: {
+        [hero.id]: state.potential.heroAnalysis[hero.id],
+        ghost_hero: { heroId: "ghost_hero", xp: 20, level: 3, revealedInsightKeys: ["background"], updatedAt: 0 },
+      },
+    },
+  });
+
+  assert.ok(normalized.potential.heroAnalysis[hero.id]);
+  assert.equal(normalized.potential.heroAnalysis.ghost_hero, undefined);
+  assert.equal(normalized.potential.heroAnalysis[hero.id]?.xp, 10);
+});
+
+test("relatorio de potencial funciona para heroi sem analise", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "pot_report_empty", "darian_cinder_oath");
+
+  const report = getHeroPotentialReport(state, hero.id);
+  assert.ok(report);
+  if (!report) return;
+  assert.equal(report.analysisLevel, 0);
+  assert.equal(report.analysisXp, 0);
+  assert.ok(report.summary.length > 0);
+  assert.equal(report.revealedInsights.length, 0);
+  assert.ok(report.lockedInsights.length > 0);
+  assert.ok(report.recommendations.length > 0);
+});
+
+test("XP de analise aumenta o nivel de forma progressiva", () => {
+  assert.equal(getPotentialLevelForXp(0), 0);
+  assert.equal(getPotentialLevelForXp(3), 1);
+  assert.equal(getPotentialLevelForXp(8), 2);
+  assert.equal(getPotentialLevelForXp(16), 3);
+  assert.equal(getPotentialLevelForXp(28), 4);
+  assert.equal(getPotentialLevelForXp(44), 5);
+
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "pot_level", "warrior");
+  progressHeroPotentialAnalysis(state, hero.id, 3, "manual", 1_000);
+  assert.equal(getHeroPotentialProgress(state, hero.id).level, 1);
+  progressHeroPotentialAnalysis(state, hero.id, 5, "manual", 2_000);
+  assert.equal(getHeroPotentialProgress(state, hero.id).level, 2);
+});
+
+test("treino e proficiencia alimentam a analise de forma leve", () => {
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "pot_feed", "warrior");
+  assert.equal(assignHeroTrainingFocus(state, hero.id, "frontline", 0).ok, true);
+
+  const outcomes = progressProficienciesForTrainingResult(state, { trainedHeroIds: [hero.id], xpPerHero: 6 }, 1_000);
+  progressPotentialFromProficiencyOutcomes(state, outcomes, 1_000);
+
+  const progress = getHeroPotentialProgress(state, hero.id);
+  // Uma leva de treino descobre principal (shieldwork) e secundaria (discipline):
+  // +1 por progresso e +2 por rank-up de cada descoberta (unknown -> novice).
+  assert.equal(progress.xp, POTENTIAL_CONFIG.xpPerProficiencyProgress + 2 * POTENTIAL_CONFIG.xpPerProficiencyRankUp);
+  // Continua leve: uma leva nao ultrapassa o nivel 2.
+  assert.ok(progress.xp > 0 && progress.level <= 2);
+});
+
+test("mudanca de rank de proficiencia gera XP extra de analise", () => {
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "pot_rankup", "warrior");
+
+  progressPotentialFromProficiencyOutcomes(state, [{ heroId: hero.id, progressed: true, rankUps: 0 }], 1_000);
+  assert.equal(getHeroPotentialProgress(state, hero.id).xp, 1);
+
+  progressPotentialFromProficiencyOutcomes(state, [{ heroId: hero.id, progressed: true, rankUps: 1 }], 2_000);
+  // +1 (progresso) +2 (rank-up) sobre o 1 anterior.
+  assert.equal(getHeroPotentialProgress(state, hero.id).xp, 1 + 1 + POTENTIAL_CONFIG.xpPerProficiencyRankUp);
+});
+
+test("insights respeitam o nivel de analise", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "pot_insight_level", "darian_cinder_oath");
+
+  const atZero = getPotentialInsightsForHero(state, hero.id);
+  const backgroundAtZero = atZero.find((insight) => insight.key === "background");
+  assert.ok(backgroundAtZero);
+  assert.equal(backgroundAtZero?.revealed, false);
+
+  progressHeroPotentialAnalysis(state, hero.id, 8, "manual", 1_000);
+  const atLevelTwo = getPotentialInsightsForHero(state, hero.id);
+  const backgroundAtTwo = atLevelTwo.find((insight) => insight.key === "background");
+  assert.equal(backgroundAtTwo?.revealed, true);
+  const hiddenAtTwo = atLevelTwo.find((insight) => insight.key === "hiddenAptitude");
+  assert.equal(hiddenAtTwo?.revealed, false);
+});
+
+test("hiddenAptitudeTags nao sao expostos diretamente na analise", () => {
+  const state = createInitialState();
+  const definition = HERO_ROSTER.find((entry) => entry.definitionId === "selka_broken_rune")!;
+  const hero = makeRosterHeroForTest(state, "pot_hidden", "selka_broken_rune");
+  progressHeroPotentialAnalysis(state, hero.id, POTENTIAL_CONFIG.maxXp, "manual", 1_000);
+
+  const report = getHeroPotentialReport(state, hero.id);
+  assert.ok(report);
+  if (!report) return;
+  const joined = [report.summary, ...report.insights.map((insight) => insight.description), ...report.recommendations].join(" ");
+  definition.hiddenAptitudeTags.forEach((tag) => {
+    assert.equal(joined.includes(tag), false);
+  });
+  assert.equal(report.hiddenPotentialSignal, true);
+});
+
+test("heroi de baixa raridade recebe leitura de potencial a descobrir", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "pot_low", "orven_ash_eye");
+
+  const report = getHeroPotentialReport(state, hero.id);
+  assert.ok(report);
+  if (!report) return;
+  assert.equal(report.isLowRarity, true);
+  const text = [report.summary, ...report.recommendations].join(" ").toLowerCase();
+  assert.ok(text.includes("inesperado") || text.includes("comum"));
+});
+
+test("heroi raro recebe leitura mais confiante, mas nao total", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "pot_rare", "darian_cinder_oath");
+
+  const report = getHeroPotentialReport(state, hero.id);
+  assert.ok(report);
+  if (!report) return;
+  assert.equal(report.isLowRarity, false);
+  assert.ok(report.rarity >= 3);
+  // Mesmo raro, ainda ha insights bloqueados no inicio.
+  assert.ok(report.lockedInsights.length > 0);
+});
+
+test("moral baixa gera insight de risco na analise", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "pot_risk", "darian_cinder_oath");
+  hero.morale = 20;
+  progressHeroPotentialAnalysis(state, hero.id, 5, "manual", 1_000);
+
+  const report = getHeroPotentialReport(state, hero.id);
+  assert.ok(report);
+  if (!report) return;
+  const risk = report.insights.find((insight) => insight.type === "risk");
+  assert.ok(risk);
+  assert.equal(risk?.revealed, true);
+});
+
+test("relatorio de potencial entrega dados consumiveis pela UI", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "pot_ui", "darian_cinder_oath");
+  progressHeroPotentialAnalysis(state, hero.id, 16, "manual", 1_000);
+
+  const report = getHeroPotentialReport(state, hero.id);
+  assert.ok(report);
+  if (!report) return;
+  assert.equal(typeof report.analysisLevelLabel, "string");
+  assert.equal(report.revealedInsights.length + report.lockedInsights.length, report.insights.length);
+  assert.ok(report.recommendations.every((entry) => typeof entry === "string" && entry.length > 0));
+  report.insights.forEach((insight) => {
+    assert.ok(typeof insight.label === "string");
+    assert.ok(["low", "medium", "high"].includes(insight.confidence));
+  });
+});
+
+test("import/export preserva analise de potencial", () => {
+  const now = 1_780_000_000_000;
+  const state = createInitialState(now);
+  const hero = makeTrainableHero(state, "pot_roundtrip", "warrior");
+  progressHeroPotentialAnalysis(state, hero.id, 16, "manual", now);
+
+  const exported = serializeGameStateForExport(state);
+  const imported = importGameStateFromText(exported, now + 1_000);
+  assert.equal(imported.ok, true);
+  if (!imported.ok) return;
+  const restored = getHeroPotentialProgress(imported.state, hero.id);
+  assert.equal(restored.xp, 16);
+  assert.equal(restored.level, 3);
+  assert.ok(restored.revealedInsightKeys.includes("background"));
+});
+
+test("acao manual de analise consome ouro e progride, respeitando saldo", () => {
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "pot_manual", "warrior");
+  state.resources.gold = POTENTIAL_CONFIG.manualAnalysisGoldCost;
+
+  const first = analyzeHeroPotential(state, hero.id, 1_000);
+  assert.equal(first.ok, true);
+  assert.equal(state.resources.gold, 0);
+  assert.equal(getHeroPotentialProgress(state, hero.id).xp, POTENTIAL_CONFIG.manualAnalysisXp);
+
+  const second = analyzeHeroPotential(state, hero.id, 2_000);
+  assert.equal(second.ok, false);
+});
+
+test("analise de potencial nao altera stats, level, raridade, combate, summon ou expedicao", () => {
+  const now = 1_780_000_000_000;
+  const state = createInitialState(now);
+  completeInitialSummonForTest(state);
+  const hero = makeTrainableHero(state, "pot_isolation", "warrior");
+  const statsBefore = JSON.stringify(hero.stats);
+  const levelBefore = hero.level;
+  const xpBefore = hero.xp;
+  const rarityBefore = hero.rarity;
+  const floorBefore = state.towerFloor;
+  const heroesBefore = state.heroes.length;
+  const historyBefore = state.summonHistory.length;
+  const expeditionsBefore = state.activeExpeditions.length;
+
+  progressHeroPotentialAnalysis(state, hero.id, POTENTIAL_CONFIG.maxXp, "manual", now);
+
+  assert.equal(JSON.stringify(hero.stats), statsBefore);
+  assert.equal(hero.level, levelBefore);
+  assert.equal(hero.xp, xpBefore);
+  assert.equal(hero.rarity, rarityBefore);
+  assert.equal(state.towerFloor, floorBefore);
+  assert.equal(state.heroes.length, heroesBefore);
+  assert.equal(state.summonHistory.length, historyBefore);
+  assert.equal(state.activeExpeditions.length, expeditionsBefore);
 });

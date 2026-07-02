@@ -11030,3 +11030,64 @@ body.pref-reduce-motion *::after {
   color: var(--muted);
   font-style: italic;
 }
+
+.hero-potential-block {
+  gap: 0.4rem;
+}
+
+.hero-potential-insights {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.hero-potential-insight {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.35rem 0.5rem;
+  border-left: 2px solid rgba(96, 205, 196, 0.4);
+  background: rgba(96, 205, 196, 0.06);
+  border-radius: 6px;
+}
+
+.hero-potential-insight span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.hero-potential-insight.insight-hiddenAptitude {
+  border-left-color: rgba(155, 127, 232, 0.5);
+  background: rgba(155, 127, 232, 0.08);
+}
+
+.hero-potential-insight.insight-risk {
+  border-left-color: rgba(232, 120, 120, 0.5);
+  background: rgba(232, 120, 120, 0.08);
+}
+
+.hero-potential-locked {
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.hero-potential-recommendations {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.hero-potential-analyze {
+  justify-self: start;
+  margin-top: 0.2rem;
+}
+
+.hero-potential-analyze:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

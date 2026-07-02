@@ -18,6 +18,7 @@ import { normalizeNarrativeState } from "../narrative";
 import { normalizeBattleResult } from "../battle";
 import { normalizeTrainingState } from "../training";
 import { normalizeProficiencyState } from "../proficiencies";
+import { normalizePotentialState } from "../potential";
 import { createInitialState } from "./createInitialState";
 import { normalizeTeamPresets } from "./teamPresets";
 import { CURRENT_SAVE_SCHEMA_VERSION } from "../save/migrations";
@@ -112,6 +113,7 @@ export function ensureStateShape(input?: PartialGameState | null, now = Date.now
   normalizeNarrativeState(merged);
   normalizeTrainingState(merged, now);
   normalizeProficiencyState(merged);
+  normalizePotentialState(merged);
 
   return merged;
 }

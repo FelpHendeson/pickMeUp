@@ -193,15 +193,23 @@ export function progressHeroProficiency(
   return { ...updated };
 }
 
+export type HeroProficiencyTrainingOutcome = {
+  heroId: string;
+  primary: HeroProficiencyProgress | null;
+  secondary: HeroProficiencyProgress | null;
+  progressed: boolean;
+  rankUps: number;
+};
+
 export function progressHeroProficienciesFromTraining(
   state: GameState,
   heroId: string,
   trainingFocus: TrainingFocus,
   amount: number,
   now = Date.now(),
-): { primary: HeroProficiencyProgress | null; secondary: HeroProficiencyProgress | null } {
+): HeroProficiencyTrainingOutcome {
   const hero = findHero(state, heroId);
-  if (!hero) return { primary: null, secondary: null };
+  if (!hero) return { heroId, primary: null, secondary: null, progressed: false, rankUps: 0 };
   const normalizedAmount = Math.max(0, Math.floor(Number(amount) || 0));
   const plan = resolveFocusProficiencyPlan(trainingFocus, hero.classKey);
 
@@ -209,22 +217,34 @@ export function progressHeroProficienciesFromTraining(
   const primaryXp = Math.ceil(normalizedAmount / PROFICIENCY_CONFIG.primaryDivisor);
   const secondaryXp = Math.floor(normalizedAmount / PROFICIENCY_CONFIG.secondaryDivisor);
 
+  const primaryRankBefore = getHeroProficiencyProgress(state, heroId, plan.primary).rank;
   const primary = primaryXp > 0 ? progressHeroProficiency(state, heroId, plan.primary, primaryXp, now) : null;
+
+  let secondaryRankBefore: ProficiencyRank | null = null;
+  if (plan.secondary && secondaryXp > 0) {
+    secondaryRankBefore = getHeroProficiencyProgress(state, heroId, plan.secondary).rank;
+  }
   const secondary =
     plan.secondary && secondaryXp > 0 ? progressHeroProficiency(state, heroId, plan.secondary, secondaryXp, now) : null;
 
-  return { primary, secondary };
+  let rankUps = 0;
+  if (primary && getRankIndex(primary.rank) > getRankIndex(primaryRankBefore)) rankUps += 1;
+  if (secondary && secondaryRankBefore && getRankIndex(secondary.rank) > getRankIndex(secondaryRankBefore)) {
+    rankUps += 1;
+  }
+
+  return { heroId, primary, secondary, progressed: Boolean(primary || secondary), rankUps };
 }
 
 export function progressProficienciesForTrainingResult(
   state: GameState,
   trainingResult: Pick<TrainingProgressResult, "trainedHeroIds" | "xpPerHero">,
   now = Date.now(),
-): void {
-  if (!trainingResult || trainingResult.xpPerHero <= 0) return;
-  trainingResult.trainedHeroIds.forEach((heroId) => {
+): HeroProficiencyTrainingOutcome[] {
+  if (!trainingResult || trainingResult.xpPerHero <= 0) return [];
+  return trainingResult.trainedHeroIds.map((heroId) => {
     const focus = getHeroTrainingFocus(state, heroId);
-    progressHeroProficienciesFromTraining(state, heroId, focus, trainingResult.xpPerHero, now);
+    return progressHeroProficienciesFromTraining(state, heroId, focus, trainingResult.xpPerHero, now);
   });
 }
 

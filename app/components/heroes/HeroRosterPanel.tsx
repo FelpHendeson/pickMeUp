@@ -15,6 +15,7 @@ import {
   getHeroInjurySummary,
   getHeroInjuryTreatmentCost,
   getHeroMoraleState,
+  getHeroPotentialReport,
   getHeroPowerWithEquipment,
   getHeroProficiencySummary,
   getHeroSpecialization,
@@ -27,6 +28,7 @@ import {
   INJURY_CONFIG,
   isHeroInFormation,
   isHeroOnExpedition,
+  POTENTIAL_CONFIG,
   SPECIALIZATION_LEVEL,
   type EquipmentItem,
   type EquipmentSlot,
@@ -397,6 +399,12 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
   const trainingSummary = getHeroTrainingSummary(state, hero.id);
   const trainingFocusOptions = getTrainingFocusDefinitions();
   const proficiencySummary = getHeroProficiencySummary(state, hero.id);
+  const potentialReport = getHeroPotentialReport(state, hero.id);
+  const analyzeHeroAction = useGameStore((store) => store.analyzeHero);
+  const canAffordAnalysis = (state.resources.gold ?? 0) >= POTENTIAL_CONFIG.manualAnalysisGoldCost;
+  const analysisComplete = potentialReport
+    ? potentialReport.analysisLevel >= 5 && potentialReport.analysisXp >= POTENTIAL_CONFIG.maxXp
+    : false;
   const inFormation = isHeroInFormation(state, hero.id);
   const expedition = getHeroExpedition(state, hero.id);
   const onExpedition = Boolean(expedition);
@@ -564,6 +572,61 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
           ) : null}
 
           <small>Preparo por proficiências (indicativo): +{proficiencySummary.readinessBonus}. Não altera o combate nesta etapa.</small>
+        </div>
+      ) : null}
+
+      {potentialReport ? (
+        <div className="hero-detail-section hero-detail-block hero-potential-block">
+          <strong>Análise de Potencial</strong>
+          <span>
+            Nível {potentialReport.analysisLevel} — {potentialReport.analysisLevelLabel}
+            {potentialReport.xpForNextLevel !== null
+              ? ` · ${potentialReport.analysisXp}/${potentialReport.xpForNextLevel} XP`
+              : ` · ${potentialReport.analysisXp} XP (máximo)`}
+          </span>
+          <small>{potentialReport.summary}</small>
+
+          {potentialReport.revealedInsights.length > 0 ? (
+            <div className="hero-potential-insights">
+              {potentialReport.revealedInsights.map((insight) => (
+                <div className={`hero-potential-insight insight-${insight.type}`} key={insight.key}>
+                  <span>{insight.label}</span>
+                  <small>{insight.description}</small>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <span>Análise inicial. Treine e analise o herói para revelar leituras.</span>
+          )}
+
+          {potentialReport.lockedInsights.length > 0 ? (
+            <div className="hero-potential-locked">
+              <strong>Indícios não compreendidos</strong>
+              <span>{potentialReport.lockedInsights.length} leitura(s) ainda bloqueada(s). Continue analisando.</span>
+            </div>
+          ) : null}
+
+          {potentialReport.recommendations.length > 0 ? (
+            <ul className="hero-potential-recommendations">
+              {potentialReport.recommendations.map((recommendation, index) => (
+                <li key={index}>{recommendation}</li>
+              ))}
+            </ul>
+          ) : null}
+
+          <button
+            type="button"
+            className="hero-potential-analyze"
+            disabled={analysisComplete || !canAffordAnalysis}
+            onClick={() => setFeedback(analyzeHeroAction(hero.id).message)}
+          >
+            {analysisComplete
+              ? "Análise completa"
+              : `Analisar herói (${POTENTIAL_CONFIG.manualAnalysisGoldCost} ouro)`}
+          </button>
+          {!analysisComplete && !canAffordAnalysis ? (
+            <small className="tone-warning">Ouro insuficiente para aprofundar a análise agora.</small>
+          ) : null}
         </div>
       ) : null}
 
