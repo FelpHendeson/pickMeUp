@@ -219,7 +219,7 @@ A direcao do Lobby Vivo introduz um roster inicial de herois originais com ident
 
 Herois criados pelo roster preservam o `definitionId` no save. Herois procedurais de saves anteriores continuam validos sem esse campo e sao tratados como legacy; nenhuma associacao automatica deve substituir ou apagar sua identidade atual.
 
-Nesta etapa, o roster prepara a futura invocacao sem duplicatas, mas a invocacao procedural atual permanece ativa ate que o fluxo de pool, esgotamento e compatibilidade esteja implementado e testado.
+Invocacoes comuns e superiores usam as definicoes ainda nao obtidas do roster. A raridade rolada funciona como preferencia: o sistema escolhe primeiro uma definicao da mesma raridade e, quando ela nao existe no pool disponivel, usa a raridade mais proxima. A raridade final continua sendo a `initialRarity` da definicao. Herois legacy nao bloqueiam o roster e, quando o pool acaba, a invocacao falha sem consumir recursos.
 
 ### Diretriz futura
 Criar memoria individual: historico de batalhas, chefes vencidos, titulos, relacoes e afinidade.
@@ -243,7 +243,7 @@ Criar memoria individual: historico de batalhas, chefes vencidos, titulos, relac
 ### Lacunas
 
 - Falta sistema de garantia/pity.
-- A invocacao ainda usa geracao procedural; a proxima etapa deve sortear apenas definicoes ainda nao obtidas do roster unico.
+- O roster inicial e finito; banners, ampliacao de pool e uma recompensa segura para pool esgotado ficam para etapas futuras.
 - Recrutamento por contrato ja existe como alternativa controlada a invocacao.
 - Veteranias tematicas por capitulo podem ser expandidas com novos candidatos e origens.
 

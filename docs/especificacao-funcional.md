@@ -13,7 +13,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 
 ### Heróis, recrutamento e progressão
 - `src/game/heroes/` define classes, raridades, atributos, XP, niveis, geracao procedural legacy e o roster de herois unicos/predefinidos.
-- Herois do roster possuem `definitionId` estavel; herois antigos sem esse campo continuam validos como procedurais/legacy. O roster expoe consultas de posse e disponibilidade sem alterar ainda o sorteio da invocacao atual.
+- Herois do roster possuem `definitionId` estavel; herois antigos sem esse campo continuam validos como procedurais/legacy e nao bloqueiam definicoes do roster.
 - `src/game/recruitment/` controla contratos de heroi, selecao entre tres candidatos, veteranos tematicos e recrutamento alternativo.
 - A tela de Recrutamento deve parecer um quadro de contratos da guilda, diferenciando-se da Invocacao por escolha estrategica entre candidatos com classe, raridade, poder, atributos, custo e traco/passiva.
 - `src/game/relics/` gerencia relíquias permanentes da conta, custos em Fragmentos de Eco e bonus globais.
@@ -41,7 +41,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 - `app/components/tower/BattleResultPanel.tsx` renderiza replay, log de combate, barra de energia e painel de resultado para explicar o desenrolar da batalha.
 
 ### Sistemas auxiliares
-- `src/game/summon/` gerencia invocacao comum e superior, histórico, custos e probabilidades.
+- `src/game/summon/` gerencia invocacao comum e superior, historico, custos e probabilidades. A raridade rolada prioriza definicoes disponiveis da mesma raridade ou da raridade mais proxima; nenhuma definicao ja obtida pode repetir e pool esgotado nao consome recursos.
 - `src/game/expeditions/` administra expedicoes temporizadas, ate 3 herois por expedicao e recompensas escaladas pelo poder enviado.
 - `src/game/missions/` valida missoes diarias, conquistas permanentes e recompensas.
 - `src/game/narrative/` gerencia cenas curtas por gatilho e marca narrativas ja vistas.
