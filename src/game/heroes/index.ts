@@ -13,3 +13,13 @@ export {
   recalculateHeroStats,
 } from "./heroFactory";
 export type { AddHeroXpResult, GenerateHeroOptions, RandomSource } from "./heroFactory";
+export {
+  HERO_ROSTER,
+  createHeroFromDefinition,
+  getAvailableHeroDefinitions,
+  getHeroDefinitionById,
+  getOwnedHeroDefinitionIds,
+  isHeroFromRoster,
+  isLegacyHero,
+} from "./heroRoster";
+export type { CreateHeroFromDefinitionOptions, HeroDefinition } from "./heroRoster";

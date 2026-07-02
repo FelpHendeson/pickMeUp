@@ -10,14 +10,21 @@ import {
   applyTowerPresetToFormation,
   claimDailyMissionReward,
   collectExpedition,
+  createHeroFromDefinition,
   createInitialState,
   ensureStateShape,
   equipItem,
   generateHero,
   generateEquipment,
   getExpeditionDefinition,
+  getAvailableHeroDefinitions,
+  getHeroDefinitionById,
+  getOwnedHeroDefinitionIds,
+  HERO_ROSTER,
   importGameStateFromText,
   initializeNarrativeForSession,
+  isHeroFromRoster,
+  isLegacyHero,
   migrateSaveData,
   markNarrativeSceneSeen,
   queueNarrativeScene,
@@ -104,6 +111,74 @@ test("ensureStateShape normaliza save parcial e remove referencias invalidas", (
   assert.deepEqual(state.teamPresets.expedition[0].heroIds, ["hero_valid", null, null]);
   assert.deepEqual(state.narrative.seenSceneIds, ["intro"]);
   assert.deepEqual(state.narrative.pendingScenes, ["firstSevereInjury"]);
+});
+
+test("roster de herois possui definicoes completas e ids unicos", () => {
+  const definitionIds = HERO_ROSTER.map((definition) => definition.definitionId);
+
+  assert.ok(HERO_ROSTER.length >= 10 && HERO_ROSTER.length <= 15);
+  assert.equal(new Set(definitionIds).size, definitionIds.length);
+  HERO_ROSTER.forEach((definition) => {
+    assert.equal(getHeroDefinitionById(definition.definitionId)?.name, definition.name);
+    assert.ok(definition.name);
+    assert.ok(definition.initialRarity >= 1);
+    assert.ok(definition.classKey);
+    assert.ok(definition.traitKey);
+    assert.ok(definition.origin);
+    assert.ok(definition.background);
+    assert.ok(definition.personality);
+    assert.ok(definition.potentialTags.length > 0);
+    assert.ok(definition.roleTags.length > 0);
+    assert.ok(definition.hiddenAptitudeTags.length > 0);
+  });
+});
+
+test("heroi criado por definicao preserva identidade e continua valido apos normalizacao", () => {
+  const definition = HERO_ROSTER[0];
+  const hero = createHeroFromDefinition(definition, { id: "roster_hero", random: () => 0.5 });
+
+  assert.equal(hero.definitionId, definition.definitionId);
+  assert.equal(hero.name, definition.name);
+  assert.equal(hero.rarity, definition.initialRarity);
+  assert.equal(hero.classKey, definition.classKey);
+  assert.equal(hero.traitKey, definition.traitKey);
+  assert.ok(hero.stats.hp > 0);
+  assert.equal(isHeroFromRoster(hero), true);
+  assert.equal(isLegacyHero(hero), false);
+
+  const normalized = ensureStateShape({ heroes: [hero], formation: [hero.id] });
+  assert.equal(normalized.heroes[0]?.definitionId, definition.definitionId);
+  assert.equal(isHeroFromRoster(normalized.heroes[0]), true);
+});
+
+test("consultas do roster removem apenas definicoes ja obtidas", () => {
+  const state = createInitialState();
+  const ownedDefinition = HERO_ROSTER[1];
+  const rosterHero = createHeroFromDefinition(ownedDefinition, { id: "owned_roster", random: () => 0.5 });
+  const legacyHero = createFixedHero("legacy_procedural");
+  state.heroes.push(rosterHero, legacyHero);
+
+  assert.deepEqual([...getOwnedHeroDefinitionIds(state)], [ownedDefinition.definitionId]);
+  assert.equal(getAvailableHeroDefinitions(state).length, HERO_ROSTER.length - 1);
+  assert.equal(getAvailableHeroDefinitions(state).some((definition) => definition.definitionId === ownedDefinition.definitionId), false);
+  assert.equal(isLegacyHero(legacyHero), true);
+  assert.equal(isHeroFromRoster(legacyHero), false);
+});
+
+test("save antigo sem definitionId preserva heroi procedural como legacy", () => {
+  const imported = importGameStateFromText(JSON.stringify({
+    saveVersion: 1,
+    resources: { gold: 10 },
+    heroes: [{ id: "old_hero", name: "Veterano sem registro", rarity: 2, classKey: "warrior", traitKey: "brave" }],
+    formation: ["old_hero"],
+    towerFloor: 3,
+  }));
+
+  assert.equal(imported.ok, true);
+  if (!imported.ok) return;
+  assert.equal(imported.state.heroes[0]?.definitionId, undefined);
+  assert.equal(isLegacyHero(imported.state.heroes[0]), true);
+  assert.deepEqual(imported.state.formation, ["old_hero", null, null, null, null]);
 });
 
 test("migration v0 normaliza save legado parcial e adiciona defaults atuais", () => {

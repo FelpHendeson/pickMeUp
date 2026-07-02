@@ -136,6 +136,7 @@ export type HeroInjury = {
 
 export type Hero = {
   id: string;
+  definitionId?: string;
   name: string;
   rarity: number;
   classKey: HeroClassKey | string;

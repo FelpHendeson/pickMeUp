@@ -6,6 +6,7 @@ import { EPITHETS, GIVEN_NAMES, HERO_CLASSES, STAT_KEYS, TRAITS } from "./defini
 export type RandomSource = () => number;
 
 export type GenerateHeroOptions = {
+  definitionId?: string;
   rarity?: number;
   classKey?: HeroClassKey;
   traitKey?: string;
@@ -116,6 +117,7 @@ export function generateHero(options: GenerateHeroOptions = {}): Hero {
 
   const hero: Hero = {
     id: options.id ?? createHeroId(),
+    ...(options.definitionId ? { definitionId: options.definitionId } : {}),
     name,
     rarity,
     classKey,
@@ -148,6 +150,7 @@ export function normalizeHero(input: unknown): Hero {
   const rarity = Math.max(1, Math.floor(Number(raw.rarity) || 1));
   const hero: Hero = {
     id: typeof raw.id === "string" && raw.id ? raw.id : createHeroId(),
+    ...(typeof raw.definitionId === "string" && raw.definitionId ? { definitionId: raw.definitionId } : {}),
     name: typeof raw.name === "string" && raw.name ? raw.name : "Heroi sem nome",
     rarity,
     classKey: normalizeClassKey(raw.classKey),
