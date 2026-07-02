@@ -2,6 +2,7 @@
 
 import {
   canSpendResource,
+  canUsePaidSummon,
   getAdjustedSummonRarityTable,
   getHeroDefinitionById,
   getHeroPower,
@@ -96,11 +97,13 @@ function SummonRitualCard({
   canAfford,
   cost,
   onSummon,
+  paidSummonsUnlocked,
   type,
 }: {
   canAfford: boolean;
   cost: SummonCost;
   onSummon: (type: SummonType) => void;
+  paidSummonsUnlocked: boolean;
   type: (typeof summonTypes)[number];
 }) {
   return (
@@ -119,14 +122,20 @@ function SummonRitualCard({
           <strong>{cost.amount}</strong>
           <span>{formatResourceName(cost.resource)}</span>
         </div>
-        <small>{canAfford ? "Recursos prontos para o ritual." : "Recursos insuficientes para este selo."}</small>
+        <small>
+          {!paidSummonsUnlocked
+            ? "Conclua o chamado inicial para liberar este selo."
+            : canAfford
+              ? "Recursos prontos para o ritual."
+              : "Recursos insuficientes para este selo."}
+        </small>
       </div>
       <div className="summon-odds-summary">
         <strong>Chances resumidas</strong>
         <span>{getRareChanceSummary(type.type)}</span>
       </div>
       <RitualRates type={type.type} />
-      <button className="hero-inline-action primary summon-action-button" disabled={!canAfford} onClick={() => onSummon(type.type)} type="button">
+      <button className="hero-inline-action primary summon-action-button" disabled={!paidSummonsUnlocked || !canAfford} onClick={() => onSummon(type.type)} type="button">
         <strong>{type.type === "superior" ? "Abrir ritual superior" : "Abrir ritual comum"}</strong>
         <span>{type.promise}</span>
       </button>
@@ -226,6 +235,7 @@ export function SummonPanel({ onViewHero }: SummonPanelProps) {
   const [lastResult, setLastResult] = useState<SummonResultPreview | null>(null);
   const commonCost = getSummonCost(state, "common");
   const superiorCost = getSummonCost(state, "superior");
+  const paidSummonsUnlocked = canUsePaidSummon(state);
   const lastSummons = state.summonHistory.slice(0, 8);
   const specialOptions = state.initialSummon.specialOptions
     .map(getHeroDefinitionById)
@@ -343,6 +353,10 @@ export function SummonPanel({ onViewHero }: SummonPanelProps) {
         </article>
       </section>
 
+      {!paidSummonsUnlocked ? (
+        <p className="starter-paid-lock-note">Finalize o nucleo inicial do Lobby para liberar rituais pagos.</p>
+      ) : null}
+
       <div className="summon-grid-react">
         {summonTypes.map((type) => {
           const cost = getCost(type.type);
@@ -352,6 +366,7 @@ export function SummonPanel({ onViewHero }: SummonPanelProps) {
               cost={cost}
               key={type.type}
               onSummon={handleSummon}
+              paidSummonsUnlocked={paidSummonsUnlocked}
               type={type}
             />
           );

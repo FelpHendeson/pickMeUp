@@ -4496,6 +4496,16 @@ article,
   display: block;
 }
 
+.starter-paid-lock-note {
+  border: 1px solid rgba(232, 188, 88, 0.3);
+  background: rgba(232, 188, 88, 0.08);
+  border-radius: var(--radius-md);
+  color: var(--gold);
+  font-weight: 800;
+  margin: 1rem 0 0;
+  padding: 0.72rem 0.85rem;
+}
+
 .summon-grid-react {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
