@@ -8,6 +8,7 @@ import { createTeamPresets } from "./teamPresets";
 import { CURRENT_SAVE_SCHEMA_VERSION } from "../save/migrations";
 import { createInitialSummonState } from "../summon/initialSummonState";
 import { createTrainingState } from "../training";
+import { createProficiencyState } from "../proficiencies";
 
 export function createInitialState(now = Date.now()): GameState {
   return {
@@ -61,6 +62,7 @@ export function createInitialState(now = Date.now()): GameState {
       pendingScenes: [],
     },
     training: createTrainingState(now),
+    proficiencies: createProficiencyState(),
     missionStats: {},
     dailyMissions: createDailyMissionState(),
     achievements: normalizeAchievements({}),

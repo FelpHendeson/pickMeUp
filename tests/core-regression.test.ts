@@ -40,6 +40,17 @@ import {
   progressHeroTraining,
   progressTrainingForElapsedTime,
   TRAINING_CONFIG,
+  getHeroLightTechniques,
+  getHeroProficiencyProgress,
+  getHeroProficiencySummary,
+  getProficiencyDefinitions,
+  getProficiencyReadinessBonus,
+  getRankForXp,
+  getRecommendedProficienciesForHero,
+  progressHeroProficienciesFromTraining,
+  progressHeroProficiency,
+  progressProficienciesForTrainingResult,
+  PROFICIENCY_CONFIG,
   LOBBY_ROUTINE_BLOCK_MS,
   generateInitialSpecialSummonOptions,
   HERO_ROSTER,
@@ -272,7 +283,7 @@ test("migration v0 normaliza save legado parcial e adiciona defaults atuais", ()
     towerFloor: 8,
   });
 
-  assert.equal(migrated.schemaVersion, 3);
+  assert.equal(migrated.schemaVersion, 4);
   assert.equal(migrated.saveVersion, 1);
 
   const imported = validateImportedSaveData(migrated);
@@ -338,21 +349,21 @@ test("migration preserva sistemas existentes e permite round-trip de importacao"
   const roundTrip = importGameStateFromText(serializeGameStateForExport(imported.state), 2_000);
   assert.equal(roundTrip.ok, true);
   if (!roundTrip.ok) return;
-  assert.equal(roundTrip.state.schemaVersion, 3);
+  assert.equal(roundTrip.state.schemaVersion, 4);
   assert.equal(roundTrip.state.saveVersion, 1);
   assert.equal(roundTrip.state.lastBattle?.id, "legacy_battle");
   assert.equal(roundTrip.state.affinities.legacya_legacyb.xp, 9);
 });
 
 test("migration rejeita schemas e versoes futuras", () => {
-  assert.equal(validateImportedSaveData({ schemaVersion: 4, saveVersion: 1 }).ok, false);
-  assert.equal(validateImportedSaveData({ schemaVersion: 3, saveVersion: 2 }).ok, false);
+  assert.equal(validateImportedSaveData({ schemaVersion: 5, saveVersion: 1 }).ok, false);
+  assert.equal(validateImportedSaveData({ schemaVersion: 4, saveVersion: 2 }).ok, false);
 });
 
 test("nova jornada recebe cinco tickets comuns e uma especial", () => {
   const state = createInitialState();
 
-  assert.equal(state.schemaVersion, 3);
+  assert.equal(state.schemaVersion, 4);
   assert.deepEqual(state.initialSummon, {
     commonRemaining: 5,
     specialAvailable: true,
@@ -797,7 +808,7 @@ test("rotina idle e deterministica, varia por bloco e nao modifica o save", () =
   assert.equal(hero.equipment, equipmentReference);
   assert.equal(hero.injuries, injuriesReference);
   assert.equal(state.schemaVersion, CURRENT_SAVE_SCHEMA_VERSION);
-  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 3);
+  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 4);
 });
 
 test("relatorio idle agrupa areas e entrega contrato pronto para a UI", () => {
@@ -1093,7 +1104,7 @@ test("migration v2 adiciona campo de treino persistido e chega ao schema atual",
   });
 
   assert.equal(migrated.schemaVersion, CURRENT_SAVE_SCHEMA_VERSION);
-  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 3);
+  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 4);
   assert.ok(migrated.training);
   assert.deepEqual((migrated.training as { heroProgress: unknown }).heroProgress, {});
 
@@ -1291,4 +1302,230 @@ test("progresso de treino nao altera combate, summon nem expedicao", () => {
   assert.equal(state.summonHistory.length, historyBefore);
   assert.equal(state.activeExpeditions.length, expeditionsBefore);
   assert.equal(JSON.stringify({ stats: hero.stats, level: hero.level, xp: hero.xp, rarity: hero.rarity }), heroSnapshot);
+});
+
+test("save antigo recebe estrutura de proficiencias com defaults corretos", () => {
+  const imported = importGameStateFromText(JSON.stringify({
+    saveVersion: 1,
+    resources: { gold: 500 },
+    heroes: [{ id: "legacy_prof", name: "Veterano", rarity: 2, classKey: "warrior", traitKey: "brave" }],
+    formation: ["legacy_prof"],
+    towerFloor: 3,
+  }));
+
+  assert.equal(imported.ok, true);
+  if (!imported.ok) return;
+  assert.ok(imported.state.proficiencies);
+  assert.deepEqual(imported.state.proficiencies.heroProgress, {});
+});
+
+test("migration v3 adiciona proficiencias persistidas e chega ao schema atual", () => {
+  const migrated = migrateSaveData({
+    schemaVersion: 3,
+    saveVersion: 1,
+    resources: { gold: 100 },
+    heroes: [],
+    formation: [],
+    towerFloor: 1,
+  });
+
+  assert.equal(migrated.schemaVersion, CURRENT_SAVE_SCHEMA_VERSION);
+  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 4);
+  assert.ok(migrated.proficiencies);
+  assert.deepEqual((migrated.proficiencies as { heroProgress: unknown }).heroProgress, {});
+});
+
+test("normalizacao remove progresso de proficiencia de herois inexistentes", () => {
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "prof_valid", "warrior");
+  progressHeroProficiency(state, hero.id, "shieldwork", 25, 1_000);
+
+  const normalized = ensureStateShape({
+    ...state,
+    proficiencies: {
+      heroProgress: {
+        [hero.id]: state.proficiencies.heroProgress[hero.id],
+        ghost_hero: { swordplay: { heroId: "ghost_hero", key: "swordplay", xp: 40, rank: "practiced", discovered: true, updatedAt: 0 } },
+      },
+    },
+  });
+
+  assert.ok(normalized.proficiencies.heroProgress[hero.id]);
+  assert.equal(normalized.proficiencies.heroProgress.ghost_hero, undefined);
+  assert.equal(normalized.proficiencies.heroProgress[hero.id]?.shieldwork?.xp, 25);
+});
+
+test("proficiencias recomendadas por classe sao coerentes", () => {
+  const state = createInitialState();
+  const warrior = makeTrainableHero(state, "rec_warrior", "warrior");
+  const guardian = makeTrainableHero(state, "rec_guardian", "guardian");
+  const archer = makeTrainableHero(state, "rec_archer", "archer");
+  const mage = makeTrainableHero(state, "rec_mage", "mage");
+  const priest = makeTrainableHero(state, "rec_priest", "priest");
+  const rogue = makeTrainableHero(state, "rec_rogue", "rogue");
+
+  assert.ok(getRecommendedProficienciesForHero(warrior).includes("swordplay"));
+  assert.ok(getRecommendedProficienciesForHero(warrior).includes("shieldwork"));
+  assert.ok(getRecommendedProficienciesForHero(guardian).includes("shieldwork"));
+  assert.ok(getRecommendedProficienciesForHero(archer).includes("archery"));
+  assert.ok(getRecommendedProficienciesForHero(archer).includes("fieldcraft"));
+  assert.ok(getRecommendedProficienciesForHero(mage).includes("arcaneControl"));
+  assert.ok(getRecommendedProficienciesForHero(priest).includes("healingArts"));
+  assert.ok(getRecommendedProficienciesForHero(rogue).includes("daggerwork"));
+  assert.equal(getProficiencyDefinitions().length, 12);
+});
+
+test("treino alimenta proficiencia principal e secundaria com valor menor", () => {
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "feed_hero", "warrior");
+  assert.equal(assignHeroTrainingFocus(state, hero.id, "frontline", 0).ok, true);
+
+  progressProficienciesForTrainingResult(state, { trainedHeroIds: [hero.id], xpPerHero: 6 }, 1_000);
+
+  // frontline -> principal shieldwork (ceil 6/2 = 3), secundaria discipline (floor 6/6 = 1)
+  const shieldwork = getHeroProficiencyProgress(state, hero.id, "shieldwork");
+  const discipline = getHeroProficiencyProgress(state, hero.id, "discipline");
+  assert.equal(shieldwork.xp, 3);
+  assert.equal(discipline.xp, 1);
+  assert.ok(shieldwork.xp > discipline.xp);
+  assert.equal(shieldwork.discovered, true);
+  assert.equal(discipline.discovered, true);
+});
+
+test("foco damage usa a proficiencia de arma da classe do heroi", () => {
+  const state = createInitialState();
+  const archer = makeTrainableHero(state, "dmg_archer", "archer");
+  assert.equal(assignHeroTrainingFocus(state, archer.id, "damage", 0).ok, true);
+
+  const result = progressHeroProficienciesFromTraining(state, archer.id, "damage", 6, 1_000);
+  assert.equal(result.primary?.key, "archery");
+  assert.equal(result.secondary?.key, "tactics");
+  assert.equal(getHeroProficiencyProgress(state, archer.id, "archery").xp, 3);
+});
+
+test("rank de proficiencia muda conforme XP acumulado", () => {
+  assert.equal(getRankForXp(0), "unknown");
+  assert.equal(getRankForXp(1), "novice");
+  assert.equal(getRankForXp(19), "novice");
+  assert.equal(getRankForXp(20), "practiced");
+  assert.equal(getRankForXp(59), "practiced");
+  assert.equal(getRankForXp(60), "competent");
+  assert.equal(getRankForXp(119), "competent");
+  assert.equal(getRankForXp(120), "refined");
+});
+
+test("progresso de proficiencia nao altera stats, level ou combate/summon/expedicao", () => {
+  const now = 1_780_000_000_000;
+  const state = createInitialState(now);
+  completeInitialSummonForTest(state);
+  const hero = makeTrainableHero(state, "prof_isolation", "warrior");
+  const statsBefore = JSON.stringify(hero.stats);
+  const levelBefore = hero.level;
+  const xpBefore = hero.xp;
+  const rarityBefore = hero.rarity;
+  const floorBefore = state.towerFloor;
+  const goldBefore = state.resources.gold;
+  const heroesBefore = state.heroes.length;
+  const historyBefore = state.summonHistory.length;
+  const expeditionsBefore = state.activeExpeditions.length;
+
+  progressHeroProficiency(state, hero.id, "shieldwork", 40, now);
+
+  assert.equal(JSON.stringify(hero.stats), statsBefore);
+  assert.equal(hero.level, levelBefore);
+  assert.equal(hero.xp, xpBefore);
+  assert.equal(hero.rarity, rarityBefore);
+  assert.equal(state.towerFloor, floorBefore);
+  assert.equal(state.resources.gold, goldBefore);
+  assert.equal(state.heroes.length, heroesBefore);
+  assert.equal(state.summonHistory.length, historyBefore);
+  assert.equal(state.activeExpeditions.length, expeditionsBefore);
+});
+
+test("tecnicas leves desbloqueiam por rank de proficiencia", () => {
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "tech_hero", "guardian");
+
+  progressHeroProficiency(state, hero.id, "shieldwork", 19, 1_000);
+  let techniques = getHeroLightTechniques(state, hero.id);
+  const steadyGuardLocked = techniques.find((technique) => technique.key === "steady_guard");
+  assert.equal(steadyGuardLocked?.unlocked, false);
+
+  progressHeroProficiency(state, hero.id, "shieldwork", 1, 2_000);
+  techniques = getHeroLightTechniques(state, hero.id);
+  const steadyGuardUnlocked = techniques.find((technique) => technique.key === "steady_guard");
+  const lineStanceStillLocked = techniques.find((technique) => technique.key === "line_stance");
+  assert.equal(steadyGuardUnlocked?.unlocked, true);
+  assert.equal(steadyGuardUnlocked?.name, "Guarda Estável");
+  assert.equal(lineStanceStillLocked?.unlocked, false);
+});
+
+test("resumo de proficiencia entrega dados consumiveis pela UI", () => {
+  const state = createInitialState();
+  const definition = HERO_ROSTER.find((entry) => entry.classKey === "guardian")!;
+  const hero = createHeroFromDefinition(definition, { id: "summary_prof_hero", random: () => 0.5 });
+  state.heroes.push(hero);
+  progressHeroProficiency(state, hero.id, "shieldwork", 24, 1_000);
+
+  const summary = getHeroProficiencySummary(state, hero.id);
+  assert.ok(summary);
+  if (!summary) return;
+  const shieldwork = summary.discovered.find((entry) => entry.key === "shieldwork");
+  assert.ok(shieldwork);
+  assert.equal(shieldwork?.rank, "practiced");
+  assert.equal(shieldwork?.rankLabel, "Praticado");
+  assert.equal(shieldwork?.discovered, true);
+  assert.ok(summary.unlockedTechniques.some((technique) => technique.key === "steady_guard"));
+  assert.ok(summary.recommended.includes("shieldwork"));
+  assert.equal(summary.hasHiddenPotential, true);
+  assert.ok(summary.potentialHint && summary.potentialHint.length > 0);
+});
+
+test("import/export preserva progresso de proficiencia", () => {
+  const now = 1_780_000_000_000;
+  const state = createInitialState(now);
+  const hero = makeTrainableHero(state, "roundtrip_prof", "mage");
+  progressHeroProficiency(state, hero.id, "arcaneControl", 35, now);
+
+  const exported = serializeGameStateForExport(state);
+  const imported = importGameStateFromText(exported, now + 1_000);
+  assert.equal(imported.ok, true);
+  if (!imported.ok) return;
+  const restored = getHeroProficiencyProgress(imported.state, hero.id, "arcaneControl");
+  assert.equal(restored.xp, 35);
+  assert.equal(restored.rank, "practiced");
+  assert.equal(restored.discovered, true);
+});
+
+test("rotina idle cita tecnica leve quando disponivel", () => {
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "routine_prof_hero", "guardian");
+  equipHeroForLobbyRoutine(state, hero);
+  assert.equal(assignHeroTrainingFocus(state, hero.id, "defense", 0).ok, true);
+  progressHeroProficiency(state, hero.id, "shieldwork", 25, 0);
+
+  const routine = getHeroLobbyRoutine(state, hero, 0);
+  assert.equal(routine.activity, "training");
+  assert.match(routine.description, /Guarda Estável/);
+});
+
+test("bonus de proficiencia para readiness e pequeno, limitado e isolado", () => {
+  const state = createInitialState();
+  const hero = makeTrainableHero(state, "readiness_prof", "guardian");
+  assert.equal(getProficiencyReadinessBonus(state, hero.id), 0);
+
+  progressHeroProficiency(state, hero.id, "shieldwork", 120, 1_000);
+  progressHeroProficiency(state, hero.id, "discipline", 120, 1_000);
+  progressHeroProficiency(state, hero.id, "survival", 120, 1_000);
+
+  const bonus = getProficiencyReadinessBonus(state, hero.id);
+  assert.ok(bonus > 0);
+  assert.ok(bonus <= PROFICIENCY_CONFIG.readinessBonusPerHeroCap);
+
+  // Readiness da Torre nao foi integrado nesta etapa: continua estavel.
+  const prepared = createPreparedTowerState();
+  const baseline = getTowerReadinessReport(prepared.state, 20);
+  progressHeroProficiency(prepared.state, prepared.heroes[0].id, "shieldwork", 120, 1_000);
+  const afterProficiency = getTowerReadinessReport(prepared.state, 20);
+  assert.equal(afterProficiency.score, baseline.score);
 });

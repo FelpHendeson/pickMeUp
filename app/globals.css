@@ -10980,3 +10980,53 @@ body.pref-reduce-motion *::after {
 .hero-training-select select {
   width: 100%;
 }
+
+.hero-proficiency-block {
+  gap: 0.4rem;
+}
+
+.hero-proficiency-list {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.hero-proficiency-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+}
+
+.hero-proficiency-row small {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.hero-technique-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.hero-technique-chip {
+  border: 1px solid rgba(232, 188, 88, 0.28);
+  background: rgba(232, 188, 88, 0.08);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.76rem;
+}
+
+.hero-proficiency-potential {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.4rem 0.5rem;
+  border-left: 2px solid rgba(155, 127, 232, 0.4);
+  background: rgba(155, 127, 232, 0.06);
+  border-radius: 6px;
+}
+
+.hero-proficiency-potential small {
+  color: var(--muted);
+  font-style: italic;
+}

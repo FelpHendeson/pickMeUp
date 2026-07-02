@@ -1,5 +1,10 @@
 import { getHeroExpedition, isHeroOnExpedition } from "../expeditions";
 import { getHeroTrainingFocus, getTrainingFocusDefinition } from "../training";
+import {
+  getHeroLightTechniques,
+  getHeroProficiencyProgress,
+  resolveFocusProficiencyPlan,
+} from "../proficiencies";
 import type { GameState, Hero } from "../types";
 
 export type LobbyRoutineLocation =
@@ -124,6 +129,18 @@ function createRoutine(
   };
 }
 
+// Nome de uma tecnica leve desbloqueada relacionada ao foco de treino do heroi,
+// usada apenas para enriquecer a descricao idle quando houver dados disponiveis.
+function getHighlightTechniqueName(state: GameState, hero: Hero): string | null {
+  const focus = getHeroTrainingFocus(state, hero.id);
+  const plan = resolveFocusProficiencyPlan(focus, hero.classKey);
+  const techniques = getHeroLightTechniques(state, hero.id);
+  const fromPrimary = techniques.find((technique) => technique.unlocked && technique.sourceProficiency === plan.primary);
+  if (fromPrimary) return fromPrimary.name;
+  const anyUnlocked = techniques.find((technique) => technique.unlocked);
+  return anyUnlocked ? anyUnlocked.name : null;
+}
+
 export function getHeroLobbyRoutine(state: GameState, hero: Hero, now = Date.now()): HeroLobbyRoutine {
   const normalizedNow = normalizeNow(now);
   const timeBlock = getTimeBlock(normalizedNow);
@@ -219,15 +236,23 @@ export function getHeroLobbyRoutine(state: GameState, hero: Hero, now = Date.now
   }
 
   if (ARCANE_CLASSES.has(hero.classKey)) {
+    const arcaneProgress = getHeroProficiencyProgress(state, hero.id, "arcaneControl");
+    const descriptions = arcaneProgress.discovered
+      ? [
+          `${hero.name} mede oscilações de eco no Portal de Invocação.`,
+          `${hero.name} exercita o Controle Arcano diante das runas do Portal.`,
+          `${hero.name} estabiliza fluxos de eco enquanto observa o Portal.`,
+        ]
+      : [
+          `${hero.name} observa as runas do Portal de Invocação em silêncio.`,
+          `${hero.name} registra oscilações arcanas ao redor do Portal.`,
+          `${hero.name} compara fragmentos de conhecimento diante das luzes do Portal.`,
+        ];
     return createRoutine(hero, timeBlock, {
       location: "summonPortal",
       activity: "studyingRelics",
       label: "Estudando ecos",
-      description: selectVariant(hero.id, timeBlock, [
-        `${hero.name} observa as runas do Portal de Invocação em silêncio.`,
-        `${hero.name} registra oscilações arcanas ao redor do Portal.`,
-        `${hero.name} compara fragmentos de conhecimento diante das luzes do Portal.`,
-      ]),
+      description: selectVariant(hero.id, timeBlock, descriptions),
       priority: 40,
     });
   }
@@ -237,15 +262,23 @@ export function getHeroLobbyRoutine(state: GameState, hero: Hero, now = Date.now
     // HP critico, moral baixa), entao aqui o treino reflete um foco tecnico ativo.
     const focusDefinition = getTrainingFocusDefinition(getHeroTrainingFocus(state, hero.id));
     const focusLabel = focusDefinition?.label ?? "Treino Técnico";
+    const techniqueName = getHighlightTechniqueName(state, hero);
+    const descriptions = techniqueName
+      ? [
+          `${hero.name} pratica ${techniqueName} no Campo de Treino.`,
+          `${hero.name} refina ${techniqueName} com o foco de ${focusLabel}.`,
+          `${hero.name} repete ${techniqueName} enquanto aguarda novas ordens.`,
+        ]
+      : [
+          `${hero.name} aprofunda o foco de ${focusLabel} no Campo de Treino.`,
+          `${hero.name} repete exercícios de ${focusLabel} contra um boneco de palha.`,
+          `${hero.name} mantém a rotina de ${focusLabel} enquanto aguarda novas ordens.`,
+        ];
     return createRoutine(hero, timeBlock, {
       location: "trainingGround",
       activity: "training",
       label: `Treino: ${focusLabel}`,
-      description: selectVariant(hero.id, timeBlock, [
-        `${hero.name} aprofunda o foco de ${focusLabel} no Campo de Treino.`,
-        `${hero.name} repete exercícios de ${focusLabel} contra um boneco de palha.`,
-        `${hero.name} mantém a rotina de ${focusLabel} enquanto aguarda novas ordens.`,
-      ]),
+      description: selectVariant(hero.id, timeBlock, descriptions),
       priority: 30,
     });
   }

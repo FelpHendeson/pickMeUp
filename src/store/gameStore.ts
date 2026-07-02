@@ -44,6 +44,7 @@ import {
   updatePreference as updateStoredPreference,
   assignHeroTrainingFocus,
   progressTrainingForElapsedTime,
+  progressProficienciesForTrainingResult,
   type EquipmentSlot,
   type GameState,
   type PartialGameState,
@@ -209,7 +210,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   refreshSession: () => {
     const current = get().state;
     regenerateEnergy(current);
-    progressTrainingForElapsedTime(current);
+    const trainingResult = progressTrainingForElapsedTime(current);
+    progressProficienciesForTrainingResult(current, trainingResult, trainingResult.generatedAt);
     const nextState = commitState(current);
     set({ state: nextState, source: get().source === "initial" ? "initial" : "manual" });
   },
@@ -324,6 +326,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const current = get().state;
     const result = progressTrainingForElapsedTime(current);
     if (result.appliedBlocks <= 0) return;
+    progressProficienciesForTrainingResult(current, result, result.generatedAt);
     const nextState = commitState(current);
     set({ state: nextState, source: "manual" });
   },

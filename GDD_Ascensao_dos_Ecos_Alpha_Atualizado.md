@@ -563,6 +563,17 @@ O Campo de Treino ganha uma primeira versao funcional focada em progresso tecnic
 - O treino nao concede ATK, DEF, HP, SPD, XP ou nivel de combate e nao altera summon, expedicoes, Torre ou readiness. Existe um bonus derivado pequeno de preparo (`getTrainingReadinessBonus`), calculado mas ainda nao integrado a readiness.
 - O painel de Herois mostra e permite trocar o foco; a Base resume foco, progresso e status por heroi. A rotina idle reflete o foco tecnico de herois aptos. Habilidades, perks e desbloqueios complexos ficam fora desta etapa.
 
+### Proficiencias e habilidades leves
+
+O treino tecnico passa a revelar e fortalecer proficiencias, dando identidade tecnica a cada heroi sem criar arvore de skills pesada nem habilidades ativas de combate.
+
+- Existem doze proficiencias (combate com lamina, escudo, arquearia, adagas, controle arcano, artes de cura, campo e trilha, sobrevivencia, disciplina, lideranca, tatica e oficina), cada uma com XP, rank e descoberta persistidos no save, separados de `stats`, `level`, `xp` e raridade.
+- Ranks por XP: unknown (0), novice (1-19), practiced (20-59), competent (60-119) e refined (120+). A proficiencia vira descoberta ao receber o primeiro XP.
+- O treino alimenta as proficiencias sem tick proprio: cada avanco de treino move a proficiencia principal do foco (fatia maior) e uma secundaria (fatia menor). O foco "dano" usa a proficiencia de arma da classe do heroi.
+- Tecnicas leves (por exemplo, Guarda Estavel, Mira Calma, Pulso Arcano, Primeiros Socorros) desbloqueiam por rank e sao apenas descritivas: nao alteram dano, IA, inimigos, recompensas, cura ou energia.
+- Existe `getProficiencyReadinessBonus` como bonus pequeno e limitado por heroi, criado e testado isoladamente, mas ainda nao somado ao readiness da Torre para preservar o balanceamento.
+- O painel de Herois exibe proficiencias descobertas (rank e XP), tecnicas leves desbloqueadas, indicios de proficiencias recomendadas ainda nao praticadas e um sinal de potencial oculto derivado do roster, sem revelar diretamente os `hiddenAptitudeTags`. A rotina idle cita a tecnica ou a proficiencia quando o dado existe.
+
 ### Recrutamento / contratos de guilda
 
 Recrutamento deve se diferenciar da invocacao. A tela representa um quadro de contratos da guilda: o jogador usa contrato para revelar candidatos, compara classe, raridade, poder, atributos principais, custo ja pago e traco/passiva, escolhe apenas um aventureiro e recebe confirmacao com atalhos para Heróis ou Formacao. Sem contrato, o estado deve comunicar custo insuficiente sem parecer erro.
@@ -606,7 +617,7 @@ A camada visual global deve manter a identidade coesa de RPG Dark Fantasy: fundo
 - `localStorage`.
 - Chave: `ascensao-dos-ecos-save-v1`.
 - `saveVersion: 1`.
-- `schemaVersion: 3` com migrations sequenciais antes da normalizacao final. O schema 3 adiciona a estrutura persistida de treino funcional (`training`).
+- `schemaVersion: 4` com migrations sequenciais antes da normalizacao final. O schema 3 adiciona a estrutura persistida de treino funcional (`training`) e o schema 4 adiciona a estrutura persistida de proficiencias (`proficiencies`).
 - Normalizacao ao carregar.
 - Exportar save JSON.
 - Importar save com validacao.

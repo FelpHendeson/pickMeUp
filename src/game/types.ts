@@ -1,5 +1,6 @@
 import type { TeamPresetType } from "./config";
 import type { TrainingState } from "./training/trainingRules";
+import type { ProficiencyState } from "./proficiencies/proficiencyRules";
 
 export type ResourceKey = "gold" | "crystals" | "essence" | "fragments" | "energy" | "maxEnergy";
 export type AccountResourceKey = ResourceKey | "echoFragments" | "heroContracts";
@@ -486,6 +487,7 @@ export type GameState = {
   lastChapterCompletion: unknown | null;
   narrative: NarrativeState;
   training: TrainingState;
+  proficiencies: ProficiencyState;
   missionStats: Record<string, number>;
   dailyMissions: DailyMissionState;
   achievements: AchievementState;

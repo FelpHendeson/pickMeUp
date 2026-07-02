@@ -16,6 +16,7 @@ import {
   getHeroInjuryTreatmentCost,
   getHeroMoraleState,
   getHeroPowerWithEquipment,
+  getHeroProficiencySummary,
   getHeroSpecialization,
   getHeroTrainingSummary,
   getHeroXpForNextLevel,
@@ -395,6 +396,7 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
   const affinities = getHeroAffinitySummaries(state, hero.id).slice(0, 4);
   const trainingSummary = getHeroTrainingSummary(state, hero.id);
   const trainingFocusOptions = getTrainingFocusDefinitions();
+  const proficiencySummary = getHeroProficiencySummary(state, hero.id);
   const inFormation = isHeroInFormation(state, hero.id);
   const expedition = getHeroExpedition(state, hero.id);
   const onExpedition = Boolean(expedition);
@@ -514,6 +516,54 @@ function HeroDetailPanel({ hero, state, inventory }: { hero: Hero; state: GameSt
               ))}
             </select>
           </label>
+        </div>
+      ) : null}
+
+      {proficiencySummary ? (
+        <div className="hero-detail-section hero-detail-block hero-proficiency-block">
+          <strong>Proficiências</strong>
+          {proficiencySummary.discovered.length > 0 ? (
+            <div className="hero-proficiency-list">
+              {proficiencySummary.discovered.map((proficiency) => (
+                <div className="hero-proficiency-row" key={proficiency.key}>
+                  <span>
+                    {proficiency.label} — {proficiency.rankLabel}
+                    {proficiency.isRecommended ? " ·" : ""}
+                  </span>
+                  <small>
+                    {proficiency.nextRankXp !== null ? `${proficiency.xp}/${proficiency.nextRankXp} XP` : `${proficiency.xp} XP (máximo)`}
+                  </small>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <span>Nenhuma proficiência revelada ainda. O treino técnico revela vocações aos poucos.</span>
+          )}
+
+          <strong>Técnicas leves</strong>
+          {proficiencySummary.unlockedTechniques.length > 0 ? (
+            <div className="hero-technique-list">
+              {proficiencySummary.unlockedTechniques.map((technique) => (
+                <span className="hero-technique-chip" key={technique.key} title={technique.description}>
+                  {technique.name}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <span>Nenhuma técnica leve desbloqueada. Avance o rank das proficiências.</span>
+          )}
+
+          {proficiencySummary.undiscoveredRecommended.length > 0 || proficiencySummary.hasHiddenPotential ? (
+            <div className="hero-proficiency-potential">
+              <strong>Potencial</strong>
+              {proficiencySummary.undiscoveredRecommended.slice(0, 3).map((proficiency) => (
+                <small key={proficiency.key}>Indícios de {proficiency.label}, ainda sem prática registrada.</small>
+              ))}
+              {proficiencySummary.potentialHint ? <small>{proficiencySummary.potentialHint}</small> : null}
+            </div>
+          ) : null}
+
+          <small>Preparo por proficiências (indicativo): +{proficiencySummary.readinessBonus}. Não altera o combate nesta etapa.</small>
         </div>
       ) : null}
 

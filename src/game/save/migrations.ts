@@ -1,7 +1,7 @@
 import { GAME_CONFIG } from "../config";
 import type { PartialGameState } from "../types";
 
-export const CURRENT_SAVE_SCHEMA_VERSION = 3;
+export const CURRENT_SAVE_SCHEMA_VERSION = 4;
 
 type SaveRecord = Record<string, unknown>;
 type SaveMigration = (save: SaveRecord) => SaveRecord;
@@ -61,6 +61,13 @@ const migrations: Record<number, SaveMigration> = {
       currentFocusByHeroId: {},
       heroProgress: {},
       lastTrainingAt: null,
+    },
+  }),
+  3: (save) => ({
+    ...save,
+    schemaVersion: 4,
+    proficiencies: save.proficiencies ?? {
+      heroProgress: {},
     },
   }),
 };
