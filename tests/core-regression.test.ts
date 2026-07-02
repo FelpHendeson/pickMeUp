@@ -12,6 +12,7 @@ import {
   claimDailyMissionReward,
   claimInitialSpecialSummonOption,
   collectExpedition,
+  CURRENT_SAVE_SCHEMA_VERSION,
   createHeroFromDefinition,
   createInitialState,
   ensureStateShape,
@@ -21,10 +22,13 @@ import {
   getExpeditionDefinition,
   getAvailableHeroDefinitions,
   getHeroDefinitionById,
+  getHeroLobbyRoutine,
+  getLobbyRoutineReport,
   getOwnedHeroDefinitionIds,
   getRecommendedFormationPower,
   getTowerReadinessLevel,
   getTowerReadinessReport,
+  LOBBY_ROUTINE_BLOCK_MS,
   generateInitialSpecialSummonOptions,
   HERO_ROSTER,
   importGameStateFromText,
@@ -99,6 +103,30 @@ function createPreparedTowerState(): { state: GameState; heroes: Hero[] } {
     state.formation[index] = hero.id;
   });
   return { state, heroes };
+}
+
+function equipHeroForLobbyRoutine(state: GameState, hero: Hero): void {
+  const equipment: EquipmentItem[] = [
+    {
+      id: `${hero.id}_routine_weapon`,
+      name: "Arma de Rotina",
+      type: "weapon",
+      rarity: hero.rarity,
+      bonusStat: "atk",
+      bonusValue: 5,
+    },
+    {
+      id: `${hero.id}_routine_armor`,
+      name: "Armadura de Rotina",
+      type: "armor",
+      rarity: hero.rarity,
+      bonusStat: "def",
+      bonusValue: 5,
+    },
+  ];
+  state.inventory.push(...equipment);
+  hero.equipment.weapon = equipment[0].id;
+  hero.equipment.armor = equipment[1].id;
 }
 
 test("ensureStateShape normaliza save parcial e remove referencias invalidas", () => {
@@ -659,6 +687,134 @@ test("expedicao usa timestamp salvo e concede recompensa ao coletar", () => {
   assert.equal(collected.ok, true);
   assert.equal(reloadedState.activeExpeditions.length, 0);
   assert.ok(reloadedState.heroes.find((hero) => hero.id === heroA.id)!.xp > startingXp);
+});
+
+test("relatorio idle do Lobby funciona sem herois", () => {
+  const state = createInitialState();
+  const report = getLobbyRoutineReport(state, 0);
+
+  assert.equal(report.generatedAt, 0);
+  assert.deepEqual(report.routines, []);
+  assert.match(report.summary, /Nenhum herói/i);
+  assert.equal(Object.keys(report.locations).length, 9);
+  assert.ok(Object.values(report.locations).every((location) => location.heroCount === 0 && location.heroIds.length === 0));
+});
+
+test("rotina idle prioriza expedicao, ferimento, HP e moral", () => {
+  const expeditionState = createInitialState();
+  const [expeditionHero] = addHeroes(expeditionState, 1);
+  assert.equal(startExpedition(expeditionState, "training_field", [expeditionHero.id], 1_000).ok, true);
+  const expeditionRoutine = getHeroLobbyRoutine(expeditionState, expeditionHero, 1_000);
+  assert.equal(expeditionRoutine.activity, "onExpedition");
+  assert.equal(expeditionRoutine.location, "expeditionGate");
+
+  const injuryState = createInitialState();
+  const [injuredHero] = addHeroes(injuryState, 1);
+  injuredHero.injuries = [
+    { id: "injury_lobby", typeKey: "injuredArm", remainingBattles: 2, createdAt: "2026-01-01T00:00:00.000Z" },
+  ];
+  injuredHero.currentHp = 1;
+  injuredHero.morale = 10;
+  const injuryRoutine = getHeroLobbyRoutine(injuryState, injuredHero, 1_000);
+  assert.equal(injuryRoutine.activity, "recovering");
+  assert.equal(injuryRoutine.location, "infirmary");
+
+  const hpState = createInitialState();
+  const [woundedHero] = addHeroes(hpState, 1);
+  woundedHero.currentHp = Math.floor(woundedHero.stats.hp * 0.3);
+  const hpRoutine = getHeroLobbyRoutine(hpState, woundedHero, 1_000);
+  assert.equal(hpRoutine.activity, "resting");
+  assert.equal(hpRoutine.location, "infirmary");
+
+  const moraleState = createInitialState();
+  const [shakenHero] = addHeroes(moraleState, 1);
+  shakenHero.morale = 25;
+  const moraleRoutine = getHeroLobbyRoutine(moraleState, shakenHero, 1_000);
+  assert.ok(["resting", "socializing"].includes(moraleRoutine.activity));
+  assert.ok(["restingQuarters", "square"].includes(moraleRoutine.location));
+});
+
+test("rotina idle representa formacao, equipamento, vocacao arcana e treino", () => {
+  const formationState = createInitialState();
+  const [formationHero] = addHeroes(formationState, 1);
+  formationState.formation[0] = formationHero.id;
+  const formationRoutine = getHeroLobbyRoutine(formationState, formationHero, 0);
+  assert.equal(formationRoutine.activity, "readyForTower");
+  assert.equal(formationRoutine.location, "trainingGround");
+
+  const equipmentState = createInitialState();
+  const [unequippedHero] = addHeroes(equipmentState, 1);
+  const equipmentRoutine = getHeroLobbyRoutine(equipmentState, unequippedHero, 0);
+  assert.equal(equipmentRoutine.activity, "preparingEquipment");
+  assert.equal(equipmentRoutine.location, "workshop");
+
+  const combatState = createInitialState();
+  const combatHero = createFixedHero("routine_warrior", "warrior", 3);
+  combatState.heroes.push(combatHero);
+  equipHeroForLobbyRoutine(combatState, combatHero);
+  const combatRoutine = getHeroLobbyRoutine(combatState, combatHero, 0);
+  assert.equal(combatRoutine.activity, "training");
+  assert.equal(combatRoutine.location, "trainingGround");
+
+  const arcaneState = createInitialState();
+  const arcaneHero = createFixedHero("routine_mage", "mage", 3);
+  arcaneState.heroes.push(arcaneHero);
+  equipHeroForLobbyRoutine(arcaneState, arcaneHero);
+  const arcaneRoutine = getHeroLobbyRoutine(arcaneState, arcaneHero, 0);
+  assert.equal(arcaneRoutine.activity, "studyingRelics");
+  assert.equal(arcaneRoutine.location, "summonPortal");
+});
+
+test("rotina idle e deterministica, varia por bloco e nao modifica o save", () => {
+  const state = createInitialState();
+  const hero = createFixedHero("routine_deterministic", "guardian", 3);
+  state.heroes.push(hero);
+  equipHeroForLobbyRoutine(state, hero);
+  const stateBefore = JSON.stringify(state);
+  const equipmentReference = hero.equipment;
+  const injuriesReference = hero.injuries;
+
+  const first = getHeroLobbyRoutine(state, hero, 0);
+  const repeated = getHeroLobbyRoutine(state, hero, 0);
+  const nextBlock = getHeroLobbyRoutine(state, hero, LOBBY_ROUTINE_BLOCK_MS);
+
+  assert.deepEqual(first, repeated);
+  assert.notEqual(first.description, nextBlock.description);
+  assert.equal(first.activity, nextBlock.activity);
+  assert.equal(JSON.stringify(state), stateBefore);
+  assert.equal(hero.equipment, equipmentReference);
+  assert.equal(hero.injuries, injuriesReference);
+  assert.equal(state.schemaVersion, CURRENT_SAVE_SCHEMA_VERSION);
+  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 2);
+});
+
+test("relatorio idle agrupa areas e entrega contrato pronto para a UI", () => {
+  const state = createInitialState();
+  const [towerHero, recoveringHero, arcaneHero] = addHeroes(state, 3);
+  state.formation[0] = towerHero.id;
+  recoveringHero.injuries = [
+    { id: "injury_group", typeKey: "brokenRib", remainingBattles: 1, createdAt: "2026-01-01T00:00:00.000Z" },
+  ];
+  arcaneHero.classKey = "mage";
+  equipHeroForLobbyRoutine(state, arcaneHero);
+
+  const report = getLobbyRoutineReport(state, 0);
+
+  assert.equal(report.routines.length, 3);
+  assert.equal(report.locations.trainingGround.heroCount, 1);
+  assert.deepEqual(report.locations.trainingGround.heroIds, [towerHero.id]);
+  assert.equal(report.locations.infirmary.heroCount, 1);
+  assert.deepEqual(report.locations.infirmary.heroIds, [recoveringHero.id]);
+  assert.equal(report.locations.summonPortal.heroCount, 1);
+  assert.deepEqual(report.locations.summonPortal.heroIds, [arcaneHero.id]);
+  assert.match(report.summary, /3 herói\(s\).*3 área\(s\)/);
+  report.routines.forEach((routine) => {
+    assert.ok(routine.heroId);
+    assert.ok(routine.heroName);
+    assert.ok(routine.label);
+    assert.ok(routine.description);
+    assert.ok(routine.priority > 0);
+  });
 });
 
 test("readiness classifica formacao vazia e falhas operacionais como criticas", () => {
