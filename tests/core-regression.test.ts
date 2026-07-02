@@ -9,6 +9,7 @@ import {
   applyExpeditionPresetToExpeditionSelection,
   applyTowerPresetToFormation,
   claimDailyMissionReward,
+  claimInitialSpecialSummonOption,
   collectExpedition,
   createHeroFromDefinition,
   createInitialState,
@@ -20,6 +21,7 @@ import {
   getAvailableHeroDefinitions,
   getHeroDefinitionById,
   getOwnedHeroDefinitionIds,
+  generateInitialSpecialSummonOptions,
   HERO_ROSTER,
   importGameStateFromText,
   initializeNarrativeForSession,
@@ -34,6 +36,7 @@ import {
   setTeamPresetHero,
   startExpedition,
   summonHero,
+  useStarterCommonSummon,
   useConsumable,
   validateImportedSaveData,
 } from "../src/game/index.ts";
@@ -179,6 +182,12 @@ test("save antigo sem definitionId preserva heroi procedural como legacy", () =>
   assert.equal(imported.state.heroes[0]?.definitionId, undefined);
   assert.equal(isLegacyHero(imported.state.heroes[0]), true);
   assert.deepEqual(imported.state.formation, ["old_hero", null, null, null, null]);
+  assert.deepEqual(imported.state.initialSummon, {
+    commonRemaining: 5,
+    specialAvailable: true,
+    specialClaimed: false,
+    specialOptions: [],
+  });
 
   const summoned = summonHero(imported.state, "common", { random: () => 0 });
   assert.equal(summoned.ok, true);
@@ -197,7 +206,7 @@ test("migration v0 normaliza save legado parcial e adiciona defaults atuais", ()
     towerFloor: 8,
   });
 
-  assert.equal(migrated.schemaVersion, 1);
+  assert.equal(migrated.schemaVersion, 2);
   assert.equal(migrated.saveVersion, 1);
 
   const imported = validateImportedSaveData(migrated);
@@ -263,15 +272,144 @@ test("migration preserva sistemas existentes e permite round-trip de importacao"
   const roundTrip = importGameStateFromText(serializeGameStateForExport(imported.state), 2_000);
   assert.equal(roundTrip.ok, true);
   if (!roundTrip.ok) return;
-  assert.equal(roundTrip.state.schemaVersion, 1);
+  assert.equal(roundTrip.state.schemaVersion, 2);
   assert.equal(roundTrip.state.saveVersion, 1);
   assert.equal(roundTrip.state.lastBattle?.id, "legacy_battle");
   assert.equal(roundTrip.state.affinities.legacya_legacyb.xp, 9);
 });
 
 test("migration rejeita schemas e versoes futuras", () => {
-  assert.equal(validateImportedSaveData({ schemaVersion: 2, saveVersion: 1 }).ok, false);
-  assert.equal(validateImportedSaveData({ schemaVersion: 1, saveVersion: 2 }).ok, false);
+  assert.equal(validateImportedSaveData({ schemaVersion: 3, saveVersion: 1 }).ok, false);
+  assert.equal(validateImportedSaveData({ schemaVersion: 2, saveVersion: 2 }).ok, false);
+});
+
+test("nova jornada recebe cinco tickets comuns e uma especial", () => {
+  const state = createInitialState();
+
+  assert.equal(state.schemaVersion, 2);
+  assert.deepEqual(state.initialSummon, {
+    commonRemaining: 5,
+    specialAvailable: true,
+    specialClaimed: false,
+    specialOptions: [],
+  });
+});
+
+test("cinco tickets iniciais invocam sem duplicatas e registram sistemas", () => {
+  const state = createInitialState();
+  const startingGold = state.resources.gold;
+  const summonedDefinitionIds: string[] = [];
+
+  for (let index = 0; index < 5; index += 1) {
+    const result = useStarterCommonSummon(state, { random: () => 0 });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    summonedDefinitionIds.push(result.hero.definitionId!);
+  }
+
+  assert.equal(new Set(summonedDefinitionIds).size, 5);
+  assert.equal(state.initialSummon.commonRemaining, 0);
+  assert.equal(state.resources.gold, startingGold);
+  assert.equal(state.summonHistory.length, 5);
+  assert.equal(state.dailyMissions.progress.summons, 5);
+  assert.ok(state.missionStats.summons >= 5);
+  state.heroes.forEach((hero) => {
+    assert.equal(state.library.heroes.classes[hero.classKey].discovered, true);
+  });
+
+  const failed = useStarterCommonSummon(state, { random: () => 0 });
+  assert.equal(failed.ok, false);
+  assert.equal(state.initialSummon.commonRemaining, 0);
+  assert.equal(state.resources.gold, startingGold);
+});
+
+test("especial persiste tres opcoes raras e reserva definicoes ate a escolha", () => {
+  const state = createInitialState();
+  const generated = generateInitialSpecialSummonOptions(state, { random: () => 0 });
+
+  assert.equal(generated.ok, true);
+  if (!generated.ok) return;
+  assert.equal(generated.options.length, 3);
+  assert.equal(generated.options.every((definition) => definition.initialRarity >= 3), true);
+  assert.deepEqual(state.initialSummon.specialOptions, generated.options.map((definition) => definition.definitionId));
+
+  const persisted = generateInitialSpecialSummonOptions(state, { random: () => 0.999 });
+  assert.equal(persisted.ok, true);
+  if (!persisted.ok) return;
+  assert.deepEqual(persisted.options.map((definition) => definition.definitionId), state.initialSummon.specialOptions);
+
+  const starterCommon = useStarterCommonSummon(state, { random: () => 0.999 });
+  assert.equal(starterCommon.ok, true);
+  if (!starterCommon.ok) return;
+  assert.equal(state.initialSummon.specialOptions.includes(starterCommon.hero.definitionId!), false);
+});
+
+test("escolha especial adiciona heroi correto uma unica vez", () => {
+  const state = createInitialState();
+  const generated = generateInitialSpecialSummonOptions(state, { random: () => 0 });
+  assert.equal(generated.ok, true);
+  if (!generated.ok) return;
+  const selected = generated.options[1];
+  const startingCrystals = state.resources.crystals;
+
+  const claimed = claimInitialSpecialSummonOption(state, selected.definitionId, { random: () => 0.5 });
+  assert.equal(claimed.ok, true);
+  if (!claimed.ok) return;
+  assert.equal(claimed.hero.definitionId, selected.definitionId);
+  assert.equal(state.heroes.filter((hero) => hero.definitionId === selected.definitionId).length, 1);
+  assert.equal(state.initialSummon.specialClaimed, true);
+  assert.equal(state.initialSummon.specialAvailable, false);
+  assert.deepEqual(state.initialSummon.specialOptions, []);
+  assert.equal(state.resources.crystals, startingCrystals);
+  assert.equal(state.summonHistory[0].id, claimed.hero.id);
+  assert.equal(state.dailyMissions.progress.summons, 1);
+  assert.equal(state.library.heroes.classes[claimed.hero.classKey].discovered, true);
+
+  const repeated = claimInitialSpecialSummonOption(state, selected.definitionId);
+  assert.equal(repeated.ok, false);
+  assert.equal(state.heroes.filter((hero) => hero.definitionId === selected.definitionId).length, 1);
+});
+
+test("estado inicial de summon sobrevive a exportacao e importacao", () => {
+  const state = createInitialState();
+  assert.equal(useStarterCommonSummon(state, { random: () => 0 }).ok, true);
+  assert.equal(generateInitialSpecialSummonOptions(state, { random: () => 0 }).ok, true);
+  const expected = JSON.parse(JSON.stringify(state.initialSummon));
+
+  const imported = importGameStateFromText(serializeGameStateForExport(state));
+  assert.equal(imported.ok, true);
+  if (!imported.ok) return;
+  assert.deepEqual(imported.state.initialSummon, expected);
+});
+
+test("pool limitado adapta especial e falhas nao consomem direitos ou recursos", () => {
+  const state = createInitialState();
+  const remainingDefinition = HERO_ROSTER[HERO_ROSTER.length - 1];
+  state.heroes.push(
+    ...HERO_ROSTER
+      .filter((definition) => definition.definitionId !== remainingDefinition.definitionId)
+      .map((definition, index) => createHeroFromDefinition(definition, { id: `limited_${index}`, random: () => 0.5 })),
+  );
+
+  const generated = generateInitialSpecialSummonOptions(state, { random: () => 0 });
+  assert.equal(generated.ok, true);
+  if (!generated.ok) return;
+  assert.deepEqual(generated.options.map((definition) => definition.definitionId), [remainingDefinition.definitionId]);
+
+  const startingGold = state.resources.gold;
+  const startingTickets = state.initialSummon.commonRemaining;
+  const failedCommon = useStarterCommonSummon(state, { random: () => 0 });
+  assert.equal(failedCommon.ok, false);
+  assert.equal(state.resources.gold, startingGold);
+  assert.equal(state.initialSummon.commonRemaining, startingTickets);
+
+  const claimed = claimInitialSpecialSummonOption(state, remainingDefinition.definitionId);
+  assert.equal(claimed.ok, true);
+  const exhausted = createInitialState();
+  exhausted.heroes.push(...HERO_ROSTER.map((definition, index) => createHeroFromDefinition(definition, { id: `all_${index}` })));
+  const startingSpecial = JSON.parse(JSON.stringify(exhausted.initialSummon));
+  assert.equal(generateInitialSpecialSummonOptions(exhausted).ok, false);
+  assert.deepEqual(exhausted.initialSummon, startingSpecial);
 });
 
 test("summonHero consome recurso, adiciona heroi e registra historico", () => {

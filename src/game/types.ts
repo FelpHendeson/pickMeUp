@@ -127,6 +127,13 @@ export type SummonHistoryEntry = {
   at: string;
 };
 
+export type InitialSummonState = {
+  commonRemaining: number;
+  specialAvailable: boolean;
+  specialClaimed: boolean;
+  specialOptions: string[];
+};
+
 export type HeroInjury = {
   id: string;
   typeKey: string;
@@ -467,6 +474,7 @@ export type GameState = {
   teamPresets: TeamPresets;
   baseRooms: Record<string, number>;
   summonHistory: SummonHistoryEntry[];
+  initialSummon: InitialSummonState;
   lastBattle: BattleResult | null;
   pendingTowerEvent: TowerEventInstance | null;
   plannedTowerPostEvent: TowerEventInstance | null;

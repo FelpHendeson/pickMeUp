@@ -1,7 +1,7 @@
 import { GAME_CONFIG } from "../config";
 import type { PartialGameState } from "../types";
 
-export const CURRENT_SAVE_SCHEMA_VERSION = 1;
+export const CURRENT_SAVE_SCHEMA_VERSION = 2;
 
 type SaveRecord = Record<string, unknown>;
 type SaveMigration = (save: SaveRecord) => SaveRecord;
@@ -43,6 +43,16 @@ const migrations: Record<number, SaveMigration> = {
     ...save,
     schemaVersion: 1,
     saveVersion: save.saveVersion ?? 1,
+  }),
+  1: (save) => ({
+    ...save,
+    schemaVersion: 2,
+    initialSummon: save.initialSummon ?? {
+      commonRemaining: 5,
+      specialAvailable: true,
+      specialClaimed: false,
+      specialOptions: [],
+    },
   }),
 };
 

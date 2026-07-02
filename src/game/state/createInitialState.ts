@@ -6,6 +6,7 @@ import { RELIC_DEFINITIONS } from "../relics";
 import type { GameState } from "../types";
 import { createTeamPresets } from "./teamPresets";
 import { CURRENT_SAVE_SCHEMA_VERSION } from "../save/migrations";
+import { createInitialSummonState } from "../summon/initialSummonState";
 
 export function createInitialState(now = Date.now()): GameState {
   return {
@@ -45,6 +46,7 @@ export function createInitialState(now = Date.now()): GameState {
       missionBoard: 1,
     },
     summonHistory: [],
+    initialSummon: createInitialSummonState(),
     lastBattle: null,
     pendingTowerEvent: null,
     plannedTowerPostEvent: null,

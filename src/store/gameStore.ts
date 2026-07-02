@@ -7,6 +7,7 @@ import {
   applyTowerPresetToFormation,
   chooseHeroSpecialization,
   chooseRecruitmentHero,
+  claimInitialSpecialSummonOption,
   claimAchievementReward,
   claimDailyMissionReward,
   clearChapterCompletion,
@@ -17,6 +18,7 @@ import {
   ensureStateShape,
   equipItem,
   importGameStateFromText,
+  generateInitialSpecialSummonOptions,
   initializeNarrativeForSession,
   markNarrativeSceneSeen,
   prepareLoadedGameState,
@@ -35,6 +37,7 @@ import {
   treatHeroInjuries,
   unequipItem,
   upgradeRelic,
+  useStarterCommonSummon,
   useConsumable,
   applyPreferencesToDocument,
   resetPreferences as resetStoredPreferences,
@@ -85,6 +88,9 @@ type GameStore = {
   claimAchievement: (achievementId: string) => ActionResult;
   upgradeRelic: (relicId: string) => ActionResult;
   summonHero: (type: SummonType) => ActionResult;
+  useStarterCommonSummon: () => ActionResult;
+  prepareInitialSpecialSummon: () => ActionResult;
+  claimInitialSpecialSummon: (definitionId: string) => ActionResult;
   startContractRecruitment: () => ActionResult;
   chooseRecruitmentHero: (heroId: string) => ActionResult;
   chooseHeroSpecialization: (heroId: string, specializationKey: string) => ActionResult;
@@ -298,6 +304,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   claimAchievement: (achievementId) => mutateState(get, set, (state) => claimAchievementReward(state, achievementId)),
   upgradeRelic: (relicId) => mutateState(get, set, (state) => upgradeRelic(state, relicId)),
   summonHero: (type) => mutateState(get, set, (state) => summonHero(state, type)),
+  useStarterCommonSummon: () => mutateState(get, set, (state) => useStarterCommonSummon(state)),
+  prepareInitialSpecialSummon: () => mutateState(get, set, (state) => generateInitialSpecialSummonOptions(state)),
+  claimInitialSpecialSummon: (definitionId) =>
+    mutateState(get, set, (state) => claimInitialSpecialSummonOption(state, definitionId)),
   startContractRecruitment: () => mutateState(get, set, (state) => startContractRecruitment(state)),
   chooseRecruitmentHero: (heroId) => mutateState(get, set, (state) => chooseRecruitmentHero(state, heroId)),
   chooseHeroSpecialization: (heroId, specializationKey) =>
