@@ -30,6 +30,7 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 
 ### Progresso principal
 - `src/game/tower/` define andares, capitulos, inimigos, modificadores regionais, chefes e progresso da torre.
+- Marcos derivados do andar aplicam testes de bloco em 5/15/25/35 e chefes de capitulo em 10/20/30/40. Eles aumentam HP/ATK/DEF e ouro/XP, garantem equipamento e fornecem aviso de preparacao sem bloquear a tentativa.
 - `src/game/difficulty/` define modos Normal, Desafio e Hardcore, aplica modificadores de risco/recompensa e registra estatisticas por modo.
 - `src/game/tower-events/` controla eventos aleatorios antes e depois de combates, escolhas de risco/recompensa e efeitos aplicado na proxima luta.
 - `src/game/weekly-events/` aplica eventos semanais locais conforme o calendario do navegador.

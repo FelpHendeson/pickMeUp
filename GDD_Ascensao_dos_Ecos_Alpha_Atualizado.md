@@ -346,6 +346,12 @@ A torre atual possui 40 andares divididos em 4 capitulos.
 - Capitulo 3: equipe recebe mais dano.
 - Capitulo 4: ATK inimigo aumentado e cura da equipe reduzida.
 
+### Marcos a cada cinco andares
+
+A Torre funciona como prova de preparo do Lobby. Os andares 5, 15, 25 e 35 sao testes de bloco com +10% em HP, ATK e DEF inimigos e +8% em ouro/XP. Os andares 10, 20, 30 e 40 sao chefes de capitulo com +18% em HP, ATK e DEF inimigos e +15% em ouro/XP.
+
+Esses oito marcos garantem equipamento e exibem aviso e dica de preparacao antes da tentativa. O jogador continua livre para lutar sem hard gate. Andares 9, 19, 29 e 39 deixam de receber equipamento garantido apenas por serem pre-chefes.
+
 ### Diretriz futura
 Expandir para 60 andares apenas depois de consolidar resultado de combate, balanceamento e progressao permanente.
 
