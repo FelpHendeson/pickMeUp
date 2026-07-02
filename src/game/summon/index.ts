@@ -1,5 +1,9 @@
 import { GAME_CONFIG } from "../config";
-import { generateHero } from "../heroes";
+import {
+  createHeroFromDefinition,
+  getAvailableHeroDefinitions,
+  type HeroDefinition,
+} from "../heroes";
 import { recordHeroDiscovery } from "../library";
 import { recordMissionProgress } from "../missions";
 import { getRelicSummonCostMultiplier } from "../relics";
@@ -102,6 +106,40 @@ export function getSummonCost(state: GameState | null, type: unknown, dateInput:
   };
 }
 
+export function getClosestAvailableDefinitionByRarity(
+  availableDefinitions: readonly HeroDefinition[],
+  targetRarity: number,
+  random: () => number = Math.random,
+): HeroDefinition | null {
+  if (availableDefinitions.length === 0) return null;
+
+  const normalizedTarget = Math.max(1, Math.floor(Number(targetRarity) || 1));
+  const closestDistance = Math.min(
+    ...availableDefinitions.map((definition) => Math.abs(definition.initialRarity - normalizedTarget)),
+  );
+  const closestDefinitions = availableDefinitions.filter(
+    (definition) => Math.abs(definition.initialRarity - normalizedTarget) === closestDistance,
+  );
+  const randomIndex = Math.min(
+    closestDefinitions.length - 1,
+    Math.max(0, Math.floor(random() * closestDefinitions.length)),
+  );
+
+  return closestDefinitions[randomIndex] ?? closestDefinitions[0] ?? null;
+}
+
+export function selectAvailableHeroDefinitionForSummon(
+  state: Pick<GameState, "heroes">,
+  type: unknown,
+  options: { random?: () => number; dateInput?: Date | string | number } = {},
+): HeroDefinition | null {
+  const availableDefinitions = getAvailableHeroDefinitions(state);
+  if (availableDefinitions.length === 0) return null;
+
+  const targetRarity = rollSummonRarity(type, options.random, options.dateInput);
+  return getClosestAvailableDefinitionByRarity(availableDefinitions, targetRarity, options.random);
+}
+
 export function createSummonHistoryEntry(hero: Hero, summonType: SummonType, at = new Date().toISOString()): SummonHistoryEntry {
   return {
     id: hero.id,
@@ -126,6 +164,15 @@ export function summonHero(
 ): SummonHeroResult {
   const summonType = normalizeSummonType(type);
   const cost = getSummonCost(state, summonType, options.dateInput);
+  const definition = selectAvailableHeroDefinitionForSummon(state, summonType, options);
+
+  if (!definition) {
+    return {
+      ok: false,
+      cost,
+      message: "Nao ha novos herois disponiveis no roster atual. Seus recursos nao foram consumidos.",
+    };
+  }
 
   if (!spendResource(state, cost.resource, cost.amount)) {
     return {
@@ -135,8 +182,7 @@ export function summonHero(
     };
   }
 
-  const rarity = rollSummonRarity(summonType, options.random, options.dateInput);
-  const hero = generateHero({ rarity, random: options.random });
+  const hero = createHeroFromDefinition(definition, { random: options.random });
   state.heroes.push(hero);
   recordHeroDiscovery(state, hero);
   addSummonHistory(state, hero, summonType);

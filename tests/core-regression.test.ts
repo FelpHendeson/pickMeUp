@@ -168,7 +168,7 @@ test("consultas do roster removem apenas definicoes ja obtidas", () => {
 test("save antigo sem definitionId preserva heroi procedural como legacy", () => {
   const imported = importGameStateFromText(JSON.stringify({
     saveVersion: 1,
-    resources: { gold: 10 },
+    resources: { gold: 500 },
     heroes: [{ id: "old_hero", name: "Veterano sem registro", rarity: 2, classKey: "warrior", traitKey: "brave" }],
     formation: ["old_hero"],
     towerFloor: 3,
@@ -179,6 +179,12 @@ test("save antigo sem definitionId preserva heroi procedural como legacy", () =>
   assert.equal(imported.state.heroes[0]?.definitionId, undefined);
   assert.equal(isLegacyHero(imported.state.heroes[0]), true);
   assert.deepEqual(imported.state.formation, ["old_hero", null, null, null, null]);
+
+  const summoned = summonHero(imported.state, "common", { random: () => 0 });
+  assert.equal(summoned.ok, true);
+  if (!summoned.ok) return;
+  assert.ok(summoned.hero.definitionId);
+  assert.equal(imported.state.heroes.some((hero) => hero.id === "old_hero"), true);
 });
 
 test("migration v0 normaliza save legado parcial e adiciona defaults atuais", () => {
@@ -282,7 +288,77 @@ test("summonHero consome recurso, adiciona heroi e registra historico", () => {
   assert.equal(state.heroes.length, 1);
   assert.equal(state.resources.gold, startingGold - result.cost.amount);
   assert.equal(result.hero.rarity, 1);
+  assert.ok(result.hero.definitionId);
+  assert.equal(result.hero.name, getHeroDefinitionById(result.hero.definitionId)?.name);
   assert.equal(state.summonHistory[0].id, result.hero.id);
+  assert.equal(state.summonHistory[0].name, result.hero.name);
+  assert.ok(state.missionStats.summons >= 1);
+  assert.equal(state.dailyMissions.progress.summons, 1);
+  assert.equal(state.library.heroes.classes[result.hero.classKey].discovered, true);
+});
+
+test("invocacao superior usa raridade disponivel mais proxima e preserva definicao", () => {
+  const state = createInitialState();
+  const startingCrystals = state.resources.crystals;
+  const result = summonHero(state, "superior", { random: () => 0.999 });
+
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  const definition = getHeroDefinitionById(result.hero.definitionId);
+  assert.ok(definition);
+  assert.equal(result.hero.rarity, definition?.initialRarity);
+  assert.equal(result.hero.classKey, definition?.classKey);
+  assert.equal(result.hero.traitKey, definition?.traitKey);
+  assert.equal(state.resources.crystals, startingCrystals - result.cost.amount);
+});
+
+test("invocacoes repetidas nao duplicam definitionId", () => {
+  const state = createInitialState();
+  const first = summonHero(state, "common", { random: () => 0 });
+  const second = summonHero(state, "common", { random: () => 0 });
+
+  assert.equal(first.ok, true);
+  assert.equal(second.ok, true);
+  if (!first.ok || !second.ok) return;
+  assert.notEqual(first.hero.definitionId, second.hero.definitionId);
+  assert.equal(new Set(state.heroes.map((hero) => hero.definitionId)).size, 2);
+});
+
+test("heroi legacy nao bloqueia roster e definicao obtida nao pode repetir", () => {
+  const state = createInitialState();
+  const legacyHero = createFixedHero("legacy_before_roster");
+  const ownedDefinition = HERO_ROSTER.find((definition) => definition.initialRarity === 1)!;
+  const ownedRosterHero = createHeroFromDefinition(ownedDefinition, { id: "owned_before_summon", random: () => 0.5 });
+  state.heroes.push(legacyHero, ownedRosterHero);
+
+  const result = summonHero(state, "common", { random: () => 0 });
+
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.ok(result.hero.definitionId);
+  assert.notEqual(result.hero.definitionId, ownedDefinition.definitionId);
+  assert.equal(state.heroes.includes(legacyHero), true);
+  assert.equal(isLegacyHero(legacyHero), true);
+});
+
+test("pool esgotado falha sem consumir recursos ou registrar progresso", () => {
+  const state = createInitialState();
+  state.heroes.push(
+    ...HERO_ROSTER.map((definition, index) =>
+      createHeroFromDefinition(definition, { id: `owned_${index}`, random: () => 0.5 }),
+    ),
+  );
+  const startingGold = state.resources.gold;
+  const startingHistoryLength = state.summonHistory.length;
+  const startingSummons = state.missionStats.summons ?? 0;
+
+  const result = summonHero(state, "common", { random: () => 0 });
+
+  assert.equal(result.ok, false);
+  assert.match(result.message, /Nao ha novos herois disponiveis/);
+  assert.equal(state.resources.gold, startingGold);
+  assert.equal(state.summonHistory.length, startingHistoryLength);
+  assert.equal(state.missionStats.summons ?? 0, startingSummons);
 });
 
 test("presets de torre e expedicao preservam selecoes validas", () => {
