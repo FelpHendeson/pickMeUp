@@ -173,10 +173,19 @@ O jogo usa Next.js, React, TypeScript e Zustand. O runtime antigo em JavaScript 
 | Ouro | Invocacao comum, compras, tratamento e custos gerais | Controlar inflacao e criar bons sumidouros |
 | Cristais | Invocacao superior e recompensas especiais | Manter raro, mas com rotas previsiveis |
 | Essencia | Tratamento/progressao e recompensas | Usar em evolucao e relíquias |
-| Fragmentos | Equipamentos e recompensas | Usar em craft/desmonte/melhoria |
+| Fragmentos | Equipamentos, recompensas e promocao 1★→2★ | Usar em craft/desmonte/melhoria e ascensao |
 | Energia | Controla ritmo da torre | Limitar farm, nao bloquear diversao |
 
 A economia deve favorecer sessoes curtas e decisoes frequentes. Energia nao deve impedir o jogador de testar uma composicao recem montada.
+
+### Balanceamento inicial
+
+O comeco do jogo segue um ritmo claro: invocar herois iniciais → montar formacao → treinar → subir os primeiros andares → coletar recursos → descobrir potencial → promover 1★ para 2★.
+
+- Recursos iniciais: 250 de ouro, 100 de cristais, 30/30 de energia. O ouro (2 invocacoes comuns) evita esgotar o roster unico de imediato; o onboarding (5 tickets + 1 escolha especial) ja entrega formacao completa, e o restante do ouro deve vir da Torre.
+- Fragmentos para a promocao 1★→2★ (5 por promocao) tem fonte controlada nos andares iniciais: 3 no andar 5, 6 no andar 7 e 10 no chefe do andar 10. A primeira promocao fica alcancavel por volta do andar 7, sem trivializar.
+- Energia inicial permite ~6 tentativas antes de depender da regeneracao; vitorias devolvem parte da energia e derrotas custam a tentativa cheia, mantendo o farm sob controle.
+- Treino, proficiencia e analise de potencial permanecem lentos e controlados, garantindo que os requisitos de promocao sejam alcancaveis com jogo inicial moderado, mas nunca instantaneos.
 
 ---
 

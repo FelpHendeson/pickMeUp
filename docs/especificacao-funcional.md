@@ -91,7 +91,9 @@ Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao po
 - A Biblioteca deve apresentar essas descobertas como grimorio/arquivo arcano, separando inimigos, chefes, capitulos, eventos, reliquias e memoria da guilda sem alterar os dados salvos.
 - Eventos semanais locais, eventos aleatorios da torre e narrativas curtas mantem o jogo vivo sem backend.
 - Recursos principais incluem ouro, cristais, essencia, fragmentos, Fragmentos de Eco e energia.
-- Energia regenera com o tempo e deve permitir teste rapido de composicoes sem bloquear o jogador.
+- Balanceamento inicial: o jogo comeca com 250 de ouro, 100 de cristais e 30/30 de energia. O ouro inicial (2 invocacoes comuns) evita esgotar o roster unico logo de inicio; o onboarding (5 tickets comuns + 1 escolha especial) ja entrega formacao, e o restante dos recursos deve vir da subida da Torre. Rituais pagos seguem bloqueados ate o fim do onboarding.
+- Fragmentos, usados na promocao 1★→2★ (5 por promocao), tem fonte controlada nos primeiros andares: 3 no marco do andar 5, 6 no andar 7 e 10 no chefe do andar 10, tornando a primeira promocao alcancavel por volta do andar 7 sem trivializar. Andares altos mantem a formula original.
+- Energia regenera com o tempo e deve permitir teste rapido de composicoes sem bloquear o jogador (30/30 iniciais permitem ~6 tentativas antes de depender da regeneracao).
 - A equipe evolui por XP, equipamento, especializacao, moral, ferimentos, recrutamento e relíquias.
 - Relíquias permanentes aumentam a conta de forma global e devem ser persistidas no save.
 - Contratos de heroi complementam a invocacao e oferecem recrutamento alternativo com escolhas curtas, confirmacao clara e atalhos para revisar Heróis ou Formacao.

@@ -108,7 +108,19 @@ export function getFloorReward(floorNumber: number, options: TowerRewardOptions 
     crystalChance: Math.min(0.1 + floorNumber * 0.012, 0.42),
     crystalAmount: 8 + floorNumber * 2 + Math.floor(floorNumber / 10) * 8,
     essence: floorNumber === 6 ? 15 : floorNumber === 10 ? 20 : floorNumber >= 13 && floorNumber % 5 === 3 ? 18 + floorNumber : 0,
-    fragments: floorNumber === 7 ? 15 : floorNumber === 10 ? 20 : floorNumber >= 14 && floorNumber % 5 === 4 ? 18 + floorNumber : 0,
+    // Fragmentos: fonte pequena e cedo para viabilizar a promocao 1★->2★
+    // (5 fragmentos) sem trivializar. Marco 5 abre a fonte, o andar 7 reforca
+    // e o chefe do andar 10 consolida. Andares altos seguem a formula original.
+    fragments:
+      floorNumber === 5
+        ? 3
+        : floorNumber === 7
+          ? 6
+          : floorNumber === 10
+            ? 10
+            : floorNumber >= 14 && floorNumber % 5 === 4
+              ? 18 + floorNumber
+              : 0,
     echoFragmentChance: bossFloor ? 0.65 : Math.min(0.03 + floorNumber * 0.003, 0.16),
     echoFragmentAmount: bossFloor ? 2 + Math.floor(floorNumber / 10) * 2 : 1,
     consumableChance: bossFloor ? 0.38 : Math.min(0.08 + floorNumber * 0.004, 0.24),

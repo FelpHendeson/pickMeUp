@@ -19,7 +19,9 @@ import {
   equipItem,
   generateHero,
   generateEquipment,
+  getFloorReward,
   getMaxLevelForRarity,
+  GAME_CONFIG,
   getExpeditionDefinition,
   getAvailableHeroDefinitions,
   getHeroDefinitionById,
@@ -2206,4 +2208,97 @@ test("preview de promocao entrega contrato consumivel pela UI", () => {
     assert.ok(typeof req.label === "string" && typeof req.description === "string");
   });
   assert.equal(getPromotionReadiness(preview), preview.readiness);
+});
+
+// --- Balanceamento inicial ---
+
+test("recursos iniciais ficam coerentes com o novo balanceamento", () => {
+  const state = createInitialState();
+  assert.equal(state.resources.gold, 250);
+  assert.equal(state.resources.crystals, 100);
+  assert.equal(state.resources.energy, GAME_CONFIG.maxEnergy);
+  assert.equal(state.resources.maxEnergy, GAME_CONFIG.maxEnergy);
+  assert.equal(state.resources.fragments, 0);
+  // Onboarding intacto: 5 tickets comuns + 1 escolha especial, rituais pagos bloqueados.
+  assert.equal(state.initialSummon.commonRemaining, 5);
+  assert.equal(isInitialSummonComplete(state), false);
+  assert.equal(canUsePaidSummon(state), false);
+});
+
+test("ouro inicial nao permite esgotar o roster unico logo de inicio", () => {
+  const state = createInitialState();
+  const commonSummons = Math.floor(state.resources.gold / GAME_CONFIG.commonSummonCost);
+  // Com 250 de ouro sao no maximo 2 invocacoes comuns pagas, bem abaixo do roster.
+  assert.ok(commonSummons <= 2);
+  assert.ok(commonSummons < HERO_ROSTER.length);
+});
+
+test("primeiros andares abrem fonte pequena e controlada de fragmentos", () => {
+  // Andares 1-4 nao entregam fragmentos: a fonte comeca no marco do andar 5.
+  for (let floor = 1; floor <= 4; floor += 1) {
+    assert.equal(getFloorReward(floor).fragments, 0);
+  }
+  assert.equal(getFloorReward(5).fragments, 3);
+  assert.equal(getFloorReward(7).fragments, 6);
+  assert.equal(getFloorReward(10).fragments, 10);
+
+  // Ate o andar 10 o total de fragmentos garantidos cobre poucas promocoes,
+  // sem trivializar (cada promocao 1★->2★ custa 5 fragmentos).
+  const earlyFragments = getFloorReward(5).fragments + getFloorReward(7).fragments + getFloorReward(10).fragments;
+  assert.equal(earlyFragments, 19);
+  assert.ok(earlyFragments >= 5);
+  assert.ok(earlyFragments < 25);
+});
+
+test("andares 5 e 10 seguem como marcos com recompensa marcante", () => {
+  assert.equal(getFloorReward(5).guaranteedEquipment, true);
+  assert.equal(getFloorReward(10).guaranteedEquipment, true);
+  assert.ok(getFloorReward(5).gold > getFloorReward(4).gold);
+  assert.ok(getFloorReward(10).gold > getFloorReward(9).gold);
+});
+
+test("energia inicial permite algumas tentativas mas nao progressao infinita", () => {
+  const state = createInitialState();
+  const freshAttempts = Math.floor(state.resources.energy / GAME_CONFIG.towerEnergyCost);
+  assert.equal(freshAttempts, 6);
+  assert.ok(freshAttempts >= 4 && freshAttempts <= 8);
+  assert.ok(GAME_CONFIG.energyRegenMs > 0);
+});
+
+test("promocao 1 para 2 e alcancavel com fragmentos dos primeiros andares", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "promo_balance", "orven_ash_eye");
+  // Fragmentos exatamente equivalentes aos marcos 5 + 7 (fonte cedo).
+  const earnedFragments = getFloorReward(5).fragments + getFloorReward(7).fragments;
+  preparePromotionCandidate(state, hero, {
+    level: 8,
+    potentialXp: 10,
+    proficiencyXp: 10,
+    proficiencyKey: "archery",
+    towerFloor: 7,
+    gold: 300,
+    fragments: earnedFragments,
+  });
+
+  const preview = getHeroPromotionPreview(state, hero.id);
+  assert.equal(preview?.eligible, true);
+
+  const result = promoteHero(state, hero.id);
+  assert.equal(result.ok, true);
+  assert.equal(hero.rarity, 2);
+  // Custo consumido; ainda sobra fragmento como buffer controlado.
+  assert.equal(state.resources.gold, 150);
+  assert.equal(state.resources.fragments, earnedFragments - 5);
+  assert.ok(state.resources.fragments >= 0);
+});
+
+test("ritmos de treino, proficiencia e potencial seguem lentos e controlados", () => {
+  assert.equal(TRAINING_CONFIG.xpPerBlock, 1);
+  assert.ok(TRAINING_CONFIG.blockMs >= 10 * 60 * 1000);
+  assert.ok(TRAINING_CONFIG.maxBlocksPerCall <= 6);
+  // Proficiencia primaria recebe apenas fracao do XP de treino.
+  assert.ok(PROFICIENCY_CONFIG.primaryDivisor >= 2);
+  // Nivel 1 de potencial ainda exige acumulo (nao instantaneo).
+  assert.equal(getPotentialLevelForXp(0), 0);
+  assert.equal(getPotentialLevelForXp(POTENTIAL_CONFIG.manualAnalysisXp), 1);
 });

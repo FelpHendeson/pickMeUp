@@ -19,7 +19,10 @@ export function createInitialState(now = Date.now()): GameState {
     accountXp: 0,
     towerFloor: 1,
     resources: {
-      gold: 500,
+      // Ouro inicial reduzido (era 500) para evitar esgotar o roster unico logo
+      // no comeco: com invocacao comum a 100, o onboarding ja entrega formacao e
+      // o restante deve vir da subida da Torre.
+      gold: 250,
       crystals: 100,
       essence: 0,
       fragments: 0,
