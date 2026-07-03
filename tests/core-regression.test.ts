@@ -17,6 +17,7 @@ import {
   createInitialState,
   ensureStateShape,
   equipItem,
+  getEarlyObjectiveTrack,
   generateHero,
   generateEquipment,
   getFloorReward,
@@ -2301,4 +2302,203 @@ test("ritmos de treino, proficiencia e potencial seguem lentos e controlados", (
   // Nivel 1 de potencial ainda exige acumulo (nao instantaneo).
   assert.equal(getPotentialLevelForXp(0), 0);
   assert.equal(getPotentialLevelForXp(POTENTIAL_CONFIG.manualAnalysisXp), 1);
+});
+
+// --- Trilha inicial de objetivos (early-game) ---
+
+function findObjective(track: ReturnType<typeof getEarlyObjectiveTrack>, key: string) {
+  return track.objectives.find((objective) => objective.key === key)!;
+}
+
+test("trilha inicial existe e retorna objetivos derivados do estado", () => {
+  const state = createInitialState();
+  const track = getEarlyObjectiveTrack(state);
+  assert.equal(track.title, "Rota da Primeira Ascensão");
+  assert.ok(track.objectives.length >= 9);
+  assert.equal(track.totalCount, track.objectives.length);
+  assert.ok(track.completedCount >= 0 && track.completedCount <= track.totalCount);
+});
+
+test("save novo mostra tickets comuns como proximo objetivo", () => {
+  const state = createInitialState();
+  const track = getEarlyObjectiveTrack(state);
+  assert.ok(track.nextObjective);
+  assert.equal(track.nextObjective?.key, "use-tickets");
+  assert.equal(findObjective(track, "use-tickets").status, "available");
+});
+
+test("gastar tickets comuns atualiza progresso do objetivo inicial", () => {
+  const state = createInitialState();
+  state.initialSummon.commonRemaining = 2;
+  const partial = getEarlyObjectiveTrack(state);
+  assert.equal(findObjective(partial, "use-tickets").progressCurrent, 3);
+  assert.equal(findObjective(partial, "use-tickets").status, "available");
+
+  state.initialSummon.commonRemaining = 0;
+  const done = getEarlyObjectiveTrack(state);
+  assert.equal(findObjective(done, "use-tickets").status, "completed");
+});
+
+test("escolher especial marca objetivo como concluido", () => {
+  const state = createInitialState();
+  state.initialSummon.commonRemaining = 0;
+  state.initialSummon.specialClaimed = true;
+  const track = getEarlyObjectiveTrack(state);
+  assert.equal(findObjective(track, "choose-special").status, "completed");
+});
+
+test("montar formacao atualiza o objetivo de formacao", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "track_formation", "orven_ash_eye");
+  assert.notEqual(findObjective(getEarlyObjectiveTrack(state), "build-formation").status, "completed");
+  state.formation[0] = hero.id;
+  const track = getEarlyObjectiveTrack(state);
+  assert.equal(findObjective(track, "build-formation").status, "completed");
+  assert.equal(findObjective(track, "build-formation").progressCurrent, 1);
+});
+
+test("towerFloor 2 marca o andar 1 como vencido", () => {
+  const state = createInitialState();
+  state.towerFloor = 2;
+  assert.equal(findObjective(getEarlyObjectiveTrack(state), "win-floor-1").status, "completed");
+});
+
+test("towerFloor 6 marca o marco do andar 5 como vencido", () => {
+  const state = createInitialState();
+  state.towerFloor = 6;
+  const track = getEarlyObjectiveTrack(state);
+  assert.equal(findObjective(track, "reach-floor-5").status, "completed");
+  assert.equal(findObjective(track, "reach-floor-5").progressCurrent, 5);
+});
+
+test("fragmentos e ouro suficientes concluem o objetivo de recursos", () => {
+  const state = createInitialState();
+  state.resources.gold = 300;
+  state.resources.fragments = 5;
+  const objective = findObjective(getEarlyObjectiveTrack(state), "gather-resources");
+  assert.equal(objective.progressCurrent, 2);
+  assert.equal(objective.progressTarget, 2);
+  assert.equal(objective.status, "completed");
+});
+
+test("treino de heroi 1 estrela conclui o objetivo de treino", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "track_train", "orven_ash_eye");
+  assert.equal(findObjective(getEarlyObjectiveTrack(state), "train-one-star").status !== "completed", true);
+  progressHeroTraining(state, hero.id, 5, 1_000);
+  assert.equal(findObjective(getEarlyObjectiveTrack(state), "train-one-star").status, "completed");
+});
+
+test("proficiencia descoberta em heroi 1 estrela conclui objetivo", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "track_prof", "orven_ash_eye");
+  progressHeroProficiency(state, hero.id, "archery", 5, 1_000);
+  assert.equal(findObjective(getEarlyObjectiveTrack(state), "reveal-proficiency").status, "completed");
+});
+
+test("potencial nivel 1 em heroi 1 estrela conclui objetivo de analise", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "track_pot", "orven_ash_eye");
+  progressHeroPotentialAnalysis(state, hero.id, 3, "manual", 1_000);
+  assert.equal(findObjective(getEarlyObjectiveTrack(state), "analyze-potential").status, "completed");
+});
+
+test("preview elegivel de promocao libera o objetivo final da trilha", () => {
+  const state = createInitialState();
+  completeInitialSummonForTest(state);
+  const hero = makeRosterHeroForTest(state, "track_final", "orven_ash_eye");
+  state.formation[0] = hero.id;
+  state.towerFloor = 7;
+  preparePromotionCandidate(state, hero, {
+    level: 8,
+    potentialXp: 10,
+    proficiencyXp: 10,
+    proficiencyKey: "archery",
+    towerFloor: 7,
+    gold: 300,
+    fragments: 9,
+  });
+  progressHeroTraining(state, hero.id, 5, 1_000);
+  state.resources.fragments = 9;
+
+  const preview = getHeroPromotionPreview(state, hero.id);
+  assert.equal(preview?.eligible, true);
+
+  const track = getEarlyObjectiveTrack(state);
+  const finalObjective = findObjective(track, "promote-one-star");
+  assert.equal(finalObjective.status, "available");
+  assert.ok(finalObjective.hint.includes("elegível"));
+});
+
+test("heroi promovido para 2 estrelas conclui a trilha final", () => {
+  const state = createInitialState();
+  completeInitialSummonForTest(state);
+  const hero = makeRosterHeroForTest(state, "track_promoted", "orven_ash_eye");
+  state.formation[0] = hero.id;
+  preparePromotionCandidate(state, hero, {
+    level: 8,
+    potentialXp: 10,
+    proficiencyXp: 10,
+    proficiencyKey: "archery",
+    towerFloor: 7,
+    gold: 300,
+    fragments: 9,
+  });
+  progressHeroTraining(state, hero.id, 5, 1_000);
+
+  const result = promoteHero(state, hero.id);
+  assert.equal(result.ok, true);
+  assert.equal(hero.rarity, 2);
+
+  const track = getEarlyObjectiveTrack(state);
+  assert.equal(findObjective(track, "promote-one-star").status, "completed");
+});
+
+test("objetivos locked/available/completed respeitam a ordem minima", () => {
+  const state = createInitialState();
+  const track = getEarlyObjectiveTrack(state);
+  const availableCount = track.objectives.filter((objective) => objective.status === "available").length;
+  assert.equal(availableCount, 1);
+  const firstAvailableIndex = track.objectives.findIndex((objective) => objective.status === "available");
+  track.objectives.forEach((objective, index) => {
+    if (index > firstAvailableIndex && objective.status !== "completed") {
+      assert.equal(objective.status, "locked");
+    }
+  });
+});
+
+test("getEarlyObjectiveTrack e puro e nao altera o estado", () => {
+  const state = createInitialState();
+  makeRosterHeroForTest(state, "track_pure", "orven_ash_eye");
+  const snapshot = JSON.stringify(state);
+  getEarlyObjectiveTrack(state);
+  assert.equal(JSON.stringify(state), snapshot);
+});
+
+test("trilha inicial nao cria campo persistido nem migration nova", () => {
+  const state = createInitialState();
+  assert.equal(state.schemaVersion, CURRENT_SAVE_SCHEMA_VERSION);
+  assert.equal(CURRENT_SAVE_SCHEMA_VERSION, 5);
+  assert.equal("earlyObjectives" in state, false);
+  assert.equal("objectives" in state, false);
+});
+
+test("contrato da trilha e consumivel pela UI sem logica duplicada", () => {
+  const state = createInitialState();
+  const track = getEarlyObjectiveTrack(state);
+  assert.equal(typeof track.title, "string");
+  assert.equal(typeof track.summary, "string");
+  track.objectives.forEach((objective) => {
+    assert.equal(typeof objective.key, "string");
+    assert.equal(typeof objective.title, "string");
+    assert.equal(typeof objective.description, "string");
+    assert.equal(typeof objective.hint, "string");
+    assert.ok(["locked", "available", "completed"].includes(objective.status));
+    assert.ok(objective.progressTarget >= 1);
+    assert.ok(objective.progressCurrent >= 0 && objective.progressCurrent <= objective.progressTarget);
+  });
+  // nextObjective, quando existe, e exatamente o objetivo disponivel.
+  if (track.nextObjective) {
+    assert.equal(track.nextObjective.status, "available");
+  }
 });

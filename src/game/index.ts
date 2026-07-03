@@ -38,6 +38,7 @@ export * from "./training";
 export * from "./proficiencies";
 export * from "./potential";
 export * from "./promotion";
+export * from "./early-game";
 export * from "./summon";
 export * from "./tower-events";
 export * from "./battle";

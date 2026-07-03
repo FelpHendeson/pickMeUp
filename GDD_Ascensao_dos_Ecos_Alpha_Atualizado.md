@@ -187,6 +187,15 @@ O comeco do jogo segue um ritmo claro: invocar herois iniciais → montar formac
 - Energia inicial permite ~6 tentativas antes de depender da regeneracao; vitorias devolvem parte da energia e derrotas custam a tentativa cheia, mantendo o farm sob controle.
 - Treino, proficiencia e analise de potencial permanecem lentos e controlados, garantindo que os requisitos de promocao sejam alcancaveis com jogo inicial moderado, mas nunca instantaneos.
 
+### Trilha inicial de objetivos (Rota da Primeira Ascensao)
+
+Para reduzir confusao no comeco, o painel Base exibe uma trilha visual e orientativa derivada do estado (`getEarlyObjectiveTrack`), sem quest system pesado, sem recurso novo e sem migration.
+
+- Objetivos, em ordem: usar os tickets iniciais → escolher o heroi especial → montar a formacao → vencer o andar 1 → superar o marco do andar 5 → obter os primeiros fragmentos → treinar um heroi 1★ → revelar uma proficiencia → analisar potencial (nivel 1) → reunir recursos (150 ouro + 5 fragmentos) → promover um heroi 1★ para 2★.
+- Cada objetivo tem status `locked`/`available`/`completed`, progresso X/Y e hint. A fronteira `available` e sempre o primeiro objetivo nao concluido; objetivos ja cumpridos ficam `completed` mesmo fora de ordem.
+- A promocao concluida e detectada comparando a raridade atual do heroi com a raridade base da definicao no roster, sem historico persistido.
+- A trilha nao bloqueia nenhum sistema: Torre, treino, invocacao e promocao continuam livres. O card some quando todos os objetivos sao concluidos.
+
 ---
 
 ## 8. Herois

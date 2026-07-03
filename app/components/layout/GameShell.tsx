@@ -8,6 +8,7 @@ import {
   getClaimableMissionCount,
   getFormationHeroes,
   getFormationHeroCount,
+  getEarlyObjectiveTrack,
   getFormationPower,
   getInjuredHeroes,
   getLobbyRoutineReport,
@@ -346,6 +347,59 @@ function BaseShortcutButton({ description, onNavigate, tab, title }: { descripti
   );
 }
 
+function EarlyObjectivesCard({ state, onNavigate }: { state: GameState; onNavigate: (tab: DashboardTab) => void }) {
+  const track = getEarlyObjectiveTrack(state);
+  if (track.completedCount >= track.totalCount) return null;
+
+  const progressValue = Math.round((track.completedCount / Math.max(1, track.totalCount)) * 100);
+  const next = track.nextObjective;
+  const statusLabel: Record<string, string> = { completed: "Concluído", available: "Agora", locked: "Bloqueado" };
+
+  return (
+    <article className="command-card early-track-card">
+      <div className="base-card-head">
+        <span>Trilha Inicial | {track.completedCount}/{track.totalCount}</span>
+        <h3>{track.title}</h3>
+      </div>
+      <p>{track.summary}</p>
+      <UiProgressBar label={`Objetivos concluídos ${track.completedCount}/${track.totalCount}`} value={progressValue} />
+
+      {next ? (
+        <div className="early-track-next">
+          <div className="early-track-next-copy">
+            <span>Próximo objetivo</span>
+            <strong>{next.title}</strong>
+            <small>{next.hint}</small>
+          </div>
+          {next.targetTab ? (
+            <button className="hero-inline-action primary" onClick={() => onNavigate(next.targetTab as DashboardTab)} type="button">
+              {next.actionLabel ?? "Abrir"}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
+      <ol className="early-track-list">
+        {track.objectives.map((objective) => (
+          <li className={`early-track-item status-${objective.status}`} key={objective.key}>
+            <span className="early-track-item-mark" aria-hidden="true">
+              {objective.status === "completed" ? "✓" : objective.status === "available" ? "◆" : "◇"}
+            </span>
+            <span className="early-track-item-body">
+              <strong>{objective.title}</strong>
+              <small>
+                {objective.progressCurrent}/{objective.progressTarget} · {statusLabel[objective.status]}
+              </small>
+            </span>
+          </li>
+        ))}
+      </ol>
+
+      <small className="lobby-routine-note">Trilha orientativa derivada do estado atual. Não bloqueia Torre, treino, invocação nem promoção.</small>
+    </article>
+  );
+}
+
 function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) {
   const state = useGameStore((store) => store.state);
   const [lobbyRoutineNow, setLobbyRoutineNow] = useState(0);
@@ -422,6 +476,8 @@ function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) 
           <span>Andar</span>
         </div>
       </article>
+
+      <EarlyObjectivesCard state={state} onNavigate={onNavigate} />
 
       <div className="base-status-ledger">
         <BaseResourceStat label="Andar atual" value={floorProgress} tone="gold" />
