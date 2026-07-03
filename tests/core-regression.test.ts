@@ -28,6 +28,7 @@ import {
   getHeroDefinitionById,
   getHeroLobbyRoutine,
   getLobbyRoutineReport,
+  getLobbyLivingReport,
   getOwnedHeroDefinitionIds,
   getRecommendedFormationPower,
   getTowerReadinessLevel,
@@ -2501,4 +2502,148 @@ test("contrato da trilha e consumivel pela UI sem logica duplicada", () => {
   if (track.nextObjective) {
     assert.equal(track.nextObjective.status, "available");
   }
+});
+
+// --- Lobby Vivo (visao enriquecida) ---
+
+test("relatorio visual do Lobby deriva do estado e resume a guilda", () => {
+  const state = createInitialState();
+  const heroes = addHeroes(state, 3);
+  const report = getLobbyLivingReport(state, 0);
+
+  assert.equal(report.generatedAt, 0);
+  assert.equal(report.summary.total, heroes.length);
+  assert.ok(typeof report.ambiance === "string" && report.ambiance.length > 0);
+  assert.ok(report.note.includes("não gera recursos") || report.note.includes("nao gera recursos"));
+  const groupedHeroes = report.groups.reduce((sum, group) => sum + group.heroCount, 0);
+  assert.equal(groupedHeroes, report.summary.total);
+});
+
+test("heroi em expedicao aparece no grupo de expedicao", () => {
+  const state = createInitialState();
+  const [hero] = addHeroes(state, 1);
+  assert.equal(startExpedition(state, "training_field", [hero.id], 1_000).ok, true);
+  const report = getLobbyLivingReport(state, 1_000);
+
+  const expeditionGroup = report.groups.find((group) => group.location === "expeditionGate");
+  assert.ok(expeditionGroup);
+  assert.equal(expeditionGroup?.heroes[0]?.onExpedition, true);
+  assert.equal(report.summary.onExpedition, 1);
+});
+
+test("heroi ferido aparece na enfermaria e no bloco de atencao", () => {
+  const state = createInitialState();
+  const [hero] = addHeroes(state, 1);
+  hero.injuries = [{ key: "bruise", remainingBattles: 2, severity: 1 }];
+  const report = getLobbyLivingReport(state, 0);
+
+  const infirmary = report.groups.find((group) => group.location === "infirmary");
+  assert.ok(infirmary);
+  assert.equal(infirmary?.heroes[0]?.injured, true);
+  assert.equal(report.summary.injured, 1);
+  assert.ok(report.attention.some((entry) => entry.heroId === hero.id && entry.tone === "danger"));
+});
+
+test("heroi em formacao aparece como pronto para a Torre", () => {
+  const state = createInitialState();
+  const [hero] = addHeroes(state, 1);
+  assert.equal(addHeroToFormation(state, hero.id).ok, true);
+  const report = getLobbyLivingReport(state, 0);
+
+  const card = report.groups.flatMap((group) => group.heroes).find((entry) => entry.heroId === hero.id);
+  assert.ok(card);
+  assert.equal(card?.inFormation, true);
+  assert.equal(card?.activity, "readyForTower");
+  assert.ok(card?.markers.includes("Formação"));
+});
+
+test("heroi com treino aparece no Campo de Treino", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "lobby_train", "orven_ash_eye");
+  equipHeroForLobbyRoutine(state, hero);
+  progressHeroTraining(state, hero.id, 5, 1_000);
+  const report = getLobbyLivingReport(state, 2_000);
+
+  const card = report.groups.flatMap((group) => group.heroes).find((entry) => entry.heroId === hero.id);
+  assert.ok(card);
+  assert.equal(card?.hasTraining, true);
+  assert.equal(card?.location, "trainingGround");
+  assert.equal(card?.activity, "training");
+});
+
+test("grupos do Lobby seguem ordem estavel e contem apenas locais ocupados", () => {
+  const state = createInitialState();
+  addHeroes(state, 4);
+  const report = getLobbyLivingReport(state, 0);
+
+  const order = ["trainingGround", "expeditionGate", "infirmary", "workshop", "summonPortal", "missionBoard", "square", "restingQuarters", "barracks"];
+  const indices = report.groups.map((group) => order.indexOf(group.location));
+  const sorted = [...indices].sort((a, b) => a - b);
+  assert.deepEqual(indices, sorted);
+  assert.ok(report.groups.every((group) => group.heroCount > 0));
+});
+
+test("resumo do Lobby contabiliza treino, ferido, expedicao e disponiveis", () => {
+  const state = createInitialState();
+  const trained = makeRosterHeroForTest(state, "lobby_sum_train", "orven_ash_eye");
+  equipHeroForLobbyRoutine(state, trained);
+  progressHeroTraining(state, trained.id, 5, 1_000);
+  const hurt = makeRosterHeroForTest(state, "lobby_sum_hurt", "selka_broken_rune");
+  hurt.injuries = [{ key: "bruise", remainingBattles: 2, severity: 1 }];
+
+  const report = getLobbyLivingReport(state, 2_000);
+  assert.equal(report.summary.total, 2);
+  assert.equal(report.summary.injured, 1);
+  assert.ok(report.summary.training >= 1);
+  assert.ok(report.summary.availableForTower >= 1);
+  assert.equal(report.summary.availableForTower + report.summary.injured, report.summary.total);
+});
+
+test("getLobbyLivingReport e puro e nao altera o estado", () => {
+  const state = createInitialState();
+  addHeroes(state, 3);
+  const snapshot = JSON.stringify(state);
+  getLobbyLivingReport(state, 0);
+  assert.equal(JSON.stringify(state), snapshot);
+});
+
+test("Lobby Vivo nao cria migration nem altera progressao", () => {
+  const state = createInitialState();
+  const hero = makeRosterHeroForTest(state, "lobby_no_side", "orven_ash_eye");
+  progressHeroTraining(state, hero.id, 5, 1_000);
+  const trainingBefore = JSON.stringify(state.training);
+  const proficiencyBefore = JSON.stringify(state.proficiencies);
+  const potentialBefore = JSON.stringify(state.potential);
+
+  getLobbyLivingReport(state, 2_000);
+
+  assert.equal(state.schemaVersion, CURRENT_SAVE_SCHEMA_VERSION);
+  assert.equal(JSON.stringify(state.training), trainingBefore);
+  assert.equal(JSON.stringify(state.proficiencies), proficiencyBefore);
+  assert.equal(JSON.stringify(state.potential), potentialBefore);
+});
+
+test("contrato do Lobby Vivo e consumivel pela UI sem duplicar regra", () => {
+  const state = createInitialState();
+  addHeroes(state, 3);
+  const report = getLobbyLivingReport(state, 0);
+
+  report.groups.forEach((group) => {
+    assert.equal(typeof group.label, "string");
+    assert.ok(group.heroCount >= 1);
+    group.heroes.forEach((card) => {
+      assert.equal(typeof card.heroName, "string");
+      assert.equal(typeof card.classLabel, "string");
+      assert.ok(card.rarity >= 1);
+      assert.ok(card.level >= 1);
+      assert.equal(typeof card.activityLabel, "string");
+      assert.equal(typeof card.moraleLabel, "string");
+      assert.ok(Array.isArray(card.markers));
+    });
+  });
+  report.attention.forEach((entry) => {
+    assert.ok(["danger", "warning", "gold", "arcane"].includes(entry.tone));
+    assert.equal(typeof entry.reason, "string");
+    assert.equal(typeof entry.targetTab, "string");
+  });
 });

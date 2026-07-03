@@ -571,6 +571,8 @@ O primeiro passo do Lobby Vivo adiciona rotinas idle apenas visuais e derivadas.
 
 A Base exibe o resumo do Lobby, ocupacao das areas e a atividade atual dos herois. Esta camada representa vida cotidiana e contexto narrativo; trabalhos, recompensas materiais e simulacao espacial continuam fora do escopo atual.
 
+A visao enriquecida do Lobby (`getLobbyLivingReport`) reaproveita a rotina idle e a apresenta agrupada por local, com cards compactos por heroi (classe, raridade, nivel, moral, atividade, hint e marcadores de formacao, expedicao, ferimento, HP baixo, pronto para 2★, proficiencia e potencial). O painel Base mostra um resumo (total, treinando, feridos, em expedicao, prontos para Torre) e um bloco de atencao clicavel que aponta feridos, HP baixo, moral baixa, falta de equipamento, prontidao para promocao e analise proxima do proximo nivel. Continua sem persistencia, sem migration e sem conceder recursos: e apenas leitura do estado atual, responsiva no mobile e limitada a poucos cards por grupo.
+
 ### Campo de Treino funcional (progresso tecnico leve)
 
 O Campo de Treino ganha uma primeira versao funcional focada em progresso tecnico, nao em atributos brutos. Cada heroi possui um foco de treino entre linha de frente, dano, defesa, suporte, mobilidade, arcano, disciplina e sobrevivencia. O foco escolhido acumula XP e nivel de treino proprios, persistidos no save, separados de `stats`, `level`, `xp` e raridade do heroi.
