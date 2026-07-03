@@ -41,7 +41,7 @@ import { ResourceHudPanel } from "./ResourceHudPanel";
 import { SaveManagementPanel } from "../settings/SaveManagementPanel";
 import { SummonPanel } from "../systems/SummonPanel";
 import { TowerChallengePanel } from "../tower/TowerChallengePanel";
-import { UiProgressBar } from "../ui";
+import { CollapsibleSection, UiProgressBar } from "../ui";
 
 type DashboardTab =
   | "base"
@@ -379,23 +379,24 @@ function EarlyObjectivesCard({ state, onNavigate }: { state: GameState; onNaviga
         </div>
       ) : null}
 
-      <ol className="early-track-list">
-        {track.objectives.map((objective) => (
-          <li className={`early-track-item status-${objective.status}`} key={objective.key}>
-            <span className="early-track-item-mark" aria-hidden="true">
-              {objective.status === "completed" ? "✓" : objective.status === "available" ? "◆" : "◇"}
-            </span>
-            <span className="early-track-item-body">
-              <strong>{objective.title}</strong>
-              <small>
-                {objective.progressCurrent}/{objective.progressTarget} · {statusLabel[objective.status]}
-              </small>
-            </span>
-          </li>
-        ))}
-      </ol>
-
-      <small className="lobby-routine-note">Trilha orientativa derivada do estado atual. Não bloqueia Torre, treino, invocação nem promoção.</small>
+      <CollapsibleSection summary={`${track.completedCount}/${track.totalCount} concluídos`} title="Ver todos os objetivos">
+        <ol className="early-track-list">
+          {track.objectives.map((objective) => (
+            <li className={`early-track-item status-${objective.status}`} key={objective.key}>
+              <span className="early-track-item-mark" aria-hidden="true">
+                {objective.status === "completed" ? "✓" : objective.status === "available" ? "◆" : "◇"}
+              </span>
+              <span className="early-track-item-body">
+                <strong>{objective.title}</strong>
+                <small>
+                  {objective.progressCurrent}/{objective.progressTarget} · {statusLabel[objective.status]}
+                </small>
+              </span>
+            </li>
+          ))}
+        </ol>
+        <small className="lobby-routine-note">Trilha orientativa derivada do estado atual. Não bloqueia Torre, treino, invocação nem promoção.</small>
+      </CollapsibleSection>
     </article>
   );
 }
@@ -617,73 +618,72 @@ function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) 
           ) : null}
 
           {lobbyLivingReport.groups.length > 0 ? (
-            <div className="lobby-group-list">
-              {lobbyLivingReport.groups.map((group) => (
-                <div className="lobby-group" key={group.location}>
-                  <div className="lobby-group-head">
-                    <strong>{group.label}</strong>
-                    <span>{group.heroCount}</span>
-                  </div>
-                  <div className="lobby-card-grid">
-                    {group.heroes.slice(0, 6).map((card) => (
-                      <div className={`lobby-hero-card activity-${card.activity}`} key={card.heroId}>
-                        <div className="lobby-hero-card-head">
-                          <strong>{card.heroName}</strong>
-                          <span>{card.classLabel} · {card.rarity}★ · Lv. {card.level}</span>
-                        </div>
-                        <em>{card.activityLabel}</em>
-                        <small className={`lobby-hero-morale tone-${card.moraleTone}`}>Moral: {card.moraleLabel}</small>
-                        {card.markers.length > 0 ? (
-                          <div className="lobby-hero-markers">
-                            {card.markers.map((marker) => (
-                              <span className="lobby-hero-marker" key={marker}>{marker}</span>
-                            ))}
+            <CollapsibleSection
+              summary={`${lobbyLivingReport.groups.length} instalação(ões) · ${lobbyLivingReport.summary.total} herói(s)`}
+              title="Ver grupos do Lobby"
+            >
+              <div className="lobby-group-list">
+                {lobbyLivingReport.groups.map((group) => (
+                  <div className="lobby-group" key={group.location}>
+                    <div className="lobby-group-head">
+                      <strong>{group.label}</strong>
+                      <span>{group.heroCount}</span>
+                    </div>
+                    <div className="lobby-card-grid">
+                      {group.heroes.slice(0, 6).map((card) => (
+                        <div className={`lobby-hero-card activity-${card.activity}`} key={card.heroId}>
+                          <div className="lobby-hero-card-head">
+                            <strong>{card.heroName}</strong>
+                            <span>{card.classLabel} · {card.rarity}★ · Lv. {card.level}</span>
                           </div>
-                        ) : null}
-                      </div>
-                    ))}
-                    {group.heroCount > 6 ? <span className="lobby-group-more">+{group.heroCount - 6} outro(s)</span> : null}
+                          <em>{card.activityLabel}</em>
+                          <small className={`lobby-hero-morale tone-${card.moraleTone}`}>Moral: {card.moraleLabel}</small>
+                          {card.markers.length > 0 ? (
+                            <div className="lobby-hero-markers">
+                              {card.markers.map((marker) => (
+                                <span className="lobby-hero-marker" key={marker}>{marker}</span>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      ))}
+                      {group.heroCount > 6 ? <span className="lobby-group-more">+{group.heroCount - 6} outro(s)</span> : null}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              <small className="lobby-routine-note">{lobbyLivingReport.note}</small>
+            </CollapsibleSection>
           ) : (
             <div className="lobby-routine-empty">
               <strong>Lobby silencioso</strong>
               <span>Os primeiros heróis darão vida a estas instalações.</span>
             </div>
           )}
-
-          <small className="lobby-routine-note">{lobbyLivingReport.note}</small>
         </article>
 
-        <article className="command-card base-training-card">
-          <div className="base-card-head">
-            <span>Campo de Treino | Progresso técnico</span>
-            <h3>Desenvolvimento dos heróis</h3>
-          </div>
-          <p>{lobbyTrainingReport.summary}</p>
+        {lobbyTrainingReport.entries.length > 0 ? (
+          <article className="command-card base-training-card">
+            <div className="base-card-head">
+              <span>Campo de Treino | Progresso técnico</span>
+              <h3>Desenvolvimento dos heróis</h3>
+            </div>
+            <p>{lobbyTrainingReport.summary}</p>
 
-          <div className="lobby-routine-list">
-            {lobbyTrainingReport.entries.length > 0 ? (
-              lobbyTrainingReport.entries.map((entry) => (
+            <div className="lobby-routine-list">
+              {lobbyTrainingReport.entries.map((entry) => (
                 <div className={`lobby-routine-entry ${entry.eligibility.canTrain ? "activity-training" : "activity-resting"}`} key={entry.heroId}>
                   <span>{entry.focusDefinition.label}</span>
                   <strong>{entry.heroName}</strong>
                   <em>{entry.progressLabel}</em>
                   <small>{entry.statusLabel}</small>
                 </div>
-              ))
-            ) : (
-              <div className="lobby-routine-empty">
-                <strong>Campo de Treino vazio</strong>
-                <span>Recrute heróis para iniciar o desenvolvimento técnico.</span>
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
 
-          <small className="lobby-routine-note">Treino técnico lento e limitado. Não concede atributos brutos nem nível de combate.</small>
-        </article>
+            <small className="lobby-routine-note">Treino técnico lento e limitado. Não concede atributos brutos nem nível de combate.</small>
+          </article>
+        ) : null}
 
         <article className="command-card base-shortcuts-card">
           <div className="base-card-head">

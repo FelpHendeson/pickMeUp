@@ -11517,3 +11517,357 @@ body.pref-reduce-motion *::after {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ============================================================
+   UX REWORK BASELINE — rework global de UX/UI (fase 1)
+   Bloco final: vence a cascata para enxugar header, navegacao
+   e consolidar o design system leve. Nenhuma regra de gameplay.
+   ============================================================ */
+
+/* --- Header compacto da rota /jogar --- */
+.play-shell {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 0.9rem 0 3rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.play-topbar {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(32, 27, 34, 0.72), rgba(10, 9, 13, 0.72));
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  padding: 0.5rem 0.85rem;
+}
+
+.play-topbar-brand {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.play-topbar-glyph {
+  color: var(--gold);
+  font-size: 0.95rem;
+}
+
+.play-topbar-title {
+  color: var(--muted-strong);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.play-topbar-back {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted-strong);
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.8rem;
+  text-decoration: none;
+  transition: border-color 160ms ease, color 160ms ease;
+}
+
+.play-topbar-back:hover {
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+
+/* --- Header do dashboard: mais baixo, menos bordas competindo --- */
+.dashboard-shell-header {
+  padding: 0.6rem 0.9rem;
+  box-shadow: none;
+  background: linear-gradient(180deg, rgba(32, 27, 34, 0.7), rgba(10, 9, 13, 0.7));
+}
+
+.dashboard-shell-header::before {
+  display: none;
+}
+
+.dashboard-shell-header h2 {
+  font-size: clamp(1.15rem, 2vw, 1.5rem);
+}
+
+.dashboard-shell-header p {
+  font-size: 0.85rem;
+}
+
+/* --- Navegacao: menos glow/bordas, botoes compactos, ativo claro --- */
+.dashboard-tabs {
+  padding: 0.5rem;
+  gap: 0.5rem;
+}
+
+.dashboard-tabs::before {
+  display: none;
+}
+
+.dashboard-tab-group {
+  padding: 0.45rem;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.dashboard-tabs button {
+  padding: 0.42rem 0.6rem;
+  box-shadow: none;
+}
+
+.dashboard-tabs button[data-active="true"] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nav-accent) 55%, transparent);
+}
+
+/* --- Design system leve: PageHeader --- */
+.page-header {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(32, 27, 34, 0.62), rgba(10, 9, 13, 0.6));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  justify-content: space-between;
+  padding: 0.7rem 0.95rem;
+}
+
+.page-header-copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.page-header-eyebrow {
+  color: var(--teal);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.page-header h2 {
+  font-size: clamp(1.15rem, 2vw, 1.5rem);
+}
+
+.page-header-copy p {
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 62ch;
+}
+
+.page-header-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.page-header-metrics span,
+.compact-stat-bar span {
+  align-items: baseline;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--muted);
+  display: inline-flex;
+  flex-direction: column;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  padding: 0.32rem 0.55rem;
+  text-transform: uppercase;
+}
+
+.page-header-metrics span strong,
+.compact-stat-bar span strong {
+  color: var(--text);
+  font-size: 1.05rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.page-header-metrics span.tone-gold strong,
+.compact-stat-bar span.tone-gold strong {
+  color: var(--gold);
+}
+
+.page-header-metrics span.tone-arcane strong,
+.compact-stat-bar span.tone-arcane strong {
+  color: var(--arcane);
+}
+
+.page-header-metrics span.tone-success strong,
+.compact-stat-bar span.tone-success strong {
+  color: var(--teal);
+}
+
+.page-header-metrics span.tone-danger strong,
+.compact-stat-bar span.tone-danger strong {
+  color: var(--blood);
+}
+
+.page-header-action {
+  flex: 0 0 auto;
+}
+
+/* --- Design system leve: CompactStatBar --- */
+.compact-stat-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* --- Design system leve: SectionCard --- */
+.section-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-soft);
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem 0.95rem;
+}
+
+.section-card.tone-gold {
+  border-color: color-mix(in srgb, var(--gold) 40%, var(--line));
+}
+
+.section-card.tone-danger {
+  border-color: color-mix(in srgb, var(--blood) 40%, var(--line));
+}
+
+.section-card.tone-arcane {
+  border-color: color-mix(in srgb, var(--arcane) 40%, var(--line));
+}
+
+.section-card-head {
+  align-items: center;
+  display: flex;
+  gap: 0.6rem;
+  justify-content: space-between;
+}
+
+.section-card-head strong {
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.section-card-head small {
+  color: var(--muted);
+  display: block;
+  font-size: 0.76rem;
+}
+
+/* --- Design system leve: StatusBadge --- */
+.status-badge {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted-strong);
+  display: inline-flex;
+  font-size: 0.7rem;
+  gap: 0.3rem;
+  letter-spacing: 0.04em;
+  padding: 0.18rem 0.55rem;
+}
+
+.status-badge.tone-gold {
+  border-color: color-mix(in srgb, var(--gold) 45%, transparent);
+  color: var(--gold);
+}
+
+.status-badge.tone-danger {
+  border-color: color-mix(in srgb, var(--blood) 45%, transparent);
+  color: var(--blood);
+}
+
+.status-badge.tone-arcane {
+  border-color: color-mix(in srgb, var(--arcane) 45%, transparent);
+  color: var(--arcane);
+}
+
+.status-badge.tone-success {
+  border-color: color-mix(in srgb, var(--teal) 45%, transparent);
+  color: var(--teal);
+}
+
+/* --- Design system leve: CollapsibleSection (progressive disclosure) --- */
+.collapsible-section {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+}
+
+.collapsible-trigger {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--muted-strong);
+  cursor: pointer;
+  display: flex;
+  gap: 0.6rem;
+  justify-content: space-between;
+  min-height: var(--tap-target);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  width: 100%;
+}
+
+.collapsible-trigger:hover {
+  color: var(--text);
+}
+
+.collapsible-title {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.collapsible-title strong {
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.collapsible-title small {
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.collapsible-caret {
+  color: var(--gold);
+  flex: 0 0 auto;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.collapsible-content {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.7rem 0.75rem;
+}
+
+/* --- Baseline responsivo: leitura e grids em telas pequenas --- */
+@media (max-width: 560px) {
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .page-header-action {
+    width: 100%;
+  }
+
+  .page-header-action .ui-action,
+  .page-header-action button {
+    width: 100%;
+  }
+}
