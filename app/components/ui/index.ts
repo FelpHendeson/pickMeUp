@@ -16,3 +16,14 @@ export {
   type CompactStat,
   type PageHeaderMetric,
 } from "./primitives";
+export {
+  CompactStatStrip,
+  DetailDrawer,
+  FocusPanel,
+  GamePage,
+  GamePageHeader,
+  PrimaryActionPanel,
+  SecondaryInfoGrid,
+  type GameStat,
+  type GameTone,
+} from "./game-layout";

@@ -31,7 +31,20 @@ import {
   type TowerReadinessReport,
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
-import { useConfirmDialog, useToast, UiAlertBox, UiModal, UiProgressBar } from "../ui";
+import {
+  CompactStatStrip,
+  DetailDrawer,
+  FocusPanel,
+  GamePage,
+  GamePageHeader,
+  PrimaryActionPanel,
+  SecondaryInfoGrid,
+  StatusBadge,
+  useConfirmDialog,
+  useToast,
+  UiModal,
+  type GameTone,
+} from "../ui";
 import { BattleResultPanel, BattleResultSummaryCard, getBattleRewardHighlights } from "./BattleResultPanel";
 
 const difficultyModes = ["normal", "challenge", "hardcore"] as const;
@@ -193,7 +206,6 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
   const recommendedLevel = selectedFloorData?.recommendedLevel ?? 1;
   const chapterFloorCount = currentChapter.endFloor - currentChapter.startFloor + 1;
   const chapterFloorPosition = Math.max(1, Math.min(highestAvailableFloor - currentChapter.startFloor + 1, chapterFloorCount));
-  const chapterProgress = Math.round((chapterFloorPosition / chapterFloorCount) * 100);
   const pendingEvent = state.pendingTowerEvent;
   const pendingEventDefinition = pendingEvent ? getTowerEventDefinition(pendingEvent.typeKey) : null;
   const activeEffects = state.towerBattleEffects.filter((effect) => effect.scope === "nextBattle");
@@ -549,121 +561,156 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
     };
   })();
 
+  const riskToneMap: Record<string, GameTone> = {
+    safe: "success",
+    warning: "warning",
+    danger: "danger",
+    critical: "danger",
+    locked: "default",
+  };
+  const riskBadgeTone = riskToneMap[riskProfile.tone] ?? "default";
+  const prepTone: GameTone = readinessReport.level === "ready" ? "success" : readinessReport.level === "caution" ? "warning" : "danger";
+  const energyTone: GameTone = energy < GAME_CONFIG.towerEnergyCost ? "danger" : "success";
+  const panelTone: GameTone = pendingEvent
+    ? "danger"
+    : blockingState
+      ? blockingState.tone === "danger"
+        ? "danger"
+        : "warning"
+      : riskBadgeTone;
+  const contextEyebrow = pendingEvent
+    ? "Evento pendente"
+    : resultIsDominant
+      ? "Combate recente"
+      : blockingState
+        ? "Combate bloqueado"
+        : selectedIsCurrent
+          ? "Avanço de campanha"
+          : selectedIsRepeatable
+            ? "Repetição de andar"
+            : "Torre Dimensional";
+
+  // Faixa compacta de andares proximos ao selecionado (navegacao rapida).
+  const floorWindowSize = 7;
+  const floorWindowStart = Math.max(1, Math.min(selectedFloor - Math.floor(floorWindowSize / 2), maxTowerFloor - floorWindowSize + 1));
+  const nearbyFloors = TOWER_FLOORS.filter((floor) => floor.floor >= floorWindowStart && floor.floor < floorWindowStart + floorWindowSize);
+
+  const renderFloorNode = (floor: TowerFloor) => {
+    const floorMilestone = getTowerMilestoneInfo(floor.floor);
+    const locked = floor.floor > state.towerFloor;
+    const current = floor.floor === highestAvailableFloor && state.towerFloor <= maxTowerFloor;
+    const completed = floor.floor < state.towerFloor;
+    const selected = floor.floor === selectedFloor;
+    const repeatable = completed && canRepeatTowerFloor(state, floor.floor);
+    const status = locked ? "locked" : current ? "current" : repeatable ? "repeatable" : "completed";
+
+    return (
+      <button
+        aria-pressed={selected}
+        className={`tower-floor-node ${status}${selected ? " selected" : ""}${floorMilestone.type !== "normal" ? ` milestone-${floorMilestone.type}` : ""}`}
+        disabled={locked}
+        key={floor.floor}
+        onClick={() => setSelectedFloor(floor.floor)}
+        title={`${floor.floor}. ${floor.title}`}
+        type="button"
+      >
+        <strong>{floor.floor}</strong>
+        <span>{floorMilestone.type === "chapter-boss" ? "Chefe" : floorMilestone.type === "block-test" ? "Prova" : floor.floor < 10 ? `0${floor.floor}` : floor.floor}</span>
+      </button>
+    );
+  };
+
   return (
-    <section className={`tower-command-panel risk-${riskProfile.tone}`}>
-      <header className={`tower-campaign-hero${isBossFloor(highestAvailableFloor) ? " is-boss" : ""}`}>
-        <div className="tower-campaign-copy">
-          <div className="tower-campaign-kicker">
-            <span>Torre Dimensional</span>
-            <strong>{isBossFloor(highestAvailableFloor) ? "Marco de chefe" : "Região perigosa"}</strong>
-          </div>
-          <h2>
-            Capítulo {currentChapter.number}: {currentChapter.name}
-          </h2>
-          <p>{currentChapter.description}</p>
-        </div>
+    <GamePage className={`tower-focus risk-${riskProfile.tone}`}>
+      <GamePageHeader
+        eyebrow="Torre Dimensional"
+        title={`Andar ${selectedFloor}: ${selectedFloorData?.title ?? "Andar desconhecido"}`}
+        subtitle={`Capítulo ${selectedChapter.number}: ${selectedChapter.name}${bossFloor ? ` · Chefe: ${selectedChapter.finalBoss}` : ""}`}
+        tone={panelTone === "danger" ? "danger" : bossFloor ? "gold" : "default"}
+        badges={
+          <>
+            <StatusBadge tone={selectedIsCurrent ? "success" : selectedIsRepeatable ? "arcane" : selectedIsLocked ? "danger" : "default"}>
+              {selectedIsCurrent ? "Avanço" : selectedIsRepeatable ? "Repetição" : selectedIsLocked ? "Bloqueado" : "Concluído"}
+            </StatusBadge>
+            <StatusBadge tone={riskBadgeTone}>Risco {riskProfile.label}</StatusBadge>
+            {milestoneInfo.type !== "normal" ? <StatusBadge tone="gold">{milestoneInfo.title}</StatusBadge> : null}
+          </>
+        }
+        actions={
+          <>
+            <button className={hasUnseenBattleResult ? "hero-inline-action primary" : "hero-inline-action"} disabled={!lastBattle} onClick={openBattleResult} type="button">
+              Último resultado
+            </button>
+            <button className="hero-inline-action" onClick={() => setShowHistoryModal(true)} type="button">
+              Histórico
+            </button>
+          </>
+        }
+      />
 
-        <div className="tower-campaign-meta">
-          <div>
-            <strong>Andar atual</strong>
-            <span>{highestAvailableFloor}</span>
-          </div>
-          <div>
-            <strong>Rota do capítulo</strong>
-            <span>
-              {chapterFloorPosition}/{chapterFloorCount}
-            </span>
-          </div>
-          <div>
-            <strong>Chefe final</strong>
-            <span>{currentChapter.finalBoss}</span>
-          </div>
-        </div>
+      <CompactStatStrip
+        stats={[
+          { key: "floor", label: "Andar", value: `${selectedFloor}/${maxTowerFloor}` },
+          { key: "chapter", label: "Rota do capítulo", value: `${chapterFloorPosition}/${chapterFloorCount}` },
+          { key: "prep", label: "Preparo", value: `${readinessReport.score}/100`, tone: prepTone },
+          { key: "risk", label: "Risco", value: riskProfile.label, tone: riskBadgeTone },
+          { key: "energy", label: "Energia", value: `${energy}/${GAME_CONFIG.towerEnergyCost}`, tone: energyTone },
+        ]}
+      />
 
-        <div className="tower-campaign-progress">
-          <div>
-            <span>Progresso do capítulo</span>
-            <strong>{chapterProgress}%</strong>
-          </div>
-          <UiProgressBar label={`Progresso do capítulo em ${chapterProgress}%`} value={chapterProgress} />
-          <small>{getBattleSummary(lastBattle)}</small>
-        </div>
-      </header>
+      {resultIsDominant && lastBattle ? (
+        <BattleResultSummaryCard battle={lastBattle} onContinue={continueFromLastBattle} onOpen={openBattleResult} state={state} />
+      ) : (
+        <PrimaryActionPanel
+          action={{
+            label: primaryAction.label,
+            detail: primaryAction.detail,
+            onClick: () => void primaryAction.onClick(),
+            disabled: primaryAction.disabled,
+          }}
+          description={statusMessage}
+          eyebrow={contextEyebrow}
+          title={primaryAction.label}
+          tone={panelTone}
+          warning={
+            pendingEvent && pendingEventDefinition ? (
+              <>
+                <strong>{pendingEventDefinition.title}</strong>
+                <span>{pendingEventDefinition.description}</span>
+              </>
+            ) : blockingState ? (
+              <span>{blockingState.description}</span>
+            ) : shouldShowPreparation && towerWarnings.length > 0 ? (
+              <>
+                {towerWarnings.map((warning) => (
+                  <span key={warning.key}>
+                    {warning.title}: {warning.description}
+                  </span>
+                ))}
+              </>
+            ) : null
+          }
+        />
+      )}
 
-      <div className="tower-command-layout">
-        <aside className="tower-floor-map" aria-label="Andares da torre">
-          <div className="tower-map-head">
-            <span>Torre</span>
-            <strong>Selecione um andar</strong>
-          </div>
-          <div className="tower-floor-grid">
-            {TOWER_FLOORS.map((floor) => {
-              const floorMilestone = getTowerMilestoneInfo(floor.floor);
-              const locked = floor.floor > state.towerFloor;
-              const current = floor.floor === highestAvailableFloor && state.towerFloor <= maxTowerFloor;
-              const completed = floor.floor < state.towerFloor;
-              const selected = floor.floor === selectedFloor;
-              const repeatable = completed && canRepeatTowerFloor(state, floor.floor);
-              const status = locked ? "locked" : current ? "current" : repeatable ? "repeatable" : "completed";
-
-              return (
-                <button
-                  aria-pressed={selected}
-                  className={`tower-floor-node ${status}${selected ? " selected" : ""}${floorMilestone.type !== "normal" ? ` milestone-${floorMilestone.type}` : ""}`}
-                  disabled={locked}
-                  key={floor.floor}
-                  onClick={() => setSelectedFloor(floor.floor)}
-                  title={`${floor.floor}. ${floor.title}`}
-                  type="button"
-                >
-                  <strong>{floor.floor}</strong>
-                  <span>{floorMilestone.type === "chapter-boss" ? "Chefe" : floorMilestone.type === "block-test" ? "Prova" : floor.floor < 10 ? `0${floor.floor}` : floor.floor}</span>
-                </button>
-              );
-            })}
-          </div>
-        </aside>
-
-        <article className={`tower-challenge-detail risk-${riskProfile.tone}${bossFloor ? " boss-floor" : ""}${milestoneInfo.type !== "normal" ? ` milestone-${milestoneInfo.type}` : ""}`}>
-          <div className="tower-challenge-head">
-            <div>
-              <span>Dados do Desafio</span>
-              <h3>
-                {selectedFloor}. {selectedFloorData?.title ?? "Andar desconhecido"}
-              </h3>
-              <p>
-                Capítulo {selectedChapter.number}: {selectedChapter.name}. {bossFloor ? `Chefe: ${selectedChapter.finalBoss}.` : "Combate regular da campanha."}
-              </p>
-            </div>
-            <div className="tower-challenge-actions">
-              <button className={hasUnseenBattleResult ? "hero-inline-action primary" : "hero-inline-action"} disabled={!lastBattle} onClick={openBattleResult} type="button">
-                Último resultado
-              </button>
-              <button className="hero-inline-action" onClick={() => setShowHistoryModal(true)} type="button">
-                Histórico
-              </button>
-            </div>
-          </div>
-
-          <div className="tower-selected-tags">
-            <span>{selectedIsCurrent ? "Avanço" : selectedIsRepeatable ? "Repetição" : selectedIsLocked ? "Bloqueado" : "Concluído"}</span>
-            <span>Risco {riskProfile.label}</span>
-            <span>Preparo {readinessReport.score}/100</span>
+      {shouldShowPreparation ? (
+        <>
+          <div className="tower-focus-summary">
+            <span>Inimigos: {enemyPreview.length} tipo(s) detectado(s)</span>
             <span>Nível recomendado {recommendedLevel}</span>
-            <span>{difficultySummary.name}</span>
+            <span>Dificuldade {difficultySummary.name}</span>
             {milestoneInfo.type !== "normal" ? <span>{getTowerDifficultyJumpLabel(selectedFloor)}</span> : null}
           </div>
 
-          <section className={`tower-readiness-card tone-${readinessReport.level}`}>
-            <div className="tower-readiness-head">
-              <div>
-                <span>Diagnóstico do Lobby</span>
-                <h4>{readinessReport.label}</h4>
-                <p>{readinessReport.summary}</p>
-              </div>
-              <strong aria-label={`Score de preparo ${readinessReport.score} de 100`}>{readinessReport.score}</strong>
+          {activeEffects.length > 0 ? (
+            <div className="tower-effect-inline">
+              {activeEffects.map((effect) => (
+                <span key={effect.id}>{effect.label}</span>
+              ))}
             </div>
+          ) : null}
 
+          <DetailDrawer summary={`${readinessReport.label} · ${readinessProblemChecks.length} ponto(s) de atenção`} title="Diagnóstico de preparo">
             <div className="tower-readiness-metrics">
               <span>
                 Formação <strong>{heroCount}/{readinessReport.metrics.maxFormationSize}</strong>
@@ -678,7 +725,6 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
                 Energia <strong>{energy}/{readinessReport.metrics.energyCost}</strong>
               </span>
             </div>
-
             <div className="tower-readiness-content">
               <div>
                 <h5>Pontos de atenção</h5>
@@ -704,146 +750,88 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
                 </ul>
               </div>
             </div>
-
             <small>Este diagnóstico é informativo e não cria um novo bloqueio para a tentativa.</small>
-          </section>
+          </DetailDrawer>
 
-          {shouldShowPreparation && towerWarnings.length > 0 ? (
-            <div className="tower-state-alerts">
-              {towerWarnings.map((warning) => (
-                <UiAlertBox key={warning.key} tone={warning.tone}>
-                  <strong>{warning.title}</strong>
-                  <span>{warning.description}</span>
-                </UiAlertBox>
-              ))}
-            </div>
-          ) : null}
-
-          {pendingEvent && pendingEventDefinition ? (
-            <section className={`tower-event-card tower-event-compact tower-event-cta tone-${pendingEventDefinition.tone}`}>
-              <div className="tower-event-head">
-                <div>
-                  <span>{getTowerEventPhaseLabel(pendingEvent.phase)}</span>
-                  <h3>{pendingEventDefinition.title}</h3>
-                </div>
-                <strong>Andar {pendingEvent.floor}</strong>
-              </div>
-              <p>{pendingEventDefinition.description}</p>
-              <button className="tower-start-battle-button tower-event-open-button" onClick={openPendingEvent} type="button">
-                <strong>Resolver evento</strong>
-                <span>
-                  {pendingEventDefinition.choices.length} escolha(s) disponível(is) | combate bloqueado
-                </span>
-              </button>
-            </section>
-          ) : null}
-
-          {resultIsDominant && lastBattle ? (
-            <BattleResultSummaryCard battle={lastBattle} onContinue={continueFromLastBattle} onOpen={openBattleResult} state={state} />
-          ) : null}
-
-          {blockingState ? (
-            <section className={`tower-blocker-card tone-${blockingState.tone}`}>
-              <span>Combate bloqueado</span>
-              <h3>{blockingState.title}</h3>
-              <p>{blockingState.description}</p>
-              <button className="tower-start-battle-button" onClick={() => void blockingState.onClick()} type="button">
-                <strong>{blockingState.cta}</strong>
-                <span>{primaryAction.detail}</span>
-              </button>
-            </section>
-          ) : null}
-
-          {shouldShowPreparation ? (
-            <>
-              <div className="tower-challenge-grid">
-                <section className="tower-threat-card">
-                  <h4>Inimigos previstos</h4>
-                  <div className="tower-enemy-list">
-                    {enemyPreview.map((enemy) => (
-                      <span key={enemy.key}>
-                        {enemy.label}
-                        {enemy.count > 1 ? ` x${enemy.count}` : ""} | {enemy.role}
-                      </span>
-                    ))}
-                  </div>
-                  <small>{bossFloor ? `Chefe detectado: ${selectedChapter.finalBoss}.` : "Composição estimada pela patrulha da guilda."}</small>
-                </section>
-                <section className={`tower-risk-card tone-${riskProfile.tone}`}>
-                  <h4>Risco estimado</h4>
-                  <strong>{riskProfile.label}</strong>
-                  <p>{riskProfile.description}</p>
-                  <small>
-                    Equipe nível médio {averageFormationLevel || 0} contra recomendado {recommendedLevel}.
-                  </small>
-                </section>
-                <section>
-                  <h4>Modificadores ativos</h4>
-                  <p>{selectedFloorData?.mechanic ?? "Sem mecânica registrada."}</p>
-                  <small>{modifierSummary || "Sem modificador adicional além da região."}</small>
-                </section>
-                <section className="tower-reward-card">
-                  <h4>Recompensas possíveis</h4>
-                  <p>{rewardPreview}</p>
-                  <small>{selectedFloorData?.rewardHint ?? "Recompensas variam conforme dificuldade e eventos."}</small>
-                </section>
-                <section className="tower-cost-card">
-                  <h4>Custo e equipe</h4>
-                  <div className="tower-cost-grid">
-                    <span>
-                      <strong>{GAME_CONFIG.towerEnergyCost}</strong>
-                      Energia
+          <DetailDrawer summary={`${enemyPreview.length} tipo(s) · risco ${riskProfile.label}`} title="Inimigos, risco e recompensas">
+            <SecondaryInfoGrid>
+              <section>
+                <h4>Inimigos previstos</h4>
+                <div className="tower-enemy-list">
+                  {enemyPreview.map((enemy) => (
+                    <span key={enemy.key}>
+                      {enemy.label}
+                      {enemy.count > 1 ? ` x${enemy.count}` : ""} | {enemy.role}
                     </span>
-                    <span>
-                      <strong>{heroCount}</strong>
-                      Heróis
-                    </span>
-                    <span>
-                      <strong>{formationPower}</strong>
-                      Poder
-                    </span>
-                  </div>
-                  <small>
-                    Energia atual {energy}/{state.resources.maxEnergy}.
-                  </small>
-                </section>
-              </div>
-
-              {activeEffects.length > 0 ? (
-                <div className="tower-effect-inline">
-                  {activeEffects.map((effect) => (
-                    <span key={effect.id}>{effect.label}</span>
                   ))}
                 </div>
-              ) : null}
+                <small>{bossFloor ? `Chefe detectado: ${selectedChapter.finalBoss}.` : "Composição estimada pela patrulha da guilda."}</small>
+              </section>
+              <section>
+                <h4>Risco estimado</h4>
+                <p>{riskProfile.label}</p>
+                <small>{riskProfile.description}</small>
+              </section>
+              <section>
+                <h4>Modificadores ativos</h4>
+                <p>{selectedFloorData?.mechanic ?? "Sem mecânica registrada."}</p>
+                <small>{modifierSummary || "Sem modificador adicional além da região."}</small>
+              </section>
+              <section>
+                <h4>Recompensas possíveis</h4>
+                <p>{rewardPreview}</p>
+                <small>{selectedFloorData?.rewardHint ?? "Recompensas variam conforme dificuldade e eventos."}</small>
+              </section>
+              <section>
+                <h4>Custo e equipe</h4>
+                <div className="tower-cost-grid">
+                  <span>
+                    <strong>{GAME_CONFIG.towerEnergyCost}</strong>
+                    Energia
+                  </span>
+                  <span>
+                    <strong>{heroCount}</strong>
+                    Heróis
+                  </span>
+                  <span>
+                    <strong>{formationPower}</strong>
+                    Poder
+                  </span>
+                </div>
+                <small>
+                  Energia atual {energy}/{state.resources.maxEnergy}.
+                </small>
+              </section>
+            </SecondaryInfoGrid>
+          </DetailDrawer>
 
-              <div className="tower-difficulty-picker compact">
-                {difficultyModes.map((mode) => (
-                  <button
-                    className={normalizedDifficulty === mode ? "tower-event-choice active" : "tower-event-choice"}
-                    key={mode}
-                    onClick={() => setDifficultyMode(mode)}
-                    type="button"
-                  >
-                    <strong>{getTowerDifficultySummary(mode).name}</strong>
-                    <span>{getTowerDifficultySummary(mode).description}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="tower-challenge-footer">
-                <p className="tower-event-next-step">{statusMessage}</p>
-                <button className="tower-start-battle-button" disabled={primaryAction.disabled} onClick={() => void primaryAction.onClick()} type="button">
-                  <strong>{primaryAction.label}</strong>
-                  <span>{primaryAction.detail}</span>
+          <DetailDrawer summary={difficultySummary.name} title="Dificuldade avançada">
+            <div className="tower-difficulty-picker compact">
+              {difficultyModes.map((mode) => (
+                <button
+                  className={normalizedDifficulty === mode ? "tower-event-choice active" : "tower-event-choice"}
+                  key={mode}
+                  onClick={() => setDifficultyMode(mode)}
+                  type="button"
+                >
+                  <strong>{getTowerDifficultySummary(mode).name}</strong>
+                  <span>{getTowerDifficultySummary(mode).description}</span>
                 </button>
-              </div>
-            </>
-          ) : null}
+              ))}
+            </div>
+          </DetailDrawer>
 
-          {feedback ? <p className="tower-battle-feedback">{feedback}</p> : null}
-        </article>
-      </div>
+          <DetailDrawer summary={`Andar ${selectedFloor} de ${maxTowerFloor}`} title="Mapa completo da Torre">
+            <div className="tower-floor-grid">{TOWER_FLOORS.map(renderFloorNode)}</div>
+          </DetailDrawer>
+        </>
+      ) : null}
+
+      <FocusPanel className="tower-nearby-panel" hint="Selecione para inspecionar outro andar" title="Andares próximos">
+        <div className="tower-floor-strip">{nearbyFloors.map(renderFloorNode)}</div>
+      </FocusPanel>
+
+      {feedback ? <p className="tower-battle-feedback">{feedback}</p> : null}
 
       {showTowerEventModal && towerEventOutcome ? (
         <UiModal
@@ -951,6 +939,6 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
           </div>
         </UiModal>
       ) : null}
-    </section>
+    </GamePage>
   );
 }

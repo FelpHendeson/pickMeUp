@@ -1,3 +1,7 @@
+"use client";
+
+"use client";
+
 import { useId, useState, type ButtonHTMLAttributes, type HTMLAttributes, type ReactNode } from "react";
 
 function cx(...classes: Array<string | false | null | undefined>): string {
