@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev -p 3333",
     "build": "next build",
+    "build:vercel": "node scripts/vercel-build.mjs",
     "start": "next start -p 3333",
     "typecheck": "tsc --noEmit",
     "test": "npm run test:core && npm run test:fixtures",
@@ -18,6 +19,7 @@
     "db:down": "docker compose down",
     "db:logs": "docker compose logs postgres",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"

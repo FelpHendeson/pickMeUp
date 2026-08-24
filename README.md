@@ -24,7 +24,8 @@ O jogo já possui:
 - treino idle funcional, proficiências, análise de potencial e promoção 1★→2★;
 - Rota da Primeira Ascensão para orientar a primeira sessão;
 - expedições, moral, ferimentos, especializações, afinidade, relíquias, missões, conquistas e biblioteca;
-- rework visual global em andamento, com a **Torre já migrada para o layout focado**.
+- rework visual global em andamento, com a **Torre já migrada para o layout focado**;
+- deploy de produção na Vercel com Prisma Postgres conectado.
 
 ## Ponto exato de retomada
 
@@ -53,6 +54,8 @@ Veja `docs/estado-atual-e-roadmap.md`.
 - **TypeScript 6.0.3** — regras e contratos.
 - **Zustand 5.0.14** — store central.
 - **Prisma 7.8.0 + PostgreSQL 16** — cloud save experimental.
+- **Prisma Postgres** — banco gerenciado de produção.
+- **Vercel** — hospedagem e deploy de produção.
 - **localStorage** — persistência principal da Alpha.
 - **Docker Compose** — PostgreSQL local opcional.
 
@@ -66,10 +69,12 @@ src/game/                    Regras puras de gameplay
 src/store/gameStore.ts       Ponte entre UI, domínio e persistência
 src/lib/                     Player ID, Prisma e snapshots
 prisma/                      Schema e migrations do PostgreSQL
+scripts/                     Automação de build/deploy
 tests/                       Regressão do core, fixtures e DB
 docs/                        Documentação canônica e operacional
 agentsRules/                 Regras reutilizáveis para agentes
 AGENTS.md                    Instruções globais para agentes
+vercel.json                  Configuração versionada do deploy Vercel
 ```
 
 ## Rodar localmente
@@ -111,15 +116,19 @@ O snapshot JSON completo continua sendo a fonte do cloud save nesta etapa. `Play
 npm run typecheck
 npm test
 npm run build
+npm run build:vercel
 npm run validate
 npm run validate:db
 npm run db:up
 npm run db:down
+npm run db:deploy
 npm run db:studio
 ```
 
 - `npm run validate`: Prisma generate + typecheck + testes + build.
 - `npm run validate:db`: sobe o PostgreSQL, aplica migrations e roda smoke de banco.
+- `npm run build:vercel`: gera o Prisma Client, aplica `prisma migrate deploy` quando `DATABASE_URL` existe e executa `next build`.
+- `npm run db:deploy`: aplica migrations existentes em ambientes de deploy/produção.
 
 ## Save
 
@@ -156,4 +165,28 @@ Hierarquia prática:
 
 ## Deploy
 
-O alvo atual continua sendo desenvolvimento local. A publicação futura planejada é Vercel, mas ainda faltam decisões de produção sobre autenticação/playerId, PostgreSQL gerenciado, política de sync e backup.
+O projeto possui deploy de produção na **Vercel**, conectado ao **Prisma Postgres**.
+
+A configuração versionada em `vercel.json` usa:
+
+```bash
+npm run build:vercel
+```
+
+Esse fluxo:
+
+1. gera o Prisma Client;
+2. aplica migrations com `prisma migrate deploy` quando `DATABASE_URL` está disponível;
+3. executa o build do Next.js.
+
+Variáveis esperadas em produção:
+
+```text
+DATABASE_URL
+NEXT_PUBLIC_APP_ENV=production
+NEXT_PUBLIC_ENABLE_CLOUD_SAVE=true
+```
+
+O banco continua opcional fora de produção: sem `DATABASE_URL`, o build ignora migrations e o jogo permanece utilizável com `localStorage`.
+
+Ainda faltam decisões de produto para considerar o cloud save definitivo: autenticação/playerId, política de sincronização entre dispositivos, conflitos e backup/retenção de snapshots.
