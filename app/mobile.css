@@ -1,0 +1,328 @@
+/*
+ * Mobile responsiveness pass.
+ * Loaded after globals.css so these rules intentionally win the cascade
+ * without changing desktop behavior or gameplay state.
+ */
+
+@media (max-width: 760px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-padding-top: 4.5rem;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .play-shell {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding:
+      max(0.5rem, env(safe-area-inset-top))
+      max(0.65rem, env(safe-area-inset-right))
+      max(2rem, env(safe-area-inset-bottom))
+      max(0.65rem, env(safe-area-inset-left));
+    gap: 0.65rem;
+  }
+
+  .play-topbar {
+    position: sticky;
+    top: max(0.35rem, env(safe-area-inset-top));
+    z-index: 35;
+    gap: 0.55rem;
+    min-width: 0;
+    padding: 0.48rem 0.62rem;
+    background: rgba(18, 15, 20, 0.94);
+    backdrop-filter: blur(14px);
+  }
+
+  .play-topbar-brand,
+  .play-topbar-title,
+  .dashboard-shell,
+  .dashboard-content,
+  .dashboard-content > * {
+    min-width: 0;
+  }
+
+  .play-topbar-title {
+    font-size: 0.92rem;
+  }
+
+  .play-topbar-back {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0.32rem 0.62rem;
+  }
+
+  .dashboard-shell {
+    gap: 0.65rem;
+  }
+
+  .dashboard-shell-header {
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.15rem 0.1rem;
+  }
+
+  .dashboard-shell-header h2 {
+    font-size: clamp(1.3rem, 6vw, 1.7rem);
+    line-height: 1.05;
+  }
+
+  .dashboard-shell-header p {
+    display: none;
+  }
+
+  .dashboard-shell-seal {
+    flex: 0 0 auto;
+  }
+
+  .resource-hud-panel {
+    padding: 0.68rem;
+  }
+
+  .resource-hud-topline {
+    gap: 0.55rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .resource-hud-header {
+    min-width: 0;
+  }
+
+  .resource-hud-panel .resource-primary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+    overflow: visible;
+    padding: 0;
+    scroll-snap-type: none;
+  }
+
+  .resource-hud-panel .resource-primary .resource-card {
+    flex: initial;
+    min-width: 0;
+    width: auto;
+    min-height: 3.6rem;
+    padding: 0.48rem 0.52rem;
+    scroll-snap-align: none;
+  }
+
+  .resource-hud-panel .resource-secondary {
+    gap: 0.45rem;
+  }
+
+  .resource-secondary-details summary {
+    min-height: 44px;
+  }
+
+  .dashboard-tabs {
+    gap: 0.42rem;
+    margin: 0;
+    padding: 0.5rem;
+  }
+
+  .dashboard-tab-group {
+    flex: 0 0 auto;
+    min-width: max-content;
+    padding: 0.3rem;
+  }
+
+  .dashboard-tab-group-label {
+    display: none;
+  }
+
+  .dashboard-tab-list {
+    gap: 0.25rem;
+  }
+
+  .dashboard-tabs button {
+    min-height: 44px;
+    min-width: 3.2rem;
+    padding: 0.42rem 0.5rem;
+  }
+
+  .dashboard-tab-label {
+    font-size: 0.7rem;
+  }
+
+  .dashboard-content {
+    overflow: clip;
+  }
+
+  .command-center-panel,
+  .base-command-layout {
+    gap: 0.65rem;
+  }
+
+  .command-next-card,
+  .command-card,
+  .tower-panel,
+  .tower-battle-panel,
+  .tower-events-panel,
+  .battle-result-panel,
+  .roster-panel,
+  .inventory-panel,
+  .formation-panel,
+  .expeditions-panel,
+  .missions-panel,
+  .relics-panel,
+  .library-panel,
+  .summon-panel-react,
+  .recruitment-panel-react,
+  .save-management-card,
+  .preferences-panel {
+    padding: 0.75rem;
+  }
+
+  .base-status-ledger,
+  .base-resource-grid,
+  .base-shortcut-grid,
+  .lobby-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .base-status-ledger span,
+  .base-resource-grid span {
+    min-width: 0;
+    padding: 0.56rem;
+  }
+
+  .base-status-ledger strong,
+  .base-resource-grid strong {
+    font-size: 0.98rem;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .base-shortcut-card {
+    min-height: 4rem;
+    padding: 0.58rem;
+  }
+
+  .base-shortcut-card span {
+    line-height: 1.3;
+  }
+
+  .weekly-event-effects.compact {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-bottom: 0.15rem;
+    scroll-snap-type: x proximity;
+  }
+
+  .weekly-event-effects.compact small {
+    flex: 0 0 min(16rem, 78vw);
+    scroll-snap-align: start;
+  }
+
+  .command-team-list,
+  .command-alert-list,
+  .base-pill-row {
+    max-width: 100%;
+  }
+
+  .dashboard-shell button,
+  .dashboard-shell summary,
+  .dashboard-shell select,
+  .dashboard-shell input:not([type="range"]),
+  .dashboard-shell textarea {
+    min-height: 44px;
+  }
+
+  .dashboard-content :where(h1, h2, h3, p, strong, span, small, em, li) {
+    overflow-wrap: anywhere;
+  }
+
+  .modal-backdrop,
+  .narrative-backdrop,
+  .ui-modal-backdrop,
+  .confirm-dialog-backdrop {
+    padding:
+      max(0.65rem, env(safe-area-inset-top))
+      max(0.65rem, env(safe-area-inset-right))
+      max(0.65rem, env(safe-area-inset-bottom))
+      max(0.65rem, env(safe-area-inset-left));
+  }
+
+  .modal-card,
+  .narrative-card,
+  .ui-modal-card,
+  .tower-result-modal-card {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100dvh - 1.3rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  .toast-region {
+    right: max(0.65rem, env(safe-area-inset-right));
+    bottom: max(0.65rem, env(safe-area-inset-bottom));
+    left: max(0.65rem, env(safe-area-inset-left));
+    max-width: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .play-topbar-title {
+    max-width: 46vw;
+  }
+
+  .dashboard-shell-seal strong {
+    display: none;
+  }
+
+  .dashboard-shell-seal {
+    min-width: 2.65rem;
+    justify-content: center;
+  }
+
+  .resource-hud-topline {
+    align-items: flex-start;
+    display: grid;
+  }
+
+  .resource-hud-flags {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .early-track-next {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .early-track-next .hero-inline-action,
+  .command-cta {
+    width: 100%;
+  }
+
+  .base-war-room-map {
+    width: 3.8rem;
+  }
+}
+
+@media (max-width: 350px) {
+  .play-shell {
+    padding-right: max(0.45rem, env(safe-area-inset-right));
+    padding-left: max(0.45rem, env(safe-area-inset-left));
+  }
+
+  .play-topbar-title {
+    max-width: 38vw;
+  }
+
+  .base-status-ledger,
+  .base-resource-grid,
+  .base-shortcut-grid,
+  .lobby-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
