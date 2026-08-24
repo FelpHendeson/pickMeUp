@@ -1,73 +1,89 @@
 ---
-description: Regras permanentes do projeto Ascensao dos Ecos no Cursor
+description: Regras permanentes do projeto Ascensão dos Ecos no Cursor
 alwaysApply: true
 ---
 
-# Ascensao dos Ecos — Regras do Workspace
+# Ascensão dos Ecos — Regras do Workspace
 
 ## Contexto atual
 
-Este projeto é um jogo web single-player de estratégia, idle RPG, gacha e progressão por torre.
+- Alpha 0.10.0.
+- `master` é a branch canônica.
+- Next.js + React + TypeScript + Zustand.
+- localStorage como save principal.
+- Prisma/PostgreSQL opcional para cloud save.
+- schema de save atual: 5.
 
-A versão operacional atual usa:
+Antes de trabalhar, leia `docs/estado-atual-e-roadmap.md`.
 
-- Next.js
-- React
-- TypeScript
-- Zustand
-- Prisma/PostgreSQL opcional
-- localStorage como save principal
+## Estado de produto
 
-O desenvolvimento atual é local. Deploy futuro planejado para Vercel.
+Já existem roster único, invocação sem duplicatas, onboarding 5 tickets + especial, readiness da Torre, Lobby Vivo, treino, proficiências, potencial, promoção 1★→2★ e Rota da Primeira Ascensão.
 
-## Estrutura principal
+A última fase concluída foi o **layout focado da Torre**. O próximo rework planejado é **Heróis**.
 
-- `app/`: aplicação Next.js, rotas e componentes React.
-- `app/components/`: painéis e componentes da UI.
-- `src/game/`: regras puras de gameplay, estado, combate, torre, heróis, economia e sistemas auxiliares.
-- `src/store/gameStore.ts`: ponte entre UI e regras, centralizando mutações persistentes.
-- `src/lib/`: utilitários de player, Prisma e snapshots.
-- `prisma/`: schema e migrations do PostgreSQL opcional.
-- `tests/`: testes de regressão do core, fixtures e banco.
-- `docs/`: documentação funcional e notas de migração.
-- `agentsRules/`: convenções e checklists do projeto.
+Não recrie sistemas existentes e não trate conceitos futuros do Lobby como implementados.
+
+## Arquitetura
+
+- `app/`: App Router/UI.
+- `app/components/ui/`: design system e modo foco.
+- `src/game/`: domínio puro.
+- `src/store/gameStore.ts`: mutações/persistência.
+- `src/game/save/`: migrations/validação.
+- `prisma/`: banco opcional.
+- `tests/`: regressão.
 
 ## Regras obrigatórias
 
-- Antes de editar, leia os arquivos envolvidos.
-- Preserve `src/game/` como núcleo de regras puras.
-- Preserve `src/store/gameStore.ts` como camada de mutação e persistência usada pela UI.
-- Não mover regra de gameplay para componente React sem necessidade.
-- Não criar dependências externas sem justificativa.
-- Não tornar PostgreSQL obrigatório para jogar localmente.
-- O jogo deve funcionar com `localStorage` mesmo sem `DATABASE_URL`.
-- Ao adicionar campos no estado, atualizar estado inicial e normalização de save.
-- Não quebrar saves existentes.
-- Manter textos em PT-BR.
-- Manter estética dark fantasy/anime/tower progression.
-- Preferir mudanças pequenas, testáveis e reversíveis.
+- leia antes de editar;
+- faça a menor mudança coerente;
+- regra de gameplay fica no domínio;
+- UI chama store;
+- não torne PostgreSQL obrigatório;
+- não quebre save legacy;
+- campo persistido novo exige default/normalização/migration quando necessário;
+- prefira valor derivado a estado persistido;
+- mantenha PT-BR e identidade dark fantasy original.
+
+## UX/UI
+
+Para telas densas, reuse `app/components/ui/game-layout.tsx`:
+
+- `GamePage`;
+- `GamePageHeader`;
+- `CompactStatStrip`;
+- `PrimaryActionPanel`;
+- `FocusPanel`;
+- `SecondaryInfoGrid`;
+- `DetailDrawer`.
+
+Princípios:
+
+- uma ação principal;
+- estado dominante evidente;
+- métricas essenciais primeiro;
+- progressive disclosure para detalhes;
+- responsividade real.
+
+A Torre é a implementação de referência. Não crie outro mini design system para Heróis.
 
 ## Verificações
 
-Conforme o tipo de alteração, rodar:
-
-- `npm run typecheck` para alterações TypeScript/React.
-- `npm test` para regras de jogo, estado, save ou balanceamento.
-- `npm run build` para mudanças estruturais de UI ou Next.
-- `npm run validate` antes de finalizar uma mudança grande.
-- `npm run validate:db` apenas quando mexer no fluxo PostgreSQL/Prisma.
+- TS/React: `npm run typecheck`;
+- domínio/save: `npm test`;
+- UI estrutural: `npm run build`;
+- mudança grande: `npm run validate`;
+- DB/Prisma: `npm run validate:db`.
 
 ## Documentação
 
-- `README.md` é a fonte operacional da stack atual.
-- `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md` é a fonte de design do jogo.
-- `docs/especificacao-funcional.md` deve ser sincronizado quando gameplay, progressão, economia, torre, UI estrutural ou save mudarem.
-- `agentsRules/` deve ser consultado quando houver dúvida de padrão.
+- `README.md`: operação/stack;
+- `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md`: design canônico;
+- `docs/especificacao-funcional.md`: contratos;
+- `docs/estado-atual-e-roadmap.md`: ponto atual;
+- `docs/visao-lobby-vivo.md`: direção futura.
 
-## Comportamento esperado do agente
+Mudou contrato? Sincronize os documentos pertinentes. O arquivo `gdd_web_tower_gacha_mvp.md` é histórico.
 
-- Entender antes de alterar.
-- Fazer a menor mudança que resolve o problema.
-- Explicar riscos quando envolver save, banco, progressão ou economia.
-- Não reescrever módulos inteiros sem necessidade.
-- Não transformar uma feature pequena em uma catedral gótica de complexidade. A torre já basta.
+Não transforme uma feature pequena numa catedral gótica de complexidade. A Torre já basta.

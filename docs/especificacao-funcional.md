@@ -1,114 +1,370 @@
-# Especificação Funcional do Jogo
+# Especificação Funcional — Ascensão dos Ecos
 
-## Visão geral
-Ascensao dos Ecos e uma Alpha jogavel de RPG web single-player com progressao por torre, invocacao, recrutamento alternativo, formacao de herois, equipamentos, expedicoes, eventos, narrativa curta, moral, ferimentos, especializacoes, missoes, conquistas, reliquias permanentes e save local.
+**Versão:** 0.10.0  
+**Sincronização:** 24/08/2026  
+**Baseline:** `master@fcc5f75`
 
-## Módulos e responsabilidades
+## 1. Objetivo
 
-### Estado, persistência e preferências
-- `src/game/state/` define o estado inicial, recursos, energia, presets, `saveVersion` e a normalizacao do save.
-- `src/game/save/` carrega, migra por `schemaVersion`, valida, exporta, importa e normaliza progresso local.
-- `src/game/preferences/` guarda preferências visuais, de combate e de interface.
-- `src/store/gameStore.ts` expõe ações persistentes para a UI React.
+Este documento descreve o comportamento funcional da Alpha atual. Ideias futuras ficam em `visao-lobby-vivo.md` e não devem ser tratadas como implementadas.
 
-### Heróis, recrutamento e progressão
-- `src/game/heroes/` define classes, raridades, atributos, XP, niveis, geracao procedural legacy e o roster de herois unicos/predefinidos.
-- Herois do roster possuem `definitionId` estavel; herois antigos sem esse campo continuam validos como procedurais/legacy e nao bloqueiam definicoes do roster.
-- `src/game/recruitment/` controla contratos de heroi, selecao entre tres candidatos, veteranos tematicos e recrutamento alternativo.
-- A tela de Recrutamento deve parecer um quadro de contratos da guilda, diferenciando-se da Invocacao por escolha estrategica entre candidatos com classe, raridade, poder, atributos, custo e traco/passiva.
-- `src/game/relics/` gerencia relíquias permanentes da conta, custos em Fragmentos de Eco e bonus globais.
-- `src/game/specializations/` disponibiliza especializacoes por classe, requisitos de nivel e bonus permanentes.
-- `src/game/hero-status/` controla ferimentos, tratamento, moral, estados temporarios e efeitos de desempenho.
-- `src/game/affinity/` salva vinculos por par de herois, evolui afinidade e aplica bonus leves de equipe.
+## 2. Arquitetura funcional
 
-### Formação e equipamentos
-- `src/game/formation/` organiza a equipe ativa, limites de slots, posicoes de frente/retaguarda e presets de time.
-- `src/game/equipment/` gera, normaliza, equipa e calcula efeitos de equipamentos, recalculando bonus derivados de raridade e andar.
-- O painel de herois equipa itens pelo modal Arsenal da Guilda, com cards, comparacao contra o slot atual, impacto estimado de poder e compatibilidade flexivel. Classe pouco afinada gera aviso e permite equipar mesmo assim; bloqueio real fica reservado para regra tecnica, como slot diferente ou item ja equipado no mesmo slot.
-- `src/game/consumables/` define consumiveis, quantidades, alvos permitidos, validacao de uso e efeitos de preparacao.
-- Itens obtidos por eventos, recompensas ou drops raros devem ser normalizados para evitar discrepancia entre raridade, nome e bonus efetivo.
+### UI
 
-### Progresso principal
-- `src/game/tower/` define andares, capitulos, inimigos, modificadores regionais, chefes e progresso da torre.
-- Marcos derivados do andar aplicam testes de bloco em 5/15/25/35 e chefes de capitulo em 10/20/30/40. Eles aumentam HP/ATK/DEF e ouro/XP, garantem equipamento e fornecem aviso de preparacao sem bloquear a tentativa.
-- O readiness da Torre e derivado do estado atual e entrega score, classificacao, verificacoes e recomendacoes com base em formacao, poder, nivel, HP, ferimentos, moral, expedicoes, energia e tipo de marco. A classificacao informa risco, mas nao adiciona hard gate ao combate.
-- `src/game/difficulty/` define modos Normal, Desafio e Hardcore, aplica modificadores de risco/recompensa e registra estatisticas por modo.
-- `src/game/tower-events/` controla eventos aleatorios antes e depois de combates, escolhas de risco/recompensa e efeitos aplicado na proxima luta.
-- `src/game/weekly-events/` aplica eventos semanais locais conforme o calendario do navegador.
-- `src/game/rewards/` concede recompensas de vitória, marcos de capitulo, drops especiais e itens permanentes.
-- `src/game/library/` registra bestiario, chefes, eventos, reliquias e herois encontrados.
+- `app/` usa Next.js App Router.
+- `app/components/` organiza painéis por domínio.
+- `app/components/layout/GameShell.tsx` coordena navegação, HUD e composição.
+- `app/components/ui/` concentra design system, feedback e layout focado.
 
-### Combate
-- `src/game/battle/` simula o combate automatico com turnos, energia, alvos, dano, cura, status e efeitos.
-- `app/components/tower/BattleResultPanel.tsx` renderiza replay, log de combate, barra de energia e painel de resultado para explicar o desenrolar da batalha.
+### Domínio
 
-### Sistemas auxiliares
-- `src/game/summon/` gerencia invocacao comum e superior, historico, custos e probabilidades. A raridade rolada prioriza definicoes disponiveis da mesma raridade ou da raridade mais proxima; nenhuma definicao ja obtida pode repetir e pool esgotado nao consome recursos. Nova jornada recebe cinco tickets comuns e uma especial com ate tres opcoes persistidas, priorizando raridade inicial 3 ou superior. Rituais pagos permanecem bloqueados ate os cinco tickets acabarem e a especial ser escolhida.
-- `src/game/expeditions/` administra expedicoes temporizadas, ate 3 herois por expedicao e recompensas escaladas pelo poder enviado.
-- `src/game/lobby/` deriva rotinas idle visuais por heroi em blocos deterministas de dez minutos. O relatorio agrupa ocupacao por area sem persistir rotina, alterar recursos ou conceder progresso automatico. A rotina de treino reflete o foco tecnico ativo de herois aptos.
-- `src/game/training/` administra o treino funcional leve do Campo de Treino. Cada heroi tem um foco tecnico (linha de frente, dano, defesa, suporte, mobilidade, arcano, disciplina ou sobrevivencia) com XP e nivel de treino persistidos, separados dos atributos de combate. O progresso e calculado por tempo decorrido em blocos de dez minutos, com teto por chamada e sem conceder ATK/DEF/HP/SPD, XP ou nivel de combate. Herois em expedicao, feridos, com HP critico ou moral baixa nao treinam. Foco sem escolha usa a recomendacao da classe. `getTrainingReadinessBonus` calcula um indicativo pequeno de preparo, mantido isolado da readiness da Torre nesta etapa.
-- `src/game/proficiencies/` administra proficiencias e habilidades leves. Cada heroi acumula XP de proficiencia (combate com lamina, escudo, arquearia, adagas, arcano, cura, campo, sobrevivencia, disciplina, lideranca, tatica e oficina) com ranks (unknown, novice, practiced, competent, refined) e descoberta gradual. O progresso e alimentado pelo treino, sem tick independente: cada avanco de treino move a proficiencia principal do foco (fatia maior) e uma secundaria (fatia menor). Tecnicas leves sao desbloqueadas por rank e sao apenas descritivas, sem alterar combate. `getProficiencyReadinessBonus` calcula um bonus pequeno por heroi (teto configuravel), criado e testado isoladamente, ainda nao somado ao readiness da Torre. Nao revela automaticamente os `hiddenAptitudeTags` do roster; usa apenas um sinal de potencial nao analisado. `progressProficienciesForTrainingResult` retorna os desdobramentos por heroi (progresso e rank-ups) para alimentar a analise de potencial.
-- `src/game/potential/` administra a analise de potencial dos herois. Cada heroi tem XP e nivel de analise persistidos (0 a 5: desconhecido, sinais iniciais, leitura de background, padrao de treino, indicios de aptidao oculta, potencial bem mapeado). A analise cresce devagar a partir dos desdobramentos de proficiencia (+1 XP por progresso, +2 por rank-up/descoberta) e de uma acao manual leve (`analyzeHeroPotential`) com custo em ouro. `getHeroPotentialReport` deriva insights (background, treino, proficiencia, comportamento, aptidao oculta, risco e recomendacao) revelados por nivel, com chaves persistidas em `revealedInsightKeys`. Os `hiddenAptitudeTags` nunca sao expostos crus: apenas sinalizam potencial nao compreendido. Herois de baixa raridade recebem leitura de "potencial a descobrir". A analise nao altera stats, level, raridade, combate, summon nem expedicoes.
-- `src/game/promotion/` administra a ascensao por estrelas. `getHeroPromotionPreview` deriva elegibilidade, requisitos, readiness (`blocked`, `not-ready`, `almost`, `ready`), custo, beneficios projetados, riscos e recomendacoes a partir de `hero.rarity`, `hero.level`, analise de potencial, proficiencias, tecnicas leves, moral, ferimentos e andar da Torre. `promoteHero` executa a promocao real apenas de 1★ para 2★: valida os requisitos hard do preview e o custo (150 ouro + 5 fragmentos), consome os recursos somente no sucesso e atualiza `hero.rarity` e `hero.maxLevel`, preservando level, XP, stats, HP, equipamentos, formacao, treino, proficiencias e potencial. Promocoes acima de 2★ retornam bloqueadas. Nao ha campo persistido novo nem migration: a promocao altera campos ja existentes do heroi e recursos existentes. Material de Eco segue como requisito futuro (`warning`) na rota 4★→5★.
-- `src/game/missions/` valida missoes diarias, conquistas permanentes e recompensas.
-- `src/game/narrative/` gerencia cenas curtas por gatilho e marca narrativas ja vistas.
-- `app/components/` concentra os paineis React por domínio.
-- `app/components/layout/GameShell.tsx` coordena a navegação principal e a composição dos painéis.
+- `src/game/` contém regras puras e dados de gameplay.
+- componentes não devem implementar regra persistente de negócio.
 
-### Interface
-- `app/components/` renderiza as abas da base, herois, formacao, inventario, expedicoes, missoes, invocacao, torre, combate e configuracoes.
-- A Base funciona como hub de comando: recomenda proxima acao, resume conta/campanha/equipe/recursos e oferece atalhos para Torre, Formacao, Herois, Expedicoes, Missoes e Inventario.
-- A Base mostra a primeira representacao do Lobby Vivo com resumo, areas ocupadas e atividades atuais dos herois; a UI apenas consome o relatorio derivado do dominio. Um card do Campo de Treino resume foco, progresso e status de treino de cada heroi.
-- O painel de Herois exibe o foco de treino atual, o progresso (nivel e XP), o status de aptidao e permite trocar o foco de cada heroi.
-- O painel de Herois tambem exibe proficiencias descobertas com rank e XP, tecnicas leves desbloqueadas, indicios de proficiencias recomendadas ainda nao praticadas e um sinal de potencial oculto quando aplicavel.
-- O painel de Herois exibe a Analise de Potencial: nivel e XP de analise, resumo, insights revelados, quantidade de indicios ainda bloqueados, recomendacoes e um botao "Analisar heroi" com custo em ouro (desabilitado sem saldo ou com analise completa).
-- O painel de Herois exibe a secao "Ascensao por Estrelas": raridade atual e alvo, status de readiness, requisitos com status (met/missing/warning), custo, beneficios projetados, riscos e recomendacoes. Para herois 1★ elegiveis, um botao funcional "Promover para 2★" executa a promocao (desabilitado se faltar requisito ou recurso). Para 2★ ou mais, o botao "Promover (em breve)" permanece desabilitado com aviso de que promocoes superiores ainda estao em preparacao.
-- `src/game/early-game/` deriva a trilha inicial de objetivos (`getEarlyObjectiveTrack`), uma funcao pura que le o `GameState` e retorna objetivos com status `locked`/`available`/`completed`, progresso X/Y, hint e `targetTab`. Os objetivos vao de usar os tickets iniciais ate promover um heroi 1★ para 2★, reaproveitando treino, proficiencias, potencial e `getHeroPromotionPreview`. Nao ha campo persistido novo nem migration: tudo e derivado do estado atual (inclusive a deteccao de promocao, via comparacao entre `hero.rarity` e a raridade base da definicao).
-- O painel Base/Lobby exibe o card "Rota da Primeira Ascensao" com resumo, barra de objetivos concluidos, proximo objetivo destacado, lista compacta com status e um botao que navega para a aba sugerida. A trilha e apenas orientativa: nao bloqueia Torre, treino, invocacao nem promocao, e some quando todos os objetivos sao concluidos.
-- `src/game/lobby/lobbyView.ts` deriva a visao enriquecida do Lobby (`getLobbyLivingReport`), funcao pura que reaproveita `getLobbyRoutineReport` e adiciona, por heroi, um card com classe, raridade, nivel, moral, atividade, hint e marcadores (formacao, expedicao, ferido, HP baixo, pronto para 2★, proficiencia, potencial). Os herois sao agrupados por local (Campo de Treino, Portao de Expedicoes, Enfermaria, Oficina, Portal de Invocacao, Quadro de Missoes, Praca, Aposentos, Alojamentos) em ordem estavel, com um resumo (total, treinando, feridos, em expedicao, prontos para Torre) e um bloco de atencao (feridos, HP baixo, moral baixa, sem equipamento, prontos para promocao, analise perto do proximo nivel). Nao ha persistencia nova nem migration: tudo e derivado do estado atual e nao concede recursos.
-- O painel Base mostra o card "Lobby Vivo" com clima de ambientacao, resumo, bloco de atencao clicavel (navega para Herois/Inventario) e grupos por local com cards compactos e responsivos, limitando a 6 herois por grupo com indicador de excedente.
-- O HUD de recursos exibe ouro, cristais, essencia, fragmentos e energia em barra compacta, mantendo recursos secundarios recolhidos e responsivos para nao disputar espaco com navegacao ou acoes.
-- O GameShell agrupa a navegacao principal por areas, exibe contexto da aba ativa e usa tabs com estado ativo evidente e scroll horizontal no mobile.
-- Sobre apresenta nome, versao, objetivo, stack, creditos/notas de alpha e status de save/cloud save em blocos curtos integrados ao tema dark fantasy.
-- O polimento mobile global deve impedir overflow horizontal da pagina, empilhar grids complexos, manter modais rolaveis com acoes visiveis e preservar area de toque confortavel.
-- O polimento visual global deve padronizar cores, cards, botoes, badges, alertas, barras, modais, tabs e estados com estética Dark Fantasy legivel.
-- A interface deve destacar poder do time, risco do andar, ferimentos, moral e modificadores ativos.
-- Configuracoes deve separar preferencias, save local, importacao/exportacao, cloud save experimental, reset e informacoes do jogo; acoes destrutivas ou de sobrescrita exigem confirmacao clara.
-- A versão atual deve ter identidade Dark Fantasy consistente, design system interno e responsividade real em mobile.
-- A tela da Torre usa layout mestre-detalhe: mapa de andares selecionável à esquerda e um painel à direita que escolhe um estado dominante entre evento pendente, resultado recente, bloqueio de combate e preparação.
-- A infraestrutura de feedback visual usa toast in-app global para acoes rapidas e modal reutilizavel para confirmacoes, eventos importantes e resultados de ciclo; eventos pendentes da Torre aparecem como CTA claro e sao resolvidos em modal, enquanto resultado de combate abre automaticamente em modal grande com abas de resumo, recompensas, herois, consequencias e log.
-- Depois de fechar o modal de combate, a Torre exibe um card compacto de ultimo resultado com outcome, andar, dificuldade, principais recompensas, principais consequencias e CTA para rever o resultado completo ou continuar a subida.
+### Estado
 
-## Fluxo principal do jogador
-1. O jogador abre a home e entra no jogo, carregando o save local.
-2. Decide entre invocar herois, usar contratos de recrutamento e avaliar relíquias atuais.
-3. Organiza a formacao, aplica presets e equipa personagens com base no capitulo ativo.
-4. Escolhe a dificuldade da torre, enfrenta eventos aleatorios, luta automaticamente e recebe recompensas proporcionais ao risco.
-5. Analisa a tela de resultado 2.0 para entender recompensas, progresso, consequencias, desempenho individual e sistemas que afetaram a luta.
-6. Gerencia ferimentos, moral, energia, expedicoes e missoes durante o loop.
-6. Avanca pelos capitulos, desbloqueia relíquias, progressao permanente e melhorias de conta.
+- `src/store/gameStore.ts` é a ponte de mutação consumida pela UI.
+- mutações persistentes devem passar pelo store e pelas regras do domínio.
 
-## Regras de alto nível
-- O progresso e salvo localmente no navegador com `localStorage`, `saveVersion: 1` e `schemaVersion: 5`. Saves legados passam por migrations sequenciais antes da normalizacao final; campos ausentes recebem defaults e referencias invalidas sao removidas. A migration para o schema 3 adiciona a estrutura de treino (`training`), a migration para o schema 4 adiciona proficiencias (`proficiencies`) e a migration para o schema 5 adiciona a analise de potencial (`potential`), todas com defaults seguros.
-- A torre e o eixo principal do jogo, com capitulos marcados, chefes, modificadores por regiao e modos de dificuldade por tentativa.
-- Descobertas do jogador devem ser persistidas na Biblioteca e evoluir conforme uso real dos sistemas.
-- A Biblioteca deve apresentar essas descobertas como grimorio/arquivo arcano, separando inimigos, chefes, capitulos, eventos, reliquias e memoria da guilda sem alterar os dados salvos.
-- Eventos semanais locais, eventos aleatorios da torre e narrativas curtas mantem o jogo vivo sem backend.
-- Recursos principais incluem ouro, cristais, essencia, fragmentos, Fragmentos de Eco e energia.
-- Balanceamento inicial: o jogo comeca com 250 de ouro, 100 de cristais e 30/30 de energia. O ouro inicial (2 invocacoes comuns) evita esgotar o roster unico logo de inicio; o onboarding (5 tickets comuns + 1 escolha especial) ja entrega formacao, e o restante dos recursos deve vir da subida da Torre. Rituais pagos seguem bloqueados ate o fim do onboarding.
-- Fragmentos, usados na promocao 1★→2★ (5 por promocao), tem fonte controlada nos primeiros andares: 3 no marco do andar 5, 6 no andar 7 e 10 no chefe do andar 10, tornando a primeira promocao alcancavel por volta do andar 7 sem trivializar. Andares altos mantem a formula original.
-- Energia regenera com o tempo e deve permitir teste rapido de composicoes sem bloquear o jogador (30/30 iniciais permitem ~6 tentativas antes de depender da regeneracao).
-- A equipe evolui por XP, equipamento, especializacao, moral, ferimentos, recrutamento e relíquias.
-- Relíquias permanentes aumentam a conta de forma global e devem ser persistidas no save.
-- Contratos de heroi complementam a invocacao e oferecem recrutamento alternativo com escolhas curtas, confirmacao clara e atalhos para revisar Heróis ou Formacao.
-- O sistema de UI deve comunicar risco, modificadores, recompensas, dificuldade escolhida, resultado da batalha e o estado da equipe de forma clara.
-- Morte permanente nunca deve ocorrer fora do modo Hardcore.
-- A especificacao deve ser sincronizada com o GDD atualizado em `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md`.
+### Persistência
 
-## Migracao Next/PostgreSQL
-- A UI React e o fluxo operacional principal desta branch.
-- O core TypeScript em `src/game/` deve continuar validado por testes de regressao e fixtures estaveis.
-- O save local no navegador permanece como fallback tecnico e deve preservar a chave existente de `localStorage`.
-- O PostgreSQL armazena snapshots completos do save normalizado e mantem `PlayerProfile`/`Hero` como tabelas preparatorias.
-- O banco local versionado deve subir por Docker Compose com volume persistente e ser validado por `npm run validate:db`.
-- O deploy futuro planejado e Vercel; GitHub Pages nao e alvo desta versao.
+- localStorage é o save principal;
+- PostgreSQL/Prisma é opcional e usado para snapshots experimentais;
+- import/export e cloud snapshots são normalizados antes de uso.
+
+## 3. Save
+
+Configuração atual:
+
+- chave: `ascensao-dos-ecos-save-v1`;
+- `saveVersion`: 1;
+- `schemaVersion`: 5.
+
+`src/game/save/migrations.ts` migra schemas anteriores até a versão atual.
+
+Fluxo de importação:
+
+1. validar JSON/objeto;
+2. identificar versão;
+3. aplicar migrations sequenciais;
+4. normalizar estado;
+5. somente então aceitar o save.
+
+Saves com versão de jogo/schema futura devem ser rejeitados com mensagem segura.
+
+## 4. Estado inicial e economia
+
+Valores relevantes da nova jornada:
+
+- ouro: 250;
+- cristais: 100;
+- energia: 30/30;
+- custo de tentativa da Torre: 5 energia;
+- regeneração: 1 a cada 5 minutos;
+- invocação comum paga: 100 ouro;
+- superior: 100 cristais.
+
+A primeira sessão recebe direitos de invocação adicionais descritos abaixo.
+
+## 5. Heróis
+
+### Identidade
+
+O roster moderno usa definições únicas e estáveis. Heróis do roster possuem `definitionId`. Saves antigos podem conter heróis procedurais sem esse campo; eles continuam válidos como legacy.
+
+Um herói legacy não deve ser automaticamente renomeado/substituído para caber no novo roster.
+
+### Dados principais
+
+- raridade;
+- classe;
+- nível/XP;
+- HP e atributos;
+- traço;
+- equipamento;
+- moral;
+- ferimentos;
+- especialização;
+- estados de treino/proficiência/potencial quando existentes.
+
+## 6. Invocação
+
+### Sem duplicatas do roster
+
+Invocação usa somente definições ainda não obtidas. A raridade rolada prioriza opções da mesma faixa e, quando necessário, a mais próxima disponível. A raridade final do herói segue sua definição.
+
+Pool vazio não deve consumir recurso.
+
+### Onboarding
+
+Nova jornada recebe:
+
+- 5 tickets de invocação comum;
+- 1 invocação especial.
+
+A especial oferece até 3 opções persistidas, priorizando heróis de raridade inicial relevante. A escolha encerra a especial.
+
+Rituais pagos permanecem bloqueados até os tickets acabarem e a escolha especial ser concluída.
+
+## 7. Recrutamento
+
+Contratos são uma rota alternativa à invocação. A UI apresenta candidatos e permite decisão estratégica antes da contratação.
+
+O sistema deve preservar a diferença conceitual:
+
+- invocação = descoberta aleatória dentro do pool;
+- contrato = escolha controlada entre candidatos.
+
+## 8. Formação
+
+- máximo de 5 heróis;
+- 2 posições frontais;
+- presets separados para Torre e expedição;
+- herói indisponível não deve ser inserido incorretamente.
+
+## 9. Equipamentos e compatibilidade
+
+Equipamentos possuem slot, raridade e bônus efetivos.
+
+A análise de equipamento deve permitir comparação com o item atual e indicar impacto/compatibilidade.
+
+**Regra:** classe pouco afinada não implica bloqueio automático. A UI pode advertir baixa compatibilidade e ainda permitir equipar. Bloqueios são reservados para restrições técnicas reais, como slot incompatível ou conflito de equipamento.
+
+## 10. Lobby Vivo
+
+`src/game/lobby/routines.ts` deriva rotina/ocupação visual em blocos determinísticos de tempo.
+
+`src/game/lobby/lobbyView.ts` produz a visão enriquecida:
+
+- cards por herói;
+- local atual;
+- atividade/hint;
+- marcadores de formação, expedição, ferimento, HP baixo, promoção, proficiência e potencial;
+- resumo do Lobby;
+- bloco de atenção;
+- grupos por local em ordem estável.
+
+Esses relatórios são derivados. Renderizar o Lobby não pode conceder recursos ou progresso automaticamente.
+
+## 11. Treino
+
+`src/game/training/` controla foco e progresso técnico.
+
+Focos incluem especializações de treinamento como linha de frente, dano, defesa, suporte, mobilidade, arcano, disciplina e sobrevivência.
+
+Regras centrais:
+
+- progresso por tempo decorrido;
+- persistência do foco/progresso;
+- sem ganho direto de atributos brutos de combate nesta etapa;
+- heróis indisponíveis/feridos/críticos podem não treinar;
+- quando não houver foco explícito, o domínio pode usar recomendação de classe.
+
+O bônus derivado de treino deve permanecer pequeno e explícito; não presumir integração com readiness se o domínio não a aplicar.
+
+## 12. Proficiências
+
+`src/game/proficiencies/` recebe progresso principalmente como desdobramento do treino.
+
+Possui ranks de descoberta e técnicas leves. Exemplos de categorias incluem combate, defesa, arcano, cura, sobrevivência, disciplina, liderança, tática e oficina.
+
+Regras:
+
+- progresso principal + secundário conforme foco de treino;
+- descoberta gradual;
+- técnicas leves desbloqueadas por rank;
+- não expor `hiddenAptitudeTags` crus;
+- bônus de readiness de proficiência existe como cálculo isolado e não deve ser somado à Torre sem decisão explícita.
+
+## 13. Potencial
+
+`src/game/potential/` mantém análise por herói em níveis 0–5.
+
+Progresso pode vir de:
+
+- avanço de proficiências;
+- rank-up/descoberta;
+- ação manual de análise com custo em ouro.
+
+`getHeroPotentialReport` revela insights progressivamente. Aptidões ocultas devem ser traduzidas em sinais/insights, não exibidas como tags internas.
+
+A análise não altera automaticamente stats, classe, raridade ou combate.
+
+## 14. Promoção
+
+`src/game/promotion/` fornece preview e execução.
+
+### 1★→2★
+
+Implementada.
+
+- custo: 150 ouro + 5 fragmentos;
+- requisitos hard são validados pelo preview;
+- recursos só são consumidos no sucesso;
+- `rarity` e `maxLevel` são atualizados;
+- preservar level, XP, stats, HP, equipamento, formação, treino, proficiências e potencial.
+
+### 2★+
+
+Ainda bloqueada. Não implementar por atalho sem especificar requisitos, economia e compatibilidade de save.
+
+## 15. Rota da Primeira Ascensão
+
+`src/game/early-game/` deriva uma trilha de objetivos do estado atual.
+
+Estados:
+
+- `locked`;
+- `available`;
+- `completed`.
+
+Objetivos cobrem onboarding, formação, primeiros andares, fragmentos, treino, proficiência, potencial e primeira promoção.
+
+A trilha não adiciona um quest state persistido pesado e não bloqueia sistemas.
+
+## 16. Torre
+
+### Estrutura
+
+- 40 andares;
+- 4 capítulos;
+- marcos de bloco em 5/15/25/35;
+- chefes em 10/20/30/40.
+
+Marcos podem aplicar salto de dificuldade e recompensa, mas devem comunicar risco antes da tentativa.
+
+### Readiness
+
+`src/game/tower/readiness.ts` deriva:
+
+- score;
+- classificação;
+- verificações;
+- recomendações.
+
+Considera, entre outros fatores:
+
+- formação;
+- poder e nível;
+- HP;
+- ferimentos;
+- moral;
+- heróis ocupados;
+- energia;
+- contexto/marco do andar.
+
+Readiness não é hard gate.
+
+### Dificuldade
+
+Normal, Desafio e Hardcore alteram risco/recompensa segundo `src/game/difficulty/`.
+
+Hardcore exige comunicação clara de risco de morte permanente.
+
+### Eventos
+
+Eventos de Torre podem ocorrer antes/depois do combate, exigir escolhas e produzir efeitos/recompensas.
+
+## 17. Combate e resultado
+
+`src/game/battle/` simula o combate automático.
+
+A UI deve preservar:
+
+- replay/log;
+- feedback de energia/ações;
+- resultado detalhado;
+- recompensas;
+- consequências;
+- progressão do herói.
+
+Após uma batalha, resultado recente pode ser o estado dominante da Torre até o jogador continuar.
+
+## 18. Expedições
+
+- temporizadas;
+- até 3 heróis;
+- heróis enviados ficam ocupados;
+- timestamps preservam progresso após reload;
+- recompensa escala segundo regras do domínio.
+
+## 19. Moral, ferimentos, afinidade e especializações
+
+Esses sistemas já existem e devem ser reutilizados antes de criar novas camadas psicológicas/progressivas.
+
+- moral afeta condição/desempenho;
+- ferimentos exigem tratamento e afetam disponibilidade/atributos conforme regra;
+- afinidade registra vínculos entre pares;
+- especializações fornecem evolução por classe.
+
+## 20. Relíquias, missões e biblioteca
+
+- relíquias: progressão permanente com Fragmentos de Eco;
+- missões/conquistas: objetivos e recompensas;
+- biblioteca: inimigos, chefes, capítulos, eventos, relíquias e memórias descobertas;
+- narrativa: cenas curtas por gatilho e registro de cenas vistas.
+
+## 21. UI e feedback
+
+### Infraestrutura transversal
+
+- toast in-app para feedback rápido;
+- `UiModal` para conteúdo modal;
+- confirmação para ações destrutivas/sobrescrita;
+- design system em `app/components/ui/`.
+
+### Layout focado
+
+`game-layout.tsx` fornece a arquitetura preferida para telas densas:
+
+- `GamePage`;
+- `GamePageHeader`;
+- `CompactStatStrip`;
+- `PrimaryActionPanel`;
+- `FocusPanel`;
+- `SecondaryInfoGrid`;
+- `DetailDrawer`.
+
+Regra de UX: uma ação principal e um estado dominante por vez; detalhes extensos ficam sob demanda.
+
+### Torre — estado atual
+
+Já migrada para esse padrão:
+
+- header/contexto;
+- métricas essenciais;
+- CTA dominante;
+- faixa compacta de andares;
+- mapa completo e diagnósticos em drawers.
+
+### Heróis — próximo alvo
+
+A próxima refatoração deve aplicar o mesmo padrão sem alterar gameplay/save.
+
+## 22. Responsividade
+
+- evitar overflow horizontal;
+- tabs podem usar scroll horizontal no mobile;
+- grids densos devem empilhar;
+- modais precisam ser roláveis;
+- ações primárias devem permanecer acessíveis;
+- informação secundária não deve dominar a primeira dobra.
+
+## 23. Critérios de regressão obrigatórios
+
+Uma mudança não pode quebrar:
+
+- save antigo/importação;
+- criação/carregamento de nova jornada;
+- onboarding de invocação;
+- roster único;
+- formação;
+- treino/proficiência/potencial;
+- promoção 1★→2★;
+- Torre/readiness/combate/resultado;
+- expedições;
+- localStorage sem banco;
+- build Next.
+
+Consulte `qa-local-checklist.md` para QA manual.

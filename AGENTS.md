@@ -1,43 +1,101 @@
-# Guia de agentes do projeto
+# Guia Canônico de Agentes
 
-## Objetivo
-- Reduzir chamadas redundantes e o consumo de tokens.
-- Preservar a arquitetura atual em Next.js, React, TypeScript e Zustand.
-- Priorizar mudanças pequenas, legíveis e verificadas.
+## Contexto
 
-## Workflow otimizado
-1. Antes de editar, leia o arquivo atual e o contexto relevante (função, módulos relacionados, testes existentes).
-2. Sempre que possível, reutilize `agentsRules/` como fonte de convenção.
-3. Faça uma alteração mínima para resolver o problema.
-4. Execute verificações relevantes (testes, checagens de arquivo e git status).
-5. Só então gerar commit/push, se solicitado.
+Ascensão dos Ecos é um RPG web single-player em Alpha 0.10.0.
 
-## Regras de código
-- Preserve `src/game/` como núcleo de regras puras e `src/store/gameStore.ts` como ponte da UI.
-- Evite novos globals e dependências externas sem necessidade.
-- Normalizar dados do save antes de usar.
-- Manter textos em PT-BR e consistentes com o visual dark fantasy.
-- Manter o save local em `localStorage` como fluxo principal.
-- Não quebrar o cloud save experimental nem as rotas Next existentes.
+Stack:
 
-## Regras de eficiência
-- Leia primeiro, edite depois.
-- Busque o menor trecho necessário para entender o problema.
-- Evite re-explicar o projeto em cada mensagem; use o contexto já existente.
-- Sempre rode o teste ou a validação diretamente relacionada ao problema corrigido.
-- Evite criar arquivos extras sem necessidade.
+- Next.js + React + TypeScript;
+- Zustand;
+- localStorage como save principal;
+- Prisma/PostgreSQL opcional para cloud save experimental.
 
-## Referências internas
-- `agentsRules/README.md`
-- `agentsRules/pre-analise.md`
-- `agentsRules/padroes-codigo-projeto.md`
-- `agentsRules/padrao-commit.md`
-- `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md` como fonte atualizada de design.
-- `docs/especificacao-funcional.md` deve ser mantida sincronizada com o GDD.
-- `README.md` como fonte operacional atual da stack Next/PostgreSQL.
+`master` é a referência canônica. A branch `migration/next-postgres` é histórica e não deve ser usada como base de novas features.
 
-## Padrão Codex / GPT
-- Este arquivo serve como instrução canônica para o Codex e outros agentes GPT que consultam `AGENTS.md`.
-- Mantenha as regras aqui enxutas e reutilizáveis, evitando duplicação em mensagens e prompts locais.
-- Quando houver um ajuste estrutural no fluxo de trabalho, atualize este arquivo antes de alterar instruções específicas de ferramenta.
-- Sempre que houver mudanças em gameplay, progressão, economia, torre, UI estrutural ou save, sincronize primeiro o GDD atualizado e em seguida `docs/especificacao-funcional.md`.
+## Antes de alterar
+
+1. Leia o arquivo atual e o fluxo relacionado.
+2. Consulte `docs/estado-atual-e-roadmap.md` para saber onde o projeto parou.
+3. Consulte o GDD/especificação para comportamento e intenção.
+4. Classifique a mudança: UI, domínio, save, infraestrutura, balanceamento ou documentação.
+5. Faça a menor mudança capaz de resolver o objetivo.
+
+## Arquitetura obrigatória
+
+- `src/game/`: regras puras de gameplay.
+- `src/store/gameStore.ts`: ponte de mutações consumida pela UI.
+- `app/components/`: apresentação React.
+- `src/game/save/`: migration/validação de save.
+- `localStorage`: precisa continuar funcionando sem banco.
+
+Não mover regra de domínio para componente para ganhar velocidade momentânea.
+
+## Save
+
+Estado atual:
+
+- `saveVersion: 1`;
+- `schemaVersion: 5`.
+
+Campo persistido novo exige avaliar:
+
+- default;
+- normalização;
+- migration;
+- regressão/importação.
+
+Valores derivados devem preferir cálculo a persistência.
+
+## UX/UI atual
+
+A direção é **modo foco + progressive disclosure**.
+
+Reuse `app/components/ui/game-layout.tsx`:
+
+- `GamePage`;
+- `GamePageHeader`;
+- `CompactStatStrip`;
+- `PrimaryActionPanel`;
+- `FocusPanel`;
+- `SecondaryInfoGrid`;
+- `DetailDrawer`.
+
+A Torre já é o piloto concluído. O próximo alvo de rework é **Heróis**. Não crie outro design system paralelo.
+
+## Estado de produto relevante
+
+Já existem: roster único, invocação sem duplicatas, onboarding 5+especial, readiness, Lobby Vivo, treino, proficiências, potencial, promoção 1★→2★ e Rota da Primeira Ascensão.
+
+Não reimplemente esses sistemas sob outro nome.
+
+Conceitos como trabalhos do Lobby, Vice-Mestre, Assistente, síntese e promoções superiores são visão futura, não features prontas.
+
+## Validação
+
+- TS/React: `npm run typecheck`.
+- Domínio/save/balance: `npm test`.
+- UI estrutural/Next: `npm run build`.
+- Mudança grande: `npm run validate`.
+- Prisma/PostgreSQL: `npm run validate:db` quando pertinente.
+
+## Documentação
+
+Hierarquia:
+
+1. código/testes;
+2. `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md`;
+3. `docs/especificacao-funcional.md`;
+4. `docs/estado-atual-e-roadmap.md`;
+5. `docs/visao-lobby-vivo.md`.
+
+`gdd_web_tower_gacha_mvp.md` é histórico.
+
+Ao mudar gameplay, economia, save ou UI estrutural, sincronize GDD + especificação + estado/roadmap; atualize QA quando o fluxo testável mudar.
+
+## Commits
+
+- pequenos e por responsabilidade;
+- documentação diretamente necessária para explicar a feature pode acompanhar a feature;
+- limpeza documental ampla deve usar commit `docs:` separado;
+- revise diff/status antes de finalizar.

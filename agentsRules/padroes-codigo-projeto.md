@@ -1,52 +1,75 @@
-# Padroes de Codigo e Projeto
+# Padrões de Código e Projeto
 
 ## Stack
 
-- Next.js, React, TypeScript e Zustand.
-- Prisma/PostgreSQL opcional para cloud save experimental.
-- `localStorage` permanece como save principal local.
-- Deploy futuro planejado para Vercel.
+- Next.js/React/TypeScript/Zustand.
+- localStorage como save principal.
+- Prisma/PostgreSQL opcional.
+- `master` como baseline canônico.
 
-## TypeScript e React
+## Domínio
 
-- Usar componentes funcionais e hooks de React.
-- Consumir estado e ações por `useGameStore`.
-- Manter regras de gameplay em `src/game/`.
-- Usar funcoes pequenas, nomes descritivos e tipos explícitos quando ajudarem a leitura.
-- Preferir objetos de configuracao para regras de gameplay.
-- Normalizar dados vindos do save antes de usar.
+- regras de gameplay em `src/game/`;
+- funções puras sempre que possível;
+- objetos/configurações explícitos para balanceamento;
+- não criar acoplamento de regra com React;
+- reaproveitar sistemas já existentes antes de introduzir conceitos equivalentes.
 
-## Estado e Save
+## Store
 
-- Campos novos devem existir em `createInitialState`.
-- Campos novos devem ser saneados em `ensureStateShape`.
-- Mutacoes persistentes devem passar pelo `gameStore`.
-- Evitar salvar dados derivados que podem ser recalculados, salvo quando forem historico ou estado pendente.
+- UI consome `useGameStore`;
+- mutações persistentes passam por `src/store/gameStore.ts`;
+- store orquestra, domínio decide regra;
+- persistir após mutações válidas conforme padrão existente.
 
-## UI React
+## Save
 
-- Reutilizar componentes existentes antes de criar novos.
-- Componentes chamam o `gameStore`; regras continuam em `src/game/`.
-- Botoes devem ter `type="button"` quando nao forem submit.
-- Conteudo dinamico renderizado pelo React nao deve usar HTML bruto sem sanitizacao.
-- Manter textos claros para escolhas do jogador.
-- UI deve continuar responsiva em desktop, tablet e mobile.
+- `saveVersion: 1`, `schemaVersion: 5`;
+- campo novo persistido exige default/normalização e, quando houver mudança de contrato, migration;
+- não salvar valor facilmente derivável;
+- não quebrar saves legacy;
+- PostgreSQL nunca deve ser requisito para jogar localmente.
+
+## UI
+
+- reutilizar `app/components/ui/`;
+- para páginas densas, preferir `game-layout.tsx`;
+- uma ação principal por contexto;
+- usar progressive disclosure para informação secundária;
+- manter estados de loading/empty/error/disabled legíveis;
+- botões não-submit devem usar `type="button"`;
+- evitar HTML bruto não sanitizado;
+- preservar acessibilidade básica (`aria-*`, foco e semântica quando aplicável).
+
+## Layout focado
+
+Componentes atuais:
+
+- `GamePage`;
+- `GamePageHeader`;
+- `CompactStatStrip`;
+- `PrimaryActionPanel`;
+- `FocusPanel`;
+- `SecondaryInfoGrid`;
+- `DetailDrawer`.
+
+A Torre é a implementação de referência. Não criar uma segunda família de componentes para resolver o mesmo problema em Heróis/Base.
 
 ## CSS
 
-- Usar classes semanticas e reaproveitar tokens de `:root`.
-- Evitar estilos inline.
-- Manter cards, paineis e botoes consistentes com o visual existente.
-- Nao criar dependencias externas para efeitos simples.
+- reutilizar tokens e classes semânticas;
+- evitar inline styles sem motivo;
+- reduzir novas regras globais quando um componente pode encapsular a necessidade;
+- mobile não pode depender de largura desktop;
+- impedir overflow horizontal global.
 
-## Conteudo e Encoding
+## Conteúdo
 
-- Preferir ASCII em nomes de arquivos e identificadores.
-- Textos do jogo devem seguir o tom dark fantasy/tower progression.
-- Manter consistencia com os textos atuais do projeto.
+- identificadores/arquivos preferencialmente ASCII;
+- textos visíveis em PT-BR;
+- tom dark fantasy, gestão e progressão;
+- nomes/lore devem permanecer originais.
 
-## Next/Vercel
+## Dependências
 
-- Manter compatibilidade com Next.js.
-- Nao introduzir dependência obrigatória de banco para jogar localmente.
-- Cloud save deve falhar de forma segura quando desativado ou sem banco.
+Não adicionar biblioteca para algo já resolvível pela stack atual sem justificativa técnica clara.

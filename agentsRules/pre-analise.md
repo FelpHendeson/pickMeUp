@@ -1,47 +1,75 @@
-# Pre-Analise Antes de Alterar
+# Pré-Análise Antes de Alterar
 
-Use este checklist antes de implementar qualquer feature.
+## 1. Descobrir o estado real
 
-## 1. Entender o Fluxo Existente
+- Leia `docs/estado-atual-e-roadmap.md`.
+- Localize o ponto de entrada e os módulos relacionados.
+- Leia testes existentes antes de presumir comportamento.
+- Verifique se a feature já existe sob outro módulo.
 
-- Localizar os arquivos envolvidos com `rg`.
-- Ler o fluxo completo antes de editar.
-- Identificar onde o estado e mutado e onde ele e salvo.
-- Verificar se a mudança afeta apenas UI React, regras em `src/game/`, save local ou cloud save experimental.
+## 2. Classificar a mudança
 
-## 2. Separar Responsabilidades
-
-Antes de codar, classifique a mudanca:
 - UI/layout;
-- gameplay/balanceamento;
-- persistencia/save;
-- documentacao/regras;
-- infraestrutura/configuracao.
+- gameplay/domínio;
+- balanceamento;
+- persistência/save;
+- infraestrutura;
+- documentação.
 
-Nao misture responsabilidades sem necessidade. Se misturar for inevitavel, explicar no commit.
+Evite misturar categorias sem necessidade.
 
-## 3. Checar Risco de Save
+## 3. UI
 
-Quando adicionar campos no estado:
-- incluir defaults em `createInitialState`;
-- normalizar saves antigos em `ensureStateShape`;
-- evitar quebrar saves existentes;
-- manter nomes de campos claros e estaveis.
+Para tela densa, verifique primeiro `app/components/ui/game-layout.tsx`.
 
-## 4. Checar Fluxo de Torre e Combate
+Pergunte ao código:
 
-Para mudancas na torre:
-- validar formacao;
-- validar energia;
-- nao quebrar repeticao de andares;
-- preservar chefes e marcos;
-- manter log de batalha compreensivel.
+- qual é o estado dominante?
+- qual é a ação principal?
+- o que pode virar detalhe recolhido?
+- existe componente reutilizável?
 
-## 5. Verificacao Minima
+A Torre já é referência. Heróis é o próximo alvo planejado.
 
-Antes de finalizar:
-- rodar `npm run typecheck` quando houver mudança em TypeScript/React;
-- rodar `npm test` quando regras ou persistência forem afetadas;
-- rodar `npm run build` antes de finalizar mudanças de UI estruturais;
-- revisar `git diff`;
-- confirmar que arquivos de responsabilidades diferentes estao em commits separados.
+## 4. Save
+
+Se o estado persistido mudar:
+
+- atualizar estado inicial;
+- atualizar normalização;
+- decidir se exige nova `schemaVersion`;
+- adicionar migration;
+- testar importação/regressão.
+
+Estado atual: schema 5.
+
+## 5. Gameplay
+
+- regra deve permanecer em `src/game/`;
+- UI chama store, não altera estado persistente de forma paralela;
+- dados derivados devem preferir função pura;
+- não duplicar moral, afinidade, treino, proficiência ou potencial com nomes novos.
+
+## 6. Torre
+
+Preservar:
+
+- formação/energia;
+- milestones/readiness;
+- repetição de andares;
+- dificuldades;
+- eventos;
+- resultado/replay;
+- layout focado, salvo quando a tarefa for explicitamente alterá-lo.
+
+## 7. Validação
+
+- TypeScript/React: `npm run typecheck`;
+- regras/save: `npm test`;
+- UI estrutural: `npm run build`;
+- grande mudança: `npm run validate`;
+- DB: `npm run validate:db` quando aplicável.
+
+## 8. Documentação
+
+Mudou contrato funcional? Sincronize GDD + especificação + estado/roadmap. Mudou fluxo de QA? Atualize o checklist.

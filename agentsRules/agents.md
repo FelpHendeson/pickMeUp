@@ -1,22 +1,36 @@
-# Otimizacao de agentes
+# Disciplina de Execução para Agentes
 
-## Diretrizes principais
-- Leia o arquivo atual antes de editar.
-- Evite trabalho duplicado e contexto redundante.
-- Mantenha mudanças pequenas e alinhadas ao comportamento atual do jogo.
-- Prefira ajustes em módulos já existentes ao invés de criar camadas novas.
+## Objetivo
 
-## Checklist de execucao
-- [ ] Entender o problema e o ponto de entrada do fluxo.
-- [ ] Conferir o estado atual do arquivo afetado.
-- [ ] Aplicar a menor correção possivel.
-- [ ] Validar com teste ou checagem relacionada.
-- [ ] Verificar git status e diff antes de finalizar.
+Evoluir o projeto sem duplicar sistemas, quebrar saves ou transformar uma mudança pequena em refactor global.
 
-## Convencoes reutilizaveis
-- `agentsRules/pre-analise.md` para analise inicial.
-- `agentsRules/padroes-codigo-projeto.md` para padroes de arquitetura.
-- `agentsRules/padrao-commit.md` para commits.
-- `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md` como fonte atualizada de design.
-- `docs/especificacao-funcional.md` deve refletir os sistemas do GDD atualizado.
-- `AGENTS.md` e `.github/copilot-instructions.md` para orientacao global.
+## Fluxo
+
+- [ ] Ler `docs/estado-atual-e-roadmap.md`.
+- [ ] Localizar arquivos e testes do fluxo.
+- [ ] Conferir se o sistema pedido já existe.
+- [ ] Identificar impacto em UI/domínio/save.
+- [ ] Aplicar a menor mudança coerente.
+- [ ] Reusar componentes existentes.
+- [ ] Rodar validação proporcional.
+- [ ] Revisar diff/status.
+- [ ] Sincronizar documentação quando o contrato mudar.
+
+## Estado que não deve ser redescoberto
+
+- `master` é canônico.
+- Stack: Next/React/TS/Zustand.
+- localStorage é save principal.
+- schema de save atual: v5.
+- Lobby Vivo/readiness/treino/proficiências/potencial/promoção 1★→2★ já existem.
+- Torre já usa o layout focado.
+- próximo rework planejado: Heróis.
+
+## Referências
+
+- `AGENTS.md`;
+- `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md`;
+- `docs/especificacao-funcional.md`;
+- `docs/estado-atual-e-roadmap.md`;
+- `agentsRules/pre-analise.md`;
+- `agentsRules/padroes-codigo-projeto.md`.

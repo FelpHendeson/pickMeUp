@@ -1,26 +1,66 @@
-# Instruções do Copilot para o projeto
+# Instruções do Copilot — Ascensão dos Ecos
 
-## Contexto do projeto
-- Jogo web single-player de estratégia, idle RPG, gacha e progressão por torre.
-- Stack operacional: Next.js, React, TypeScript e Zustand.
-- Prisma/PostgreSQL é opcional, apenas para cloud save experimental.
-- `localStorage` é o save principal; o jogo funciona localmente sem `DATABASE_URL`.
-- Regras de gameplay ficam em `src/game/`; mutações persistentes passam por `src/store/gameStore.ts`.
-- UI em `app/` e `app/components/`. Regras e convenções em `agentsRules/`.
+## Estado atual
 
-## Regras obrigatórias
-- Antes de tocar em qualquer arquivo, confira o conteúdo atual daquele arquivo.
-- Preserve `src/game/` como núcleo de regras puras e `src/store/gameStore.ts` como ponte da UI.
-- Ao adicionar campos no estado, atualizar `createInitialState` e a normalização de save (`ensureStateShape`).
-- Não quebrar saves existentes nem tornar o PostgreSQL obrigatório para jogar localmente.
-- Não introduzir dependências externas sem necessidade.
-- Validar com testes existentes (`npm test`) ou com uma reprodução mínima do problema.
-- Use commits curtos e separados por responsabilidade.
+- Alpha 0.10.0.
+- `master` é canônico.
+- Stack: Next.js, React, TypeScript, Zustand.
+- localStorage é o save principal.
+- Prisma/PostgreSQL é opcional para cloud save experimental.
+- schema de save atual: v5.
 
-## Otimização do fluxo
-- Prefira leitura localizada em vez de re-sumar tudo.
-- Reaproveite componentes e padrões já existentes.
-- Mantenha alterações mínimas e reversíveis.
-- Rode `npm run typecheck` para mudanças TypeScript/React e `npm run build` para mudanças estruturais de UI/Next.
-- Use `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md` como referência de design atualizada e sincronize `docs/especificacao-funcional.md` quando o gameplay mudar.
-- Documente mudanças funcionais em `docs/` ou em arquivos de regra quando necessário.
+Leia `docs/estado-atual-e-roadmap.md` antes de iniciar uma feature.
+
+## Arquitetura
+
+- gameplay em `src/game/`;
+- mutações persistentes em `src/store/gameStore.ts`;
+- UI em `app/components/`;
+- migrations/validação em `src/game/save/`;
+- jogo deve funcionar sem `DATABASE_URL`.
+
+## Sistemas já existentes
+
+Não reimplementar: roster único, invocação sem duplicatas, onboarding 5+especial, readiness, Lobby Vivo, treino, proficiências, potencial, promoção 1★→2★ e Rota da Primeira Ascensão.
+
+## UX atual
+
+O projeto está migrando telas para **modo foco**.
+
+Reuse `app/components/ui/game-layout.tsx`. A Torre já foi refatorada e serve de referência. O próximo alvo planejado é Heróis.
+
+Prefira:
+
+- um estado dominante;
+- uma ação principal;
+- métricas essenciais compactas;
+- detalhes extensos recolhidos.
+
+## Save
+
+Ao mudar estado persistido:
+
+1. default;
+2. normalização;
+3. migration quando necessário;
+4. teste de regressão/importação.
+
+Não persistir dados derivados sem necessidade.
+
+## Validação
+
+- `npm run typecheck` para TS/React;
+- `npm test` para domínio/save;
+- `npm run build` para UI/Next estrutural;
+- `npm run validate` para mudança grande;
+- `npm run validate:db` só quando DB/Prisma for afetado.
+
+## Documentação
+
+- GDD canônico: `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md`;
+- funcional: `docs/especificacao-funcional.md`;
+- ponto atual: `docs/estado-atual-e-roadmap.md`;
+- visão futura: `docs/visao-lobby-vivo.md`;
+- GDD de MVP antigo: histórico.
+
+Sincronize docs quando gameplay, economia, save ou UI estrutural mudar.

@@ -1,149 +1,194 @@
 # Checklist de QA Local
 
-Use este checklist apos mudancas grandes de UI, regras, persistencia ou migracao. Marque cada item testado e registre observacoes quando algo parecer instavel.
+Use após mudanças de UI, gameplay, save, economia ou infraestrutura.
 
-## Preparacao
+## Preparação
 
-- [ ] Rodar `npm install` quando houver mudanca em dependencias.
-- [ ] Rodar `npm run typecheck`.
-- [ ] Rodar `npm test`.
-- [ ] Rodar `npm run build`.
-- [ ] Rodar `npm run dev` e abrir o endereco local informado pelo Next.
-- [ ] Confirmar que o jogo abre sem `.env` e sem PostgreSQL, usando save local.
-- [ ] Se o teste envolver cloud save, rodar `npm run db:up`, `npm run db:migrate` e reiniciar o Next com `NEXT_PUBLIC_ENABLE_CLOUD_SAVE="true"`.
+- [ ] `npm install` se dependências mudaram.
+- [ ] `npm run typecheck`.
+- [ ] `npm test`.
+- [ ] `npm run build` para mudanças de UI/Next.
+- [ ] Abrir o jogo com `npm run dev`.
+- [ ] Confirmar funcionamento sem `.env`/PostgreSQL.
+- [ ] Para DB: `npm run db:up`, `npm run db:migrate` e cloud save habilitado.
 
-## 1. Inicializacao
+## 1. Nova jornada e onboarding
 
-- [ ] Abrir o jogo localmente.
-- [ ] Verificar se a tela Base aparece sem erros visuais.
-- [ ] Criar novo save quando nao houver progresso.
-- [ ] Recarregar a pagina e confirmar que o save existente carrega.
-- [ ] Confirmar que a narrativa inicial, quando aparecer, pode ser continuada ou pulada.
+- [ ] Criar novo save.
+- [ ] Confirmar 250 ouro, 100 cristais e 30 energia.
+- [ ] Confirmar 5 tickets comuns iniciais.
+- [ ] Confirmar invocação especial disponível.
+- [ ] Verificar que rituais pagos ficam bloqueados durante o onboarding.
+- [ ] Consumir os 5 tickets.
+- [ ] Abrir especial e conferir até 3 opções.
+- [ ] Recarregar a página e confirmar persistência das opções especiais.
+- [ ] Escolher o herói especial.
+- [ ] Confirmar liberação dos rituais pagos.
+- [ ] Confirmar que `Rota da Primeira Ascensão` mostra o próximo objetivo coerente.
 
-## 2. Herois
+## 2. Roster e invocação
 
-- [ ] Fazer uma invocacao.
-- [ ] Verificar se o heroi aparece na lista.
-- [ ] Conferir raridade, classe, traco e atributos principais.
-- [ ] Usar um contrato de heroi, quando disponivel.
-- [ ] Escolher 1 entre 3 herois no recrutamento por contrato.
-- [ ] Confirmar que apenas o heroi escolhido entra na lista.
-- [ ] Equipar um item em um heroi.
-- [ ] Remover ou trocar equipamento.
-- [ ] Evoluir ou preparar um heroi ate nivel 10.
-- [ ] Escolher uma especializacao disponivel.
-- [ ] Confirmar que a especializacao aparece no detalhe do heroi.
+- [ ] Confirmar que heróis do roster possuem identidade estável.
+- [ ] Invocar e confirmar ausência de duplicata do mesmo `definitionId`.
+- [ ] Confirmar que pool esgotado não consome recurso.
+- [ ] Importar/usar save legacy, se houver fixture, e confirmar que heróis sem `definitionId` continuam válidos.
+- [ ] Usar contrato e escolher 1 entre candidatos.
 
-## 3. Formacao
+## 3. Heróis e formação
 
-- [ ] Adicionar herois a formacao.
-- [ ] Remover heroi da formacao.
-- [ ] Confirmar destaque visual de herois na formacao.
-- [ ] Salvar preset de equipe.
-- [ ] Alterar a equipe e reaplicar preset.
-- [ ] Confirmar que preset nao adiciona heroi indisponivel de forma incorreta.
+- [ ] Abrir Heróis e selecionar personagens diferentes.
+- [ ] Conferir raridade, classe, traço, nível, moral e condição.
+- [ ] Adicionar/remover heróis da formação.
+- [ ] Confirmar máximo de 5 e 2 slots frontais.
+- [ ] Salvar/aplicar preset.
+- [ ] Confirmar que herói indisponível não entra incorretamente.
 
-## 4. Torre
+## 4. Equipamentos
 
-- [ ] Abrir a aba Torre.
-- [ ] Conferir capitulo atual, andar e modificadores.
-- [ ] Escolher dificuldade Normal.
-- [ ] Iniciar combate.
-- [ ] Vencer um combate e confirmar avanco/recompensas.
-- [ ] Testar uma derrota, quando possivel.
-- [ ] Trocar para Desafio e conferir riscos/recompensas.
-- [ ] Trocar para Hardcore e confirmar aviso claro antes de iniciar.
-- [ ] Confirmar que o resultado de combate mostra resumo, recompensas, herois, consequencias e log.
-- [ ] Usar "Ver replay" e voltar para Torre.
+- [ ] Equipar item compatível.
+- [ ] Comparar item novo com equipado.
+- [ ] Testar item de baixa afinidade de classe e confirmar aviso sem bloqueio arbitrário.
+- [ ] Confirmar bloqueio de slot tecnicamente incompatível.
+- [ ] Trocar/remover equipamento.
+- [ ] Confirmar recálculo coerente de atributos/poder.
 
-## 5. Sistemas de Consequencia
+## 5. Lobby Vivo
 
-- [ ] Confirmar mudanca de moral apos vitoria.
-- [ ] Confirmar reducao de moral apos derrota ou queda de aliado.
-- [ ] Fazer um heroi cair em combate e verificar chance de ferimento.
-- [ ] Confirmar que ferimentos aparecem na tela de herois.
-- [ ] Abrir Enfermaria e tratar ferimento com recurso disponivel.
-- [ ] Confirmar que morte permanente nao acontece em Normal ou Desafio.
-- [ ] Em Hardcore, confirmar aviso de risco antes da luta.
-- [ ] Em Hardcore, se houver morte permanente, confirmar memorial/remocao conforme comportamento atual.
+- [ ] Abrir Base.
+- [ ] Confirmar resumo total/treinando/feridos/expedição/prontos.
+- [ ] Conferir grupos por local.
+- [ ] Conferir bloco de atenção quando houver herói ferido, HP/moral baixo ou outro alerta.
+- [ ] Usar alerta clicável e confirmar navegação correta.
+- [ ] Confirmar que simplesmente abrir/renderizar o Lobby não concede recursos/progresso.
 
-## 6. Progressao
+## 6. Treino
 
-- [ ] Confirmar ganho de XP apos combate.
-- [ ] Confirmar level up quando XP suficiente for acumulado.
-- [ ] Verificar se especializacao fica disponivel no nivel 10.
-- [ ] Abrir Reliquias e conferir fragmentos de eco.
-- [ ] Melhorar uma reliquia quando houver recurso.
-- [ ] Abrir Missoes e conferir progresso atualizado.
-- [ ] Coletar missao concluida.
-- [ ] Abrir Conquistas e coletar recompensa, se houver.
-- [ ] Abrir Biblioteca/Bestiario e conferir inimigos encontrados.
-- [ ] Derrotar inimigo repetido e confirmar aumento de dados descobertos, quando aplicavel.
+- [ ] Escolher foco de treino para um herói.
+- [ ] Confirmar persistência após reload.
+- [ ] Avançar/coletar progresso conforme mecanismo atual.
+- [ ] Confirmar que treino não aumenta diretamente ATK/DEF/HP/SPD por si só.
+- [ ] Testar herói ferido/em expedição/condição crítica e confirmar bloqueio conforme regra.
+- [ ] Conferir progresso exibido na Base e em Heróis.
 
-## 7. Inventario
+## 7. Proficiências
 
-- [ ] Conferir lista de equipamentos.
-- [ ] Conferir lista de consumiveis.
-- [ ] Usar pocao de cura em heroi com HP abaixo do maximo.
-- [ ] Tentar usar cura em heroi com HP cheio e confirmar erro amigavel.
-- [ ] Usar pocao de vigor em heroi com moral reduzida.
-- [ ] Tentar usar item inexistente ou sem alvo valido, quando possivel.
-- [ ] Usar kit medico em heroi ferido.
-- [ ] Tentar usar kit medico em heroi sem ferimento e confirmar bloqueio.
-- [ ] Confirmar que quantidades nao ficam negativas.
+- [ ] Gerar progresso de treino suficiente para alimentar proficiência.
+- [ ] Confirmar proficiência principal e secundária quando aplicável.
+- [ ] Confirmar rank/discovery.
+- [ ] Confirmar técnica leve ao atingir rank necessário.
+- [ ] Confirmar que tags internas de aptidão oculta não são expostas cruas.
+- [ ] Confirmar que bônus isolado de proficiência não altera readiness da Torre sem integração explícita.
 
-## 8. Expedicoes
+## 8. Potencial
 
-- [ ] Abrir Expedicoes.
-- [ ] Selecionar herois validos.
-- [ ] Iniciar uma expedicao.
-- [ ] Confirmar destaque de herois em expedicao.
-- [ ] Salvar preset de expedicao, se aplicavel.
-- [ ] Recarregar a pagina durante a expedicao.
-- [ ] Confirmar que o tempo restante restante permanece correto apos reload.
-- [ ] Aguardar a conclusao da expedicao.
+- [ ] Abrir relatório de potencial.
+- [ ] Confirmar nível/XP de análise.
+- [ ] Executar análise manual com ouro suficiente.
+- [ ] Tentar sem ouro e conferir bloqueio amigável.
+- [ ] Confirmar revelação gradual de insights.
+- [ ] Confirmar que análise não altera diretamente stats/raridade/classe.
+
+## 9. Promoção 1★→2★
+
+- [ ] Preparar um 1★ até cumprir requisitos.
+- [ ] Conferir preview/readiness.
+- [ ] Sem 150 ouro/5 fragmentos, confirmar bloqueio.
+- [ ] Com recursos, promover.
+- [ ] Confirmar consumo exato apenas no sucesso.
+- [ ] Confirmar raridade 2★ e `maxLevel` atualizado.
+- [ ] Confirmar preservação de level, XP, stats, HP, equipamento, formação, treino, proficiências e potencial.
+- [ ] Confirmar que promoções 2★+ continuam bloqueadas.
+- [ ] Confirmar atualização da Rota da Primeira Ascensão.
+
+## 10. Torre — gameplay
+
+- [ ] Abrir Torre.
+- [ ] Conferir andar/capítulo selecionado.
+- [ ] Conferir readiness, risco e energia.
+- [ ] Testar marco 5/15/25/35 quando possível.
+- [ ] Testar chefe 10/20/30/40 quando possível.
+- [ ] Confirmar que readiness informa risco sem hard gate.
+- [ ] Testar Normal.
+- [ ] Testar Desafio.
+- [ ] Testar Hardcore e aviso de risco.
+- [ ] Resolver evento pendente.
+- [ ] Vencer combate e conferir progresso/recompensas.
+- [ ] Testar derrota.
+- [ ] Repetir andar elegível.
+
+## 11. Torre — layout focado
+
+- [ ] Confirmar primeira dobra com andar, preparo, risco, energia e ação principal.
+- [ ] Confirmar apenas um CTA dominante no estado normal.
+- [ ] Confirmar estado dominante de evento quando houver evento pendente.
+- [ ] Confirmar resultado recente como estado dominante após combate quando aplicável.
+- [ ] Navegar pela faixa compacta de andares.
+- [ ] Abrir `Mapa completo` sob demanda.
+- [ ] Abrir readiness detalhado/inimigos/recompensas/modificadores/dificuldade nos drawers.
+- [ ] Confirmar que detalhes recolhidos não impedem a ação principal.
+- [ ] Testar teclado/`aria-expanded` nos drawers quando pertinente.
+
+## 12. Combate e resultado
+
+- [ ] Assistir combate.
+- [ ] Alterar velocidade 1x/2x/instantâneo.
+- [ ] Ver resultado automático após combate.
+- [ ] Conferir resumo, recompensas, heróis, consequências e log.
+- [ ] Abrir replay.
+- [ ] Voltar à Torre e confirmar card/estado de último resultado.
+
+## 13. Moral, ferimentos e Hardcore
+
+- [ ] Confirmar alteração de moral após eventos previstos.
+- [ ] Gerar ferimento quando possível.
+- [ ] Tratar ferimento.
+- [ ] Confirmar ausência de morte permanente em modos sem essa regra.
+- [ ] Em Hardcore, conferir confirmação e memorial quando a condição ocorrer.
+
+## 14. Expedições
+
+- [ ] Selecionar heróis válidos.
+- [ ] Iniciar expedição.
+- [ ] Confirmar heróis ocupados.
+- [ ] Recarregar e conferir timestamp restante.
+- [ ] Coletar conclusão.
+- [ ] Confirmar recompensa e liberação dos heróis.
+
+## 15. Missões, relíquias e biblioteca
+
+- [ ] Conferir progresso de missão/conquista.
 - [ ] Coletar recompensa.
-- [ ] Confirmar recursos e progresso de missoes/conquistas atualizados.
+- [ ] Melhorar relíquia quando houver Fragmentos de Eco.
+- [ ] Confirmar registros de inimigos/chefes/eventos/heróis na biblioteca.
 
-## 9. Save
+## 16. Save e migrations
 
-- [ ] Abrir Config.
-- [ ] Confirmar que "Save Local" informa localStorage como save principal.
-- [ ] Salvar local manualmente.
-- [ ] Recarregar local.
+- [ ] Salvar/recarregar local.
 - [ ] Exportar JSON.
-- [ ] Importar JSON valido e confirmar sobrescrita apos confirmacao.
-- [ ] Tentar importar JSON invalido e confirmar erro amigavel.
-- [ ] Resetar save e confirmar dupla confirmacao.
-- [ ] Recarregar pagina apos reset e confirmar novo estado.
-- [ ] Sem PostgreSQL, confirmar que Cloud Save Experimental fica desativado ou indisponivel sem quebrar o jogo.
-- [ ] Com PostgreSQL habilitado, salvar na nuvem e carregar da nuvem.
+- [ ] Importar save atual.
+- [ ] Importar save de schema anterior e confirmar migration até v5.
+- [ ] Importar JSON inválido e conferir erro.
+- [ ] Tentar save de versão/schema futuro e conferir rejeição segura.
+- [ ] Resetar com confirmação.
+- [ ] Recarregar após reset.
+- [ ] Sem DB, confirmar que o jogo não quebra.
+- [ ] Com DB, salvar/carregar snapshot experimental.
 
-## 10. Configuracoes
+## 17. Responsividade e acessibilidade básica
 
-- [ ] Alterar velocidade de combate para `1x`.
-- [ ] Alterar velocidade de combate para `2x`.
-- [ ] Alterar velocidade de combate para `Instantaneo`.
-- [ ] Ativar modo compacto.
-- [ ] Desativar modo compacto.
-- [ ] Ativar reduzir animacoes.
-- [ ] Desativar reduzir animacoes.
-- [ ] Recarregar a pagina e confirmar que preferencias persistem.
-
-## 11. Responsividade Basica
-
-- [ ] Testar em desktop largo.
-- [ ] Testar em largura media ou janela menor.
-- [ ] Testar mobile simulado no navegador.
-- [ ] Confirmar que abas principais continuam acessiveis.
-- [ ] Confirmar que cards nao sobrepoem texto importante.
-- [ ] Confirmar que modais cabem na tela ou permitem rolagem.
-- [ ] Confirmar que botoes principais continuam clicaveis.
+- [ ] Desktop largo.
+- [ ] Janela média/tablet.
+- [ ] Mobile simulado.
+- [ ] Sem overflow horizontal global.
+- [ ] Tabs acessíveis com scroll quando necessário.
+- [ ] Modais roláveis.
+- [ ] Botões com área de toque adequada.
+- [ ] Estado ativo/disabled distinguível.
+- [ ] Ação principal continua visível e clara.
 
 ## Encerramento
 
-- [ ] Rodar `npm run typecheck` apos correcoes feitas durante QA.
-- [ ] Rodar `npm test` apos correcoes de regra.
-- [ ] Rodar `npm run build` antes de fechar mudancas de UI/Next.
-- [ ] Registrar bugs encontrados em issue, nota local ou proximo commit.
-- [ ] Confirmar `git status --short` antes de commitar.
+- [ ] Reexecutar validações após correções.
+- [ ] Revisar diff/status.
+- [ ] Sincronizar GDD/especificação/estado-roadmap se o comportamento mudou.
+- [ ] Registrar bugs não corrigidos antes de fechar a entrega.

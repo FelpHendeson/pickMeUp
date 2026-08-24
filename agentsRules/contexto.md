@@ -1,45 +1,63 @@
-# Contexto do Projeto
+# Contexto Atual do Projeto
 
 ## Produto
 
-Ascensao dos Ecos e um jogo web single-player de estrategia, idle RPG, gacha e progressao por torre.
+Ascensão dos Ecos é um RPG web single-player em Alpha 0.10.0. O jogador é o Mestre de um Lobby Vivo e prepara heróis únicos para sobreviver à Torre.
 
-O jogador gerencia uma base, invoca herois, monta uma formacao, equipa personagens e avanca por andares com combates automaticos.
+O loop atual combina gestão, idle, descoberta de potencial e combate automático.
 
-## Deploy
+## Situação em 24/08/2026
 
-O alvo operacional atual é desenvolvimento local em Next.js, com deploy futuro planejado para Vercel.
+- branch canônica: `master`;
+- última fase concluída: **Fase 2 do rework de UX/UI — Torre em modo foco**;
+- próxima fase: **Heróis em modo foco**;
+- `migration/next-postgres` é histórica.
 
-Regras importantes:
-- a experiência principal roda em `app/` via Next.js;
-- `localStorage` continua sendo o save principal;
-- PostgreSQL/Prisma é opcional e usado apenas para cloud save experimental;
-- o jogo deve funcionar localmente mesmo sem `DATABASE_URL`.
+## Stack
 
-## Estrutura Atual
+- Next.js 16;
+- React 19;
+- TypeScript 6;
+- Zustand 5;
+- localStorage;
+- Prisma/PostgreSQL opcional.
 
-- `app/`: aplicação Next, rotas e componentes React.
-- `app/components/`: painéis da UI do jogo.
-- `src/game/`: regras puras, tipos e normalização do estado.
-- `src/store/gameStore.ts`: store Zustand usada pela UI.
-- `src/lib/`: utilitários de Prisma, playerId e snapshots.
-- `prisma/`: schema e migrations do PostgreSQL opcional.
-- `tests/`: regressão do core, fixtures e banco.
-- `docs/`: especificação funcional e notas da migração.
+## Sistemas importantes já existentes
 
-## Arquitetura do Jogo
+- roster único + legacy;
+- invocação sem duplicatas;
+- onboarding com 5 tickets + especial;
+- formação/presets;
+- equipamento flexível;
+- Torre 40 andares/4 capítulos;
+- milestones/readiness/dificuldades;
+- combate, replay e resultado;
+- Lobby Vivo;
+- treino;
+- proficiências;
+- potencial;
+- promoção 1★→2★;
+- Rota da Primeira Ascensão;
+- expedições, moral, ferimentos, especializações, afinidade;
+- relíquias, missões, biblioteca e narrativa.
 
-O código operacional usa Next.js, React, TypeScript e Zustand.
+## Estrutura
 
-Fluxos centrais:
-- `app/components/layout/GameShell.tsx`: shell, navegação e composição dos painéis.
-- `app/globals.css`: tokens visuais, responsividade e estilos globais.
-- `src/game/state/`: estado inicial, normalização e persistência.
-- `src/game/heroes`, `src/game/tower`, `src/game/battle`: regras principais.
-- `src/store/gameStore.ts`: ações persistentes consumidas pela UI.
+- `app/`: Next/UI.
+- `app/components/ui/game-layout.tsx`: arquitetura de telas focadas.
+- `src/game/`: domínio puro.
+- `src/store/gameStore.ts`: mutações/persistência.
+- `src/game/save/`: validação/migrations.
+- `prisma/`: banco opcional.
+- `tests/`: regressão.
 
-## Persistencia
+## Save
 
-O save principal fica em `localStorage`, pela chave configurada em `GAME_CONFIG.saveKey`.
+- localStorage principal;
+- `saveVersion: 1`;
+- `schemaVersion: 5`;
+- qualquer mudança persistida deve preservar migrations/normalização.
 
-Toda mudança persistente deve passar por ações do `gameStore` ou por regras puras em `src/game/` chamadas pelo store.
+## Direção de produto
+
+Lobby é o coração; Torre é prova de preparo. A prioridade imediata é clareza da interface, não adicionar uma nova pilha de features.

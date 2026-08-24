@@ -1,300 +1,159 @@
-# Ascensao dos Ecos
+# Ascensão dos Ecos
 
-**Ascensao dos Ecos** e um jogo web single-player de estrategia, idle RPG, gacha e progressao por torre. A versao atual esta em fase Alpha de desenvolvimento local, com a experiencia principal migrada para Next.js, React e TypeScript.
+**Ascensão dos Ecos** é um RPG web single-player de estratégia, idle/gacha e progressão por torre. O projeto está em **Alpha 0.10.0** e, no estado atual, o foco não é mais provar o loop básico: é consolidar a experiência do **Lobby Vivo**, tornar a preparação dos heróis legível e transformar a interface em uma experiência de jogo mais focada.
 
-O jogo deve abrir e funcionar localmente sem banco de dados. O PostgreSQL e opcional nesta etapa e serve para testar o fluxo experimental de save em nuvem por snapshot JSON.
+> Documentação sincronizada em **24/08/2026** com o `master`, tomando como baseline funcional/UI o commit `fcc5f75`.
 
-## Status Atual
+## Estado atual
 
-- Foco atual: desenvolvimento local.
-- Deploy futuro planejado: Vercel.
-- GitHub Pages nao e mais alvo da versao atual.
-- Migracao para Next.js concluida; o runtime legado em JavaScript puro foi removido.
-- A tela inicial (`/`) e o menu em React; o jogo abre em `/jogar`.
+O `master` é a fonte operacional do projeto. A antiga branch `migration/next-postgres` representa uma etapa histórica da migração e está atrás do `master`; não deve ser usada como base de novas features.
+
+O jogo já possui:
+
+- aplicação em Next.js/React/TypeScript;
+- store global Zustand;
+- save principal em `localStorage`;
+- migrations formais do schema de save até `schemaVersion: 5`;
+- cloud save experimental via Prisma/PostgreSQL;
+- roster de heróis únicos, com compatibilidade para heróis legacy;
+- invocação sem duplicatas e onboarding com 5 tickets + invocação especial;
+- formação, presets, equipamentos, consumíveis e compatibilidade flexível de itens;
+- Torre com 40 andares, 4 capítulos, marcos, chefes, dificuldades e readiness;
+- combate automático, replay e resultado detalhado;
+- Lobby Vivo derivado do estado do jogo;
+- treino idle funcional, proficiências, análise de potencial e promoção 1★→2★;
+- Rota da Primeira Ascensão para orientar a primeira sessão;
+- expedições, moral, ferimentos, especializações, afinidade, relíquias, missões, conquistas e biblioteca;
+- rework visual global em andamento, com a **Torre já migrada para o layout focado**.
+
+## Ponto exato de retomada
+
+A última entrega de produto foi a **Fase 2 do rework de UX/UI**, aplicada à Torre.
+
+Foi criada a infraestrutura em `app/components/ui/game-layout.tsx`:
+
+- `GamePage`;
+- `GamePageHeader`;
+- `CompactStatStrip`;
+- `PrimaryActionPanel`;
+- `FocusPanel`;
+- `SecondaryInfoGrid`;
+- `DetailDrawer`.
+
+A Torre agora prioriza andar, preparo, risco, energia e uma única ação principal, movendo mapa completo e detalhes extensos para progressive disclosure.
+
+**Próxima etapa recomendada:** aplicar a mesma arquitetura de foco ao módulo **Heróis**, sem alterar regras de gameplay. Depois, consolidar a Base/Lobby e avançar para os módulos restantes.
+
+Veja `docs/estado-atual-e-roadmap.md`.
 
 ## Stack
 
-- **Next.js**: aplicacao web e rotas de API.
-- **React**: interface principal do jogo.
-- **TypeScript**: regras, contratos e estado do jogo.
-- **Zustand**: store central usada pela UI.
-- **Prisma**: acesso ao banco e migrations.
-- **PostgreSQL**: opcional, usado para testar cloud save local.
-- **Docker Compose**: ambiente local do PostgreSQL.
+- **Next.js 16.2.6** — aplicação, rotas e API.
+- **React 19.2.6** — interface.
+- **TypeScript 6.0.3** — regras e contratos.
+- **Zustand 5.0.14** — store central.
+- **Prisma 7.8.0 + PostgreSQL 16** — cloud save experimental.
+- **localStorage** — persistência principal da Alpha.
+- **Docker Compose** — PostgreSQL local opcional.
 
-## Instalacao
+## Estrutura
 
-Clone o repositorio e instale as dependencias:
+```text
+app/                         App Router e UI React
+app/components/              Painéis por domínio
+app/components/ui/           Design system e layout focado
+src/game/                    Regras puras de gameplay
+src/store/gameStore.ts       Ponte entre UI, domínio e persistência
+src/lib/                     Player ID, Prisma e snapshots
+prisma/                      Schema e migrations do PostgreSQL
+tests/                       Regressão do core, fixtures e DB
+docs/                        Documentação canônica e operacional
+agentsRules/                 Regras reutilizáveis para agentes
+AGENTS.md                    Instruções globais para agentes
+```
+
+## Rodar localmente
 
 ```bash
 npm install
-```
-
-## Rodar Local Sem Banco
-
-Este e o fluxo principal por enquanto. O jogo usa `localStorage` do navegador para salvar o progresso.
-
-Nao e obrigatorio criar `.env` para jogar localmente sem banco.
-
-```bash
 npm run dev
 ```
 
-Abra o endereco informado pelo Next, normalmente:
+O Next inicia por padrão em:
 
 ```text
 http://localhost:3333
 ```
 
-Se a porta 3333 estiver ocupada, rode em outra porta:
+O PostgreSQL **não é obrigatório** para jogar. Sem `DATABASE_URL`, o save local continua funcionando; apenas o cloud save experimental fica indisponível.
 
-```bash
-npm run dev -- -p 3334
-```
+## PostgreSQL opcional
 
-Sem `DATABASE_URL`, a tela principal continua funcionando. Apenas as acoes de cloud save pela API devem retornar erro de banco indisponivel.
-
-## Rodar Local Com PostgreSQL
-
-Use este fluxo quando quiser testar save em nuvem/local via API e PostgreSQL.
-
-Copie o exemplo de ambiente para `.env`:
-
-```bash
-cp .env.example .env
-```
-
-No PowerShell:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Suba o banco:
+Crie `.env` a partir de `.env.example` e rode:
 
 ```bash
 npm run db:up
-```
-
-Aplique as migrations:
-
-```bash
 npm run db:migrate
-```
-
-Rode a aplicacao:
-
-```bash
 npm run dev
 ```
 
-DSN local padrao:
+DSN local padrão:
 
 ```text
 postgresql://postgres:postgres@localhost:55432/ascensao_dos_ecos?schema=public
 ```
 
-O Docker Compose usa a porta local `55432` para evitar conflito com PostgreSQL ja instalado na maquina. O volume `ecos_postgres_data` preserva os dados locais.
+O snapshot JSON completo continua sendo a fonte do cloud save nesta etapa. `Player`, `PlayerProfile` e `Hero` são tabelas auxiliares.
 
-## Variaveis de Ambiente
-
-O `.env` so e obrigatorio quando voce quiser usar Prisma/PostgreSQL, Prisma Studio, `validate:db` ou cloud save pela API. Para jogar usando apenas `localStorage`, ele pode ficar ausente.
-
-Para criar:
-
-```bash
-cp .env.example .env
-```
-
-No PowerShell:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Valores de exemplo:
-
-```bash
-DATABASE_URL="postgresql://postgres:postgres@localhost:55432/ascensao_dos_ecos?schema=public"
-NEXT_PUBLIC_APP_ENV="local"
-NEXT_PUBLIC_ENABLE_CLOUD_SAVE="false"
-```
-
-Variaveis:
-
-- `DATABASE_URL`: opcional para jogar localmente; necessaria para `db:migrate`, `db:studio`, `validate:db` e rotas de cloud save.
-- `NEXT_PUBLIC_APP_ENV`: flag publica informativa para ambiente local/futuro deploy.
-- `NEXT_PUBLIC_ENABLE_CLOUD_SAVE`: controla a interface de Cloud Save Experimental. Use `"false"` para desenvolvimento local sem banco e `"true"` apenas quando `DATABASE_URL` estiver configurada.
-
-Nao commite `.env` real. O repositorio versiona apenas `.env.example`.
-
-## Comandos Uteis
-
-```bash
-npm run dev
-```
-
-Inicia o Next em modo desenvolvimento.
-
-```bash
-npm run build
-```
-
-Gera o build de producao.
+## Scripts
 
 ```bash
 npm run typecheck
-```
-
-Executa `tsc --noEmit`.
-
-```bash
 npm test
-```
-
-Roda testes de regressao do core e fixtures.
-
-```bash
+npm run build
 npm run validate
-```
-
-Roda Prisma generate, typecheck, testes e build.
-
-```bash
+npm run validate:db
 npm run db:up
-```
-
-Sobe o PostgreSQL local via Docker Compose e aguarda healthcheck.
-
-```bash
-npm run db:migrate
-```
-
-Aplica/verifica migrations Prisma no PostgreSQL local.
-
-```bash
+npm run db:down
 npm run db:studio
 ```
 
-Abre o Prisma Studio para inspecionar dados locais.
+- `npm run validate`: Prisma generate + typecheck + testes + build.
+- `npm run validate:db`: sobe o PostgreSQL, aplica migrations e roda smoke de banco.
 
-Comandos adicionais:
+## Save
 
-```bash
-npm run validate:db
-npm run db:down
-npm run db:logs
-```
+- chave local: `ascensao-dos-ecos-save-v1`;
+- `saveVersion`: 1;
+- `schemaVersion` atual: 5;
+- versões antigas são migradas em `src/game/save/migrations.ts`;
+- importação passa por migration + normalização antes de substituir o estado;
+- mudanças persistidas novas devem sempre possuir default, normalização e migration quando necessário.
 
-## Sistema de Save
+## Documentação
 
-### Save local
+Comece por `docs/README.md`.
 
-O save principal atual e o `localStorage`, pela chave configurada em `GAME_CONFIG.saveKey`.
+Hierarquia prática:
 
-Esse caminho e suficiente para:
+1. código + testes — comportamento executável;
+2. `GDD_Ascensao_dos_Ecos_Alpha_Atualizado.md` — design canônico;
+3. `docs/especificacao-funcional.md` — contratos e fluxos funcionais;
+4. `docs/estado-atual-e-roadmap.md` — situação atual e próximo passo;
+5. `docs/visao-lobby-vivo.md` — direção de produto e sistemas ainda futuros;
+6. `gdd_web_tower_gacha_mvp.md` — arquivo histórico, não canônico.
 
-- iniciar novo jogo;
-- salvar progresso automaticamente no navegador;
-- exportar/importar JSON;
-- resetar o save local;
-- jogar sem PostgreSQL.
+## Fluxo de desenvolvimento
 
-### Save em nuvem/local experimental
-
-O PostgreSQL e usado como camada opcional para testar cloud save local. O jogador aciona esse fluxo manualmente na tela de Config.
-
-Por padrao, a interface de cloud save fica desativada com:
-
-```bash
-NEXT_PUBLIC_ENABLE_CLOUD_SAVE="false"
-```
-
-Para testar o recurso experimental, configure `DATABASE_URL`, altere `NEXT_PUBLIC_ENABLE_CLOUD_SAVE` para `"true"` e reinicie o servidor Next.
-
-Rotas atuais:
-
-- `GET /api/saves/[playerId]`
-- `PUT /api/saves/[playerId]` com `{ payload: GameState }`
-
-No banco, `SaveSnapshot.payload` e a fonte completa do save. `Player`, `PlayerProfile` e `Hero` sao tabelas auxiliares sincronizadas para preparar evolucoes futuras.
-
-Sem `DATABASE_URL`, a aplicacao continua jogavel; apenas as rotas de cloud save ficam indisponiveis.
-
-## Sistemas de Jogo
-
-O core TypeScript em `src/game/` cobre:
-
-- herois, classes, tracos, raridade, XP e poder;
-- formacao e presets de equipe;
-- equipamentos e atributos efetivos;
-- consumiveis;
-- moral, ferimentos e enfermaria;
-- especializacoes;
-- afinidade entre herois;
-- invocacao e historico;
-- recrutamento por contratos;
-- reliquias permanentes;
-- missoes e conquistas;
-- expedicoes;
-- capitulos, andares, inimigos e recompensas da torre;
-- eventos aleatorios da torre;
-- eventos semanais locais;
-- dificuldades da torre;
-- combate automatico, replay e resultado;
-- conclusao de capitulos;
-- biblioteca/bestiario;
-- narrativa;
-- preferencias;
-- export/import de save.
-
-## Estrutura Principal
-
-- `app/`: app Next, rotas e componentes React.
-- `app/components/`: paineis da UI do jogo.
-- `app/api/saves/[playerId]/route.ts`: API opcional de cloud save.
-- `src/game/`: regras puras e contratos do jogo.
-- `src/store/gameStore.ts`: ponte entre UI, core e persistencia.
-- `src/lib/`: utilitarios de Prisma, playerId e snapshots.
-- `prisma/`: schema e migrations.
-- `tests/`: regressao do core, fixtures e banco.
-- `docs/`: especificacao funcional e notas da migracao.
-- `agentsRules/`: convencoes internas para agentes.
+- Use `master` como referência canônica e crie branches curtas quando a mudança justificar.
+- Preserve regras de jogo em `src/game/`.
+- Mutação persistente consumida pela UI passa por `src/store/gameStore.ts`.
+- Reuse o design system e `game-layout.tsx` antes de criar novas abstrações.
+- Não torne PostgreSQL obrigatório para jogar.
+- Não quebre saves antigos.
+- Mudanças em gameplay, economia, save ou UI estrutural devem sincronizar GDD + especificação + estado/roadmap.
+- Rode as validações proporcionais à mudança antes de finalizar.
 
 ## Deploy
 
-### Agora
-
-O alvo atual e rodar bem localmente. GitHub Pages foi descartado para esta fase porque a aplicacao agora usa Next.js, rotas de API e uma stack pensada para Vercel.
-
-### Futuro
-
-O deploy planejado e Vercel.
-
-Antes do deploy, ainda e preciso decidir:
-
-- provedor do PostgreSQL;
-- estrategia real de autenticacao/playerId;
-- politica de sync entre `localStorage` e cloud save;
-- variaveis de ambiente de producao;
-- rotinas de backup e migracao de saves.
-
-## Roadmap Tecnico Imediato
-
-1. Manter o fluxo local sem banco sempre funcionando.
-2. Endurecer mensagens de erro de cloud save quando `DATABASE_URL` nao existir.
-3. Validar manualmente os fluxos principais no React: novo jogo, torre, combate, resultado, save, export/import e reset.
-4. Melhorar QA visual em desktop e mobile basico.
-5. Documentar melhor a sincronizacao entre save local e snapshot PostgreSQL.
-6. Preparar checklist de deploy para Vercel sem antecipar autenticacao real.
-
-## Fluxo de Desenvolvimento
-
-- Trabalhe na branch `migration/next-postgres`.
-- Preserve `master` enquanto a migracao nao for promovida.
-- Faca commits pequenos por responsabilidade.
-- Chame mutacoes de UI por `src/store/gameStore.ts`.
-- Mantenha regras de jogo em `src/game/`.
-- Normalize saves antigos antes de usar.
-- Mantenha textos em PT-BR.
-- Rode validacoes antes de commitar quando houver mudanca de codigo.
+O alvo atual continua sendo desenvolvimento local. A publicação futura planejada é Vercel, mas ainda faltam decisões de produção sobre autenticação/playerId, PostgreSQL gerenciado, política de sync e backup.
