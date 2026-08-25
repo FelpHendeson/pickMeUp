@@ -39,7 +39,7 @@ import {
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
 import { useMemo, useState } from "react";
-import { UiModal, useToast } from "../ui";
+import { GameArtPlaceholder, UiModal, useToast } from "../ui";
 
 function getRarityStars(rarity: number): string {
   return "\u2605".repeat(rarity) + "\u2606".repeat(Math.max(0, 5 - rarity));
@@ -892,6 +892,13 @@ export function HeroRosterPanel() {
 
   return (
     <section className="roster-panel">
+      <GameArtPlaceholder
+        className="screen-art-placeholder hero-art-placeholder"
+        hint="Retratos do elenco e cena do Quartel entrarão nesta área"
+        icon="♟"
+        label="Imagem dos Heróis"
+        variant="header"
+      />
       <div className="section-heading">
         <span>Quartel da Guilda</span>
         <h2>Heróis</h2>

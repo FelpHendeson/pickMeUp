@@ -8,6 +8,43 @@ function cx(...classes: Array<string | false | null | undefined>): string {
 
 export type GameTone = "default" | "gold" | "arcane" | "success" | "warning" | "danger";
 
+export type GameArtPlaceholderVariant = "banner" | "header" | "module";
+
+// Reserva visual tematizada para artes que ainda serao produzidas.
+// Mantem o layout final previsivel sem fingir que o placeholder e uma arte definitiva.
+export function GameArtPlaceholder({
+  className,
+  hint = "Arte temporaria para substituicao futura",
+  icon = "✦",
+  label,
+  variant = "header",
+}: {
+  className?: string;
+  hint?: string;
+  icon?: string;
+  label: string;
+  variant?: GameArtPlaceholderVariant;
+}) {
+  return (
+    <div
+      aria-label={`${label}. ${hint}`}
+      className={cx("game-art-placeholder", `variant-${variant}`, className)}
+      role="img"
+    >
+      <span aria-hidden="true" className="game-art-placeholder-rune">
+        {icon}
+      </span>
+      <span className="game-art-placeholder-copy">
+        <strong>{label}</strong>
+        <small>{hint}</small>
+      </span>
+      <span aria-hidden="true" className="game-art-placeholder-tag">
+        Placeholder
+      </span>
+    </div>
+  );
+}
+
 // GamePage: contêiner de tela focada com ritmo vertical previsível.
 // Impõe a hierarquia cabeçalho -> ação -> métricas -> conteúdo -> detalhes.
 export function GamePage({ children, className }: { children: ReactNode; className?: string }) {

@@ -23,6 +23,7 @@ import {
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
 import { useEffect, useMemo, useState } from "react";
+import { GameArtPlaceholder } from "../ui";
 
 const MAX_ACTIVE_EXPEDITIONS = 3;
 
@@ -307,6 +308,13 @@ export function ExpeditionsPanel() {
 
   return (
     <section className="expeditions-panel">
+      <GameArtPlaceholder
+        className="screen-art-placeholder expedition-art-placeholder"
+        hint="Paisagem futura das rotas disponíveis fora do Lobby"
+        icon="☽"
+        label="Imagem das Rotas de Expedição"
+        variant="header"
+      />
       <div className="expedition-board-hero">
         <div>
           <span>Quadro de contratos</span>

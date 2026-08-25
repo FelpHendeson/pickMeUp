@@ -35,6 +35,7 @@ import {
   CompactStatStrip,
   DetailDrawer,
   FocusPanel,
+  GameArtPlaceholder,
   GamePage,
   GamePageHeader,
   PrimaryActionPanel,
@@ -622,6 +623,13 @@ export function TowerChallengePanel({ onNavigate }: TowerChallengePanelProps = {
 
   return (
     <GamePage className={`tower-focus risk-${riskProfile.tone}`}>
+      <GameArtPlaceholder
+        className="screen-art-placeholder tower-art-placeholder"
+        hint={`Arte futura do ${selectedChapter.name} e do andar ${selectedFloor}`}
+        icon="▲"
+        label="Imagem da Torre"
+        variant="header"
+      />
       <GamePageHeader
         eyebrow="Torre Dimensional"
         title={`Andar ${selectedFloor}: ${selectedFloorData?.title ?? "Andar desconhecido"}`}

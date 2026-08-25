@@ -1,8 +1,8 @@
 # Especificação Funcional — Ascensão dos Ecos
 
 **Versão:** 0.10.0  
-**Sincronização:** 24/08/2026  
-**Baseline:** `master@fcc5f75`
+**Sincronização:** 25/08/2026
+**Baseline de origem:** `master@4cd38eb`
 
 ## 1. Objetivo
 
@@ -342,10 +342,45 @@ Já migrada para esse padrão:
 
 A próxima refatoração deve aplicar o mesmo padrão sem alterar gameplay/save.
 
+### Navegação mobile
+
+- HUD superior fixa com ouro, cristais, energia, andar atual e acesso contextual a alertas/missões;
+- bottom navigation fixa com Base, Heróis, Torre, Expedições e Mais;
+- o botão Mais abre as áreas secundárias agrupadas por Equipe, Progressão e Sistema;
+- ao trocar de área, o menu é fechado e a nova tela inicia no topo;
+- a navegação desktop agrupada continua disponível sem duplicar estado ou regras de domínio.
+
+### Base como hub
+
+A Base é a entrada padrão e apresenta instalações clicáveis de grande porte:
+
+- Portal de Invocação;
+- Quartel;
+- Arsenal;
+- Quadro de Missões;
+- Expedições;
+- Relíquias;
+- Biblioteca.
+
+Cada instalação mostra um resumo derivado do save e leva ao painel existente. Relatórios detalhados, rotina do Lobby, alertas e métricas permanecem acessíveis em uma seção recolhível, reduzindo a competição visual na primeira dobra.
+
+### Placeholders visuais
+
+O componente `GameArtPlaceholder` reserva o espaço das artes futuras sem introduzir assets definitivos. Existem placeholders para:
+
+- banner e módulos da Base;
+- header da Torre;
+- header da Invocação;
+- header de Heróis;
+- header/rotas de Expedições.
+
+Substituir o placeholder por arte final não deve alterar navegação, domínio ou save.
+
 ## 22. Responsividade
 
 - evitar overflow horizontal;
-- tabs podem usar scroll horizontal no mobile;
+- no mobile, usar HUD e bottom navigation fixas em vez da lista completa de tabs;
+- destinos secundários ficam agrupados em Mais;
 - grids densos devem empilhar;
 - modais precisam ser roláveis;
 - ações primárias devem permanecer acessíveis;

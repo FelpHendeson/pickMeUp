@@ -20,10 +20,12 @@ export {
   CompactStatStrip,
   DetailDrawer,
   FocusPanel,
+  GameArtPlaceholder,
   GamePage,
   GamePageHeader,
   PrimaryActionPanel,
   SecondaryInfoGrid,
   type GameStat,
+  type GameArtPlaceholderVariant,
   type GameTone,
 } from "./game-layout";

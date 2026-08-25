@@ -55,6 +55,10 @@ Use após mudanças de UI, gameplay, save, economia ou infraestrutura.
 ## 5. Lobby Vivo
 
 - [ ] Abrir Base.
+- [ ] Confirmar banner principal e sete instalações visuais clicáveis.
+- [ ] Abrir Portal, Quartel, Arsenal, Missões, Expedições, Relíquias e Biblioteca pelos módulos da Base.
+- [ ] Confirmar que os placeholders estão identificados como provisórios.
+- [ ] Abrir `Relatórios e atividade do Lobby` sob demanda.
 - [ ] Confirmar resumo total/treinando/feridos/expedição/prontos.
 - [ ] Conferir grupos por local.
 - [ ] Conferir bloco de atenção quando houver herói ferido, HP/moral baixo ou outro alerta.
@@ -180,7 +184,12 @@ Use após mudanças de UI, gameplay, save, economia ou infraestrutura.
 - [ ] Janela média/tablet.
 - [ ] Mobile simulado.
 - [ ] Sem overflow horizontal global.
-- [ ] Tabs acessíveis com scroll quando necessário.
+- [ ] HUD superior fixa mostra ouro, cristais, energia, andar e alertas sem sobrepor conteúdo.
+- [ ] Bottom navigation fixa mostra Base, Heróis, Torre, Expedições e Mais.
+- [ ] Abrir e fechar o menu Mais por botão, backdrop e tecla Escape.
+- [ ] Acessar Formação, Arsenal, Recrutamento, Invocação, Missões, Relíquias, Biblioteca, Configurações e Sobre pelo menu Mais.
+- [ ] Confirmar destaque do destino ativo, inclusive quando uma tela do menu Mais está aberta.
+- [ ] Confirmar que o conteúdo não fica oculto atrás da HUD ou da bottom navigation, incluindo safe areas.
 - [ ] Modais roláveis.
 - [ ] Botões com área de toque adequada.
 - [ ] Estado ativo/disabled distinguível.

@@ -26,6 +26,7 @@ Componentes apresentam estado e disparam ações do `gameStore`. Regras de gamep
 - `FocusPanel` — conteúdo principal;
 - `SecondaryInfoGrid` — informações secundárias;
 - `DetailDrawer` — progressive disclosure.
+- `GameArtPlaceholder` — reserva visual tematizada para artes futuras, com variantes `banner`, `header` e `module`.
 
 A Torre já usa esse padrão e deve ser referência para novas refatorações.
 
@@ -42,5 +43,7 @@ O módulo **Heróis** é a próxima tela planejada para modo foco. Ao trabalhar 
 
 - evitar overflow global;
 - preservar ações principais no mobile;
-- permitir rolagem em tabs/modais quando necessária;
+- usar a HUD superior e a bottom navigation de cinco entradas no mobile;
+- agrupar destinos secundários no menu Mais;
+- manter a navegação agrupada completa no desktop;
 - empilhar grids densos em larguras menores.

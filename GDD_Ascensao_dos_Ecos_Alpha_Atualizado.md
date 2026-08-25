@@ -3,8 +3,8 @@
 **Versão do jogo:** 0.10.0  
 **Estado:** Alpha jogável  
 **Stack operacional:** Next.js + React + TypeScript + Zustand  
-**Última sincronização documental:** 24/08/2026  
-**Baseline verificado:** `master@fcc5f75`
+**Última sincronização documental:** 25/08/2026
+**Baseline de origem:** `master@4cd38eb`
 
 ---
 
@@ -321,9 +321,13 @@ Uma tela deve responder primeiro:
 
 **Fase 2 — concluída:** Torre como piloto completo do layout focado. Primeira dobra com andar, preparo, risco, energia e ação principal; mapa completo e diagnósticos detalhados ficam recolhidos.
 
-**Fase 3 — próxima:** Heróis. Reduzir densidade do `HeroRosterPanel`, criar uma hierarquia clara entre roster, herói selecionado, condição, desenvolvimento e ação principal, reutilizando os componentes existentes.
+**Navegação mobile — concluída:** HUD superior fixa com ouro, cristais, energia, andar e alertas; bottom navigation fixa com Base, Heróis, Torre, Expedições e Mais; telas secundárias agrupadas no menu Mais.
 
-**Fase 4 — depois:** consolidar Base/Lobby e aplicar o padrão aos demais módulos conforme necessidade, sem reescrever tudo de uma vez.
+**Base como hub — concluída:** instalações principais funcionam como destinos visuais de grande porte. Relatórios extensos do Lobby ficam recolhidos e deixam de competir com a navegação central.
+
+**Placeholders visuais — concluídos:** reservas temáticas foram adicionadas ao banner e módulos da Base e aos headers de Heróis, Torre, Invocação e Expedições para substituição futura por artes finais.
+
+**Fase 3 — próxima:** aprofundar Heróis em modo foco. Reduzir a densidade do `HeroRosterPanel`, criar uma hierarquia clara entre roster, herói selecionado, condição, desenvolvimento e ação principal, reutilizando os componentes existentes.
 
 ---
 
@@ -331,8 +335,8 @@ Uma tela deve responder primeiro:
 
 ### P0 — concluir o rework focado
 
-1. Heróis em modo foco.
-2. Consolidar Base/Lobby com a mesma linguagem.
+1. Validar a nova navegação mobile e substituir placeholders conforme as artes forem aprovadas.
+2. Heróis em modo foco.
 3. Revisar Inventário, Expedições, Invocação/Recrutamento e Progressão apenas onde a densidade justificar.
 4. QA visual desktop/mobile.
 

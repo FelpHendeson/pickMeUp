@@ -41,7 +41,7 @@ import { ResourceHudPanel } from "./ResourceHudPanel";
 import { SaveManagementPanel } from "../settings/SaveManagementPanel";
 import { SummonPanel } from "../systems/SummonPanel";
 import { TowerChallengePanel } from "../tower/TowerChallengePanel";
-import { CollapsibleSection, UiProgressBar } from "../ui";
+import { CollapsibleSection, DetailDrawer, GameArtPlaceholder, UiProgressBar } from "../ui";
 
 type DashboardTab =
   | "base"
@@ -119,6 +119,42 @@ const dashboardTabGroups: DashboardTabGroup[] = [
     ],
   },
 ];
+
+const mobilePrimaryTabs: DashboardTabConfig[] = [
+  { id: "base", label: "Base", icon: "⌂" },
+  { id: "heroes", label: "Heróis", icon: "♟" },
+  { id: "tower", label: "Torre", icon: "▲" },
+  { id: "expeditions", label: "Expedições", icon: "☽" },
+];
+
+const mobileMoreGroups = [
+  {
+    label: "Equipe",
+    tabs: [
+      { id: "formation", label: "Formação", icon: "⬡" },
+      { id: "inventory", label: "Arsenal", icon: "⚔" },
+      { id: "recruitment", label: "Recrutamento", icon: "▣" },
+    ] satisfies DashboardTabConfig[],
+  },
+  {
+    label: "Progressão",
+    tabs: [
+      { id: "summon", label: "Invocação", icon: "✺" },
+      { id: "missions", label: "Missões", icon: "✉" },
+      { id: "relics", label: "Relíquias", icon: "✧" },
+      { id: "library", label: "Biblioteca", icon: "☰" },
+    ] satisfies DashboardTabConfig[],
+  },
+  {
+    label: "Sistema",
+    tabs: [
+      { id: "settings", label: "Configurações", icon: "⚙" },
+      { id: "about", label: "Sobre", icon: "?" },
+    ] satisfies DashboardTabConfig[],
+  },
+];
+
+const mobileMoreTabIds = new Set<DashboardTab>(mobileMoreGroups.flatMap((group) => group.tabs.map((tab) => tab.id)));
 
 function getActiveNavigation(tabId: DashboardTab) {
   const group = dashboardTabGroups.find((item) => item.tabs.some((tab) => tab.id === tabId)) || dashboardTabGroups[0];
@@ -198,15 +234,6 @@ type BaseSituation = {
   unequippedItems: number;
   canSummonCommon: boolean;
 };
-
-const baseShortcuts: Array<{ tab: DashboardTab; title: string; description: string }> = [
-  { tab: "tower", title: "Torre", description: "Avancar campanha" },
-  { tab: "formation", title: "Formacao", description: "Ajustar equipe" },
-  { tab: "heroes", title: "Herois", description: "Tratar e revisar" },
-  { tab: "expeditions", title: "Expedicoes", description: "Enviar patrulhas" },
-  { tab: "missions", title: "Missoes", description: "Coletar ordens" },
-  { tab: "inventory", title: "Inventario", description: "Equipar arsenal" },
-];
 
 function getBaseNextAction(state: GameState, situation: BaseSituation): BaseNextAction {
   if (situation.completeExpeditions > 0) {
@@ -338,12 +365,83 @@ function BaseResourceStat({ label, value, tone }: { label: string; value: string
   );
 }
 
-function BaseShortcutButton({ description, onNavigate, tab, title }: { description: string; onNavigate: (tab: DashboardTab) => void; tab: DashboardTab; title: string }) {
+function BaseFacilityCard({
+  description,
+  icon,
+  imageLabel,
+  onNavigate,
+  status,
+  tab,
+  title,
+}: {
+  description: string;
+  icon: string;
+  imageLabel: string;
+  onNavigate: (tab: DashboardTab) => void;
+  status: string;
+  tab: DashboardTab;
+  title: string;
+}) {
   return (
-    <button className="base-shortcut-card" onClick={() => onNavigate(tab)} type="button">
-      <strong>{title}</strong>
-      <span>{description}</span>
+    <button aria-label={`Abrir ${title}. ${status}`} className="base-facility-card" onClick={() => onNavigate(tab)} type="button">
+      <GameArtPlaceholder hint="Arte do módulo será adicionada depois" icon={icon} label={imageLabel} variant="module" />
+      <span className="base-facility-copy">
+        <small>{status}</small>
+        <strong>{title}</strong>
+        <span>{description}</span>
+      </span>
+      <span aria-hidden="true" className="base-facility-enter">›</span>
     </button>
+  );
+}
+
+const compactMobileHudFormatter = new Intl.NumberFormat("pt-BR", { notation: "compact", maximumFractionDigits: 1 });
+const standardMobileHudFormatter = new Intl.NumberFormat("pt-BR");
+
+function formatMobileHudNumber(value: number): string {
+  return value >= 10_000 ? compactMobileHudFormatter.format(value) : standardMobileHudFormatter.format(value);
+}
+
+function MobileGameHud({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) {
+  const state = useGameStore((store) => store.state);
+  const claimableMissions = getClaimableMissionCount(state);
+  const injuredCount = getInjuredHeroes(state).length;
+  const completedExpeditions = state.activeExpeditions.filter((expedition) => isExpeditionComplete(expedition)).length;
+  const notificationCount = claimableMissions + injuredCount + completedExpeditions;
+  const notificationTab: DashboardTab = completedExpeditions > 0 ? "expeditions" : claimableMissions > 0 ? "missions" : injuredCount > 0 ? "heroes" : "missions";
+  const energyPercent = state.resources.maxEnergy > 0 ? Math.min(100, (state.resources.energy / state.resources.maxEnergy) * 100) : 0;
+
+  return (
+    <header aria-label="HUD principal" className="mobile-game-hud">
+      <button aria-label="Voltar para a Base" className="mobile-hud-brand" onClick={() => onNavigate("base")} type="button">
+        Æ
+      </button>
+      <div className="mobile-hud-resource tone-gold">
+        <span aria-hidden="true">◈</span>
+        <strong>{formatMobileHudNumber(state.resources.gold)}</strong>
+        <small>Ouro</small>
+      </div>
+      <div className="mobile-hud-resource tone-arcane">
+        <span aria-hidden="true">◆</span>
+        <strong>{formatMobileHudNumber(state.resources.crystals)}</strong>
+        <small>Cristais</small>
+      </div>
+      <div className="mobile-hud-resource mobile-hud-energy">
+        <span aria-hidden="true">☽</span>
+        <strong>{state.resources.energy}/{state.resources.maxEnergy}</strong>
+        <small>Energia</small>
+        <i aria-hidden="true"><b style={{ width: `${energyPercent}%` }} /></i>
+      </div>
+      <button className="mobile-hud-progress" onClick={() => onNavigate("tower")} type="button">
+        <strong>{Math.min(state.towerFloor, GAME_CONFIG.towerMaxFloor)}</strong>
+        <small>Andar</small>
+      </button>
+      <button aria-label={`${notificationCount} alertas. Abrir prioridade`} className="mobile-hud-alerts" onClick={() => onNavigate(notificationTab)} type="button">
+        <span aria-hidden="true">✉</span>
+        {notificationCount > 0 ? <strong>{notificationCount > 9 ? "9+" : notificationCount}</strong> : null}
+        <small>Missões</small>
+      </button>
+    </header>
   );
 }
 
@@ -460,9 +558,82 @@ function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) 
     100,
     Math.max(0, ((state.towerFloor - chapter.startFloor + 1) / Math.max(1, chapter.endFloor - chapter.startFloor + 1)) * 100),
   );
+  const facilities: Array<{
+    description: string;
+    icon: string;
+    imageLabel: string;
+    status: string;
+    tab: DashboardTab;
+    title: string;
+  }> = [
+    {
+      tab: "summon",
+      title: "Portal de Invocação",
+      description: "Chame novos Ecos e conclua o núcleo inicial do Lobby.",
+      imageLabel: "Imagem do Portal",
+      icon: "✺",
+      status: state.initialSummon.commonRemaining > 0 ? `${state.initialSummon.commonRemaining} ticket(s) inicial(is)` : canSummonCommon ? "Ritual disponível" : "Aguardando recursos",
+    },
+    {
+      tab: "heroes",
+      title: "Quartel",
+      description: "Revise heróis, condição, treino e desenvolvimento.",
+      imageLabel: "Imagem do Quartel",
+      icon: "♟",
+      status: `${state.heroes.length} herói(s) · ${injuredCount} ferido(s)`,
+    },
+    {
+      tab: "inventory",
+      title: "Arsenal",
+      description: "Compare equipamentos e prepare builds para a Torre.",
+      imageLabel: "Imagem do Arsenal",
+      icon: "⚔",
+      status: `${unequippedItems} item(ns) sem uso`,
+    },
+    {
+      tab: "missions",
+      title: "Quadro de Missões",
+      description: "Acompanhe ordens, conquistas e recompensas pendentes.",
+      imageLabel: "Imagem do Quadro",
+      icon: "✉",
+      status: claimableMissions > 0 ? `${claimableMissions} recompensa(s) pronta(s)` : "Novas ordens aguardam",
+    },
+    {
+      tab: "expeditions",
+      title: "Expedições",
+      description: "Envie patrulhas e colete retornos fora da Torre.",
+      imageLabel: "Imagem das Expedições",
+      icon: "☽",
+      status: completeExpeditions > 0 ? `${completeExpeditions} retorno(s) pronto(s)` : `${state.activeExpeditions.length} em andamento`,
+    },
+    {
+      tab: "relics",
+      title: "Relíquias",
+      description: "Fortaleça o Lobby com poder permanente dos Ecos.",
+      imageLabel: "Imagem das Relíquias",
+      icon: "✧",
+      status: upgradeableRelics > 0 ? `${upgradeableRelics} aprimoramento(s)` : `${state.echoFragments} Fragmentos de Eco`,
+    },
+    {
+      tab: "library",
+      title: "Biblioteca",
+      description: "Consulte inimigos, capítulos, eventos e memórias.",
+      imageLabel: "Imagem da Biblioteca",
+      icon: "☰",
+      status: "Registros da campanha",
+    },
+  ];
 
   return (
     <section className="command-center-panel base-hub-panel">
+      <GameArtPlaceholder
+        className="base-main-art-placeholder"
+        hint="Cena futura do Lobby Vivo com instalações clicáveis"
+        icon="⌂"
+        label="Banner principal da Base"
+        variant="banner"
+      />
+
       <article className={`command-next-card base-war-room tone-${nextAction.tone}`}>
         <div className="base-war-room-copy">
           <span>Sala de comando | {nextAction.detail}</span>
@@ -478,18 +649,36 @@ function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) 
         </div>
       </article>
 
+      <section aria-label="Instalações da Base" className="base-facilities-section">
+        <div className="base-facilities-heading">
+          <span>Instalações do Lobby</span>
+          <h2>Escolha seu próximo destino</h2>
+          <p>Cada área concentra uma função da guilda. Os blocos visuais serão substituídos pelas artes finais.</p>
+        </div>
+        <div className="base-facilities-grid">
+          {facilities.map((facility) => (
+            <BaseFacilityCard {...facility} key={facility.tab} onNavigate={onNavigate} />
+          ))}
+        </div>
+      </section>
+
       <EarlyObjectivesCard state={state} onNavigate={onNavigate} />
 
-      <div className="base-status-ledger">
-        <BaseResourceStat label="Andar atual" value={floorProgress} tone="gold" />
-        <BaseResourceStat label="Capitulo" value={chapter.name} tone="arcane" />
-        <BaseResourceStat label="Poder da formacao" value={formationPower} tone="success" />
-        <BaseResourceStat label="Energia" value={`${state.resources.energy}/${state.resources.maxEnergy}`} tone={energyFull ? "gold" : undefined} />
-        <BaseResourceStat label="Ouro" value={state.resources.gold} />
-        <BaseResourceStat label="Cristais" value={state.resources.crystals} />
-      </div>
+      <DetailDrawer
+        className="base-reports-drawer"
+        summary={`${alerts.length} alerta(s) · ${formationCount} na formação · poder ${formationPower}`}
+        title="Relatórios e atividade do Lobby"
+      >
+        <div className="base-status-ledger">
+          <BaseResourceStat label="Andar atual" value={floorProgress} tone="gold" />
+          <BaseResourceStat label="Capitulo" value={chapter.name} tone="arcane" />
+          <BaseResourceStat label="Poder da formacao" value={formationPower} tone="success" />
+          <BaseResourceStat label="Energia" value={`${state.resources.energy}/${state.resources.maxEnergy}`} tone={energyFull ? "gold" : undefined} />
+          <BaseResourceStat label="Ouro" value={state.resources.gold} />
+          <BaseResourceStat label="Cristais" value={state.resources.crystals} />
+        </div>
 
-      <div className="base-command-layout">
+        <div className="base-command-layout">
         <article className="command-card base-map-card">
           <div className="base-card-head">
             <span>Mesa de guerra</span>
@@ -685,18 +874,8 @@ function BasePanel({ onNavigate }: { onNavigate: (tab: DashboardTab) => void }) 
           </article>
         ) : null}
 
-        <article className="command-card base-shortcuts-card">
-          <div className="base-card-head">
-            <span>Atalhos de comando</span>
-            <h3>Para onde ir agora</h3>
-          </div>
-          <div className="base-shortcut-grid">
-            {baseShortcuts.map((shortcut) => (
-              <BaseShortcutButton description={shortcut.description} key={shortcut.tab} onNavigate={onNavigate} tab={shortcut.tab} title={shortcut.title} />
-            ))}
-          </div>
-        </article>
-      </div>
+        </div>
+      </DetailDrawer>
     </section>
   );
 }
@@ -805,11 +984,31 @@ function AboutPanel() {
 
 export function GameShell() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("base");
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const activeNavigation = getActiveNavigation(activeTab);
+  const moreIsActive = mobileMoreTabIds.has(activeTab);
+
+  useEffect(() => {
+    if (!mobileMoreOpen) return;
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileMoreOpen(false);
+    };
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [mobileMoreOpen]);
+
+  function navigateTo(tab: DashboardTab) {
+    setActiveTab(tab);
+    setMobileMoreOpen(false);
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
+  }
 
   return (
     <section className="dashboard-shell">
       <SaveBootstrap />
+      <MobileGameHud onNavigate={navigateTo} />
       <header className="dashboard-shell-header">
         <div>
           <span className="eyebrow">Mesa da guilda</span>
@@ -844,7 +1043,7 @@ export function GameShell() {
                   data-active={activeTab === tab.id ? "true" : "false"}
                   data-group={group.id}
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => navigateTo(tab.id)}
                   type="button"
                 >
                   <span aria-hidden="true" className="dashboard-tab-icon">
@@ -858,12 +1057,72 @@ export function GameShell() {
         ))}
       </nav>
 
+      <nav aria-label="Navegação principal mobile" className="mobile-bottom-nav">
+        {mobilePrimaryTabs.map((tab) => (
+          <button
+            aria-current={activeTab === tab.id ? "page" : undefined}
+            className={activeTab === tab.id ? "active" : ""}
+            key={tab.id}
+            onClick={() => navigateTo(tab.id)}
+            type="button"
+          >
+            <span aria-hidden="true">{tab.icon}</span>
+            <small>{tab.label}</small>
+          </button>
+        ))}
+        <button
+          aria-controls="mobileMoreMenu"
+          aria-expanded={mobileMoreOpen}
+          className={mobileMoreOpen || moreIsActive ? "active" : ""}
+          onClick={() => setMobileMoreOpen((open) => !open)}
+          type="button"
+        >
+          <span aria-hidden="true">•••</span>
+          <small>Mais</small>
+        </button>
+      </nav>
+
+      {mobileMoreOpen ? (
+        <div className="mobile-more-layer">
+          <button aria-label="Fechar menu Mais" className="mobile-more-backdrop" onClick={() => setMobileMoreOpen(false)} type="button" />
+          <aside aria-label="Mais destinos" className="mobile-more-menu" id="mobileMoreMenu">
+            <div className="mobile-more-head">
+              <div>
+                <span>Mapa da Base</span>
+                <strong>Outras áreas</strong>
+              </div>
+              <button aria-label="Fechar menu" onClick={() => setMobileMoreOpen(false)} type="button">×</button>
+            </div>
+            {mobileMoreGroups.map((group) => (
+              <section className="mobile-more-group" key={group.label}>
+                <h3>{group.label}</h3>
+                <div>
+                  {group.tabs.map((tab) => (
+                    <button
+                      aria-current={activeTab === tab.id ? "page" : undefined}
+                      className={activeTab === tab.id ? "active" : ""}
+                      key={tab.id}
+                      onClick={() => navigateTo(tab.id)}
+                      type="button"
+                    >
+                      <span aria-hidden="true">{tab.icon}</span>
+                      <strong>{tab.label}</strong>
+                      <small>Entrar</small>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </aside>
+        </div>
+      ) : null}
+
       <div className="dashboard-content">
-        {activeTab === "base" ? <BasePanel onNavigate={setActiveTab} /> : null}
+        {activeTab === "base" ? <BasePanel onNavigate={navigateTo} /> : null}
         {activeTab === "tower" ? (
           <>
             <ChapterCompletionPanel />
-          <TowerChallengePanel onNavigate={setActiveTab} />
+          <TowerChallengePanel onNavigate={navigateTo} />
           </>
         ) : null}
         {activeTab === "heroes" ? (
@@ -877,8 +1136,8 @@ export function GameShell() {
         {activeTab === "expeditions" ? <ExpeditionsPanel /> : null}
         {activeTab === "missions" ? <MissionsPanel /> : null}
         {activeTab === "relics" ? <RelicsPanel /> : null}
-        {activeTab === "summon" ? <SummonPanel onViewHero={() => setActiveTab("heroes")} /> : null}
-        {activeTab === "recruitment" ? <RecruitmentPanel onViewFormation={() => setActiveTab("formation")} onViewHeroes={() => setActiveTab("heroes")} /> : null}
+        {activeTab === "summon" ? <SummonPanel onViewHero={() => navigateTo("heroes")} /> : null}
+        {activeTab === "recruitment" ? <RecruitmentPanel onViewFormation={() => navigateTo("formation")} onViewHeroes={() => navigateTo("heroes")} /> : null}
         {activeTab === "library" ? <LibraryPanel /> : null}
         {activeTab === "settings" ? <SettingsPanel /> : null}
         {activeTab === "about" ? <AboutPanel /> : null}

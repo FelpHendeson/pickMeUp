@@ -12292,3 +12292,242 @@ body.pref-reduce-motion *::after {
 .detail-drawer-content .tower-floor-grid {
   margin-top: 0;
 }
+
+/* ============================================================
+   MOBILE GAME NAV + ART PLACEHOLDERS — fase de navegabilidade
+   Reservas visuais deliberadamente provisórias; sem assets finais.
+   ============================================================ */
+.mobile-game-hud,
+.mobile-bottom-nav,
+.mobile-more-layer {
+  display: none;
+}
+
+.game-art-placeholder {
+  isolation: isolate;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--arcane) 42%, var(--line));
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(135deg, transparent 46%, rgba(255, 255, 255, 0.035) 47%, rgba(255, 255, 255, 0.035) 53%, transparent 54%),
+    radial-gradient(circle at 20% 20%, rgba(79, 210, 199, 0.15), transparent 34%),
+    radial-gradient(circle at 82% 70%, rgba(157, 105, 220, 0.2), transparent 40%),
+    linear-gradient(145deg, rgba(30, 27, 42, 0.96), rgba(11, 10, 17, 0.96));
+  color: var(--text);
+  display: flex;
+  gap: 0.75rem;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0.9rem 1rem;
+  position: relative;
+}
+
+.game-art-placeholder::before,
+.game-art-placeholder::after {
+  border: 1px solid color-mix(in srgb, var(--gold) 24%, transparent);
+  content: "";
+  inset: 0.42rem;
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+}
+
+.game-art-placeholder::after {
+  border-color: color-mix(in srgb, var(--arcane) 20%, transparent);
+  border-radius: 50%;
+  height: 8rem;
+  inset: auto -2rem -3rem auto;
+  width: 8rem;
+}
+
+.game-art-placeholder.variant-banner {
+  min-height: 12rem;
+  padding: 1.4rem;
+}
+
+.game-art-placeholder.variant-header {
+  min-height: 7.5rem;
+}
+
+.game-art-placeholder.variant-module {
+  border-radius: calc(var(--radius-md) - 0.15rem);
+  min-height: 6.3rem;
+  padding: 0.65rem;
+}
+
+.game-art-placeholder-rune {
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+  border-radius: 50%;
+  color: var(--gold);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.4rem;
+  height: 3.3rem;
+  justify-content: center;
+  text-shadow: 0 0 18px rgba(232, 188, 88, 0.45);
+  width: 3.3rem;
+}
+
+.variant-banner .game-art-placeholder-rune {
+  font-size: 2.1rem;
+  height: 5rem;
+  width: 5rem;
+}
+
+.variant-module .game-art-placeholder-rune {
+  font-size: 1.15rem;
+  height: 2.8rem;
+  width: 2.8rem;
+}
+
+.game-art-placeholder-copy {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.game-art-placeholder-copy strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1rem, 2vw, 1.3rem);
+}
+
+.game-art-placeholder-copy small {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.game-art-placeholder-tag {
+  border: 1px solid color-mix(in srgb, var(--arcane) 40%, transparent);
+  border-radius: 999px;
+  color: var(--arcane);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin-left: auto;
+  padding: 0.2rem 0.5rem;
+  text-transform: uppercase;
+}
+
+.screen-art-placeholder {
+  margin-bottom: 0.2rem;
+}
+
+.tower-art-placeholder {
+  border-color: color-mix(in srgb, var(--gold) 40%, var(--line));
+}
+
+.summon-art-placeholder {
+  border-color: color-mix(in srgb, var(--arcane) 58%, var(--line));
+}
+
+.hero-art-placeholder {
+  border-color: color-mix(in srgb, var(--teal) 42%, var(--line));
+}
+
+.expedition-art-placeholder {
+  border-color: color-mix(in srgb, var(--teal) 52%, var(--line));
+}
+
+.base-facilities-section {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(29, 25, 34, 0.8), rgba(11, 10, 14, 0.78));
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+}
+
+.base-facilities-heading {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.base-facilities-heading > span {
+  color: var(--teal);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.base-facilities-heading h2 {
+  font-size: clamp(1.25rem, 2.6vw, 1.75rem);
+  margin: 0;
+}
+
+.base-facilities-heading p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.base-facilities-grid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.base-facility-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(0, 0, 0, 0.24);
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.5rem;
+  position: relative;
+  text-align: left;
+  transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
+}
+
+.base-facility-card:hover,
+.base-facility-card:focus-visible {
+  border-color: color-mix(in srgb, var(--gold) 58%, var(--line));
+  background: rgba(232, 188, 88, 0.045);
+  transform: translateY(-2px);
+}
+
+.base-facility-copy {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0 0.35rem 0.35rem;
+}
+
+.base-facility-copy small {
+  color: var(--teal);
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.base-facility-copy strong {
+  color: var(--text);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.05rem;
+}
+
+.base-facility-copy > span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.base-facility-enter {
+  bottom: 0.75rem;
+  color: var(--gold);
+  font-size: 1.4rem;
+  position: absolute;
+  right: 0.8rem;
+}
+
+.base-reports-drawer .detail-drawer-content {
+  gap: 0.9rem;
+}
+
+@media (max-width: 920px) {
+  .base-facilities-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

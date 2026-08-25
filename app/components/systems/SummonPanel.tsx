@@ -16,6 +16,7 @@ import {
 } from "@/src/game";
 import { useGameStore } from "@/src/store/gameStore";
 import { useState } from "react";
+import { GameArtPlaceholder } from "../ui";
 
 type SummonPanelProps = {
   onViewHero?: (heroId: string) => void;
@@ -283,6 +284,13 @@ export function SummonPanel({ onViewHero }: SummonPanelProps) {
 
   return (
     <section className="summon-panel-react">
+      <GameArtPlaceholder
+        className="screen-art-placeholder summon-art-placeholder"
+        hint="Arte final do círculo dimensional e dos Ecos invocados"
+        icon="✺"
+        label="Imagem do Portal de Invocação"
+        variant="header"
+      />
       <div className="summon-ritual-hero">
         <div>
           <span>Portal de Invocação</span>

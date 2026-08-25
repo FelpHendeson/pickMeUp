@@ -1,9 +1,9 @@
 # Estado Atual e Roadmap de Retomada
 
-**Data:** 24/08/2026  
+**Data:** 25/08/2026
 **Versão:** 0.10.0  
 **Branch canônica:** `master`  
-**Último baseline funcional/UI:** `fcc5f75` — `ui: base de layout focado e refatoracao da aba Torre (fase 2)`
+**Baseline de origem:** `4cd38eb` — `fix: melhora responsividade mobile da interface de jogo`
 
 ## 1. Onde o projeto realmente parou
 
@@ -23,11 +23,22 @@ A sequência de desenvolvimento de 02–03/07/2026 avançou por:
 10. Fase 1 do rework global de UX/UI;
 11. **Fase 2: layout focado aplicado à Torre.**
 
-Portanto, o ponto de retomada correto é **Fase 3 do rework: Heróis em modo foco**.
+Após a correção responsiva inicial, a navegabilidade mobile recebeu prioridade: a Base passou a ser o hub, a navegação foi reduzida a cinco destinos principais e as áreas secundárias foram agrupadas. O próximo aprofundamento continua sendo **Heróis em modo foco**.
 
 ## 2. Última entrega concluída
 
-A Fase 2 criou `app/components/ui/game-layout.tsx` e transformou a Torre no piloto da nova linguagem de interface.
+A entrega mobile consolidou a estrutura global de navegação sem alterar domínio ou save.
+
+Implementado:
+
+- HUD superior fixa com ouro, cristais, energia, andar e alertas;
+- bottom navigation fixa com Base, Heróis, Torre, Expedições e Mais;
+- menu Mais com destinos secundários agrupados;
+- Base como hub de sete instalações;
+- relatórios extensos do Lobby recolhidos por padrão;
+- placeholders temáticos para Base, Torre, Invocação, Heróis e Expedições.
+
+A Fase 2 anterior criou `app/components/ui/game-layout.tsx` e transformou a Torre no piloto da nova linguagem de interface.
 
 Componentes disponíveis:
 
@@ -74,6 +85,9 @@ Na Torre:
 | Afinidade/especializações | Implementado | Progressão existente |
 | Relíquias/biblioteca | Implementado | Progressão/coleção |
 | Layout focado — Torre | Concluído | Fase 2 |
+| Navegação mobile game-like | Concluído | HUD fixa, bottom nav e menu Mais |
+| Base como hub mobile | Concluído | Sete instalações e relatórios recolhíveis |
+| Placeholders de arte | Implementado | Base, Torre, Heróis, Invocação e Expedições |
 | Layout focado — Heróis | Próximo | Fase 3 |
 | Cena visual rica do Lobby | Parcial/futuro | Estado atual usa representação por cards |
 | Trabalhos do Lobby | Futuro | Ainda não tratar como implementado |
@@ -109,12 +123,14 @@ Reduzir a densidade de `HeroRosterPanel.tsx` sem remover profundidade.
 
 ## 5. Fase seguinte — Base/Lobby
 
-Depois de validar Heróis:
+O primeiro ciclo da Base/Lobby foi antecipado e concluído como parte do rework mobile:
 
-- consolidar a Base dentro da mesma hierarquia visual;
-- preservar `Lobby Vivo` e `Rota da Primeira Ascensão`;
-- evitar voltar a transformar a Base em dashboard com dezenas de cards concorrentes;
-- preparar a interface para uma representação visual mais viva no futuro, sem introduzir RTS/pathfinding.
+- a Base concentra os destinos principais em instalações visuais;
+- `Lobby Vivo` e `Rota da Primeira Ascensão` foram preservados;
+- relatórios detalhados ficam sob progressive disclosure;
+- a composição está pronta para receber artes futuras sem introduzir RTS/pathfinding.
+
+Depois de validar Heróis, revisar a Base apenas com feedback real de uso e com as artes finais disponíveis.
 
 ## 6. Depois do rework
 
@@ -138,6 +154,6 @@ Prioridade de produto recomendada:
 
 ## 8. Definição de pronto para o ciclo de UX
 
-O rework estará consolidado quando Torre, Heróis e Base compartilharem uma linguagem consistente de foco, hierarquia e progressive disclosure, com QA desktop/mobile e sem regressão do domínio.
+O rework estará consolidado quando Torre, Heróis e Base compartilharem uma linguagem consistente de foco, hierarquia e progressive disclosure, com QA desktop/mobile e sem regressão do domínio. A navegação global mobile e a Base já atendem essa direção; Heróis segue como lacuna principal.
 
 Até lá, **não é prioridade adicionar outra grande camada sistêmica**.

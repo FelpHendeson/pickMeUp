@@ -1,7 +1,7 @@
 # Visão de Produto — Lobby Vivo
 
 **Versão de referência:** Alpha 0.10.0  
-**Revisado:** 24/08/2026
+**Revisado:** 25/08/2026
 
 Este documento descreve a direção do produto e separa explicitamente **o que já existe** do que ainda é **visão futura**.
 
@@ -63,7 +63,7 @@ A Base guia a primeira jornada até a primeira promoção sem criar um hard gate
 
 ### Interface visual viva
 
-Hoje o Lobby é representado por cards, grupos e alertas derivados do estado. Isso já comunica vida, mas ainda não é a cena operacional visual imaginada para o longo prazo.
+Hoje a Base funciona como hub de instalações, com cards visuais de grande porte e placeholders temáticos. Grupos, alertas e rotinas derivados do estado continuam disponíveis em relatórios recolhíveis. Isso já melhora a leitura de espaço, mas ainda não é a cena operacional visual imaginada para o longo prazo.
 
 A evolução pode usar uma composição 2D/semi-isométrica com instalações clicáveis, retratos/tokens e estados visuais, **sem** exigir pathfinding ou RTS.
 
@@ -137,9 +137,10 @@ A ordem antiga deste documento já foi parcialmente executada. A partir do estad
 
 ### Agora
 
-1. concluir rework de UX/UI focado em Heróis;
-2. consolidar Base/Lobby na mesma linguagem;
-3. QA visual e de fluxo.
+1. validar HUD, bottom navigation e hub da Base no mobile;
+2. substituir os placeholders conforme as artes forem aprovadas;
+3. concluir rework de UX/UI focado em Heróis;
+4. QA visual e de fluxo.
 
 ### Depois
 
